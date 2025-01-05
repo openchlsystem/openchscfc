@@ -12,9 +12,9 @@
                 </div>
             </div>
             <form @submit.prevent="sendMessage" class="chat-input">
-                <input v-model="userInput" type="text" placeholder="Type your message..."
-                    aria-label="Type your message" />
-                <button type="submit">Send</button>
+                <input v-model="userInput" type="text" :placeholder="currentPrompt.placeholder"
+                    aria-label="Type your message" :disabled="isSubmitting" />
+                <button type="submit" :disabled="isSubmitting">Send</button>
             </form>
         </div>
     </div>
@@ -26,9 +26,48 @@
             return {
                 userInput: "",
                 messages: [
-                    { text: "Hello! I'm here to help. How are you feeling today?", type: "bot" },
+                    { text: "Hello! I'm here to help you sign up. What's your name? 😊", type: "bot" },
                 ],
+                form: {
+                    name: "",
+                    age: null,
+                    gender: "",
+                    parentEmail: "",
+                    interests: "",
+                    consent: false,
+                },
+                currentStep: "name",
+                isSubmitting: false,
+                prompts: {
+                    name: { text: "What's your name? 😊", placeholder: "Enter your first name" },
+                    age: { text: "How old are you? 🎂", placeholder: "Enter your age (1-18)" },
+                    gender: {
+                        text: "What's your gender? 🧒",
+                        placeholder: "Enter: boy, girl, other, or prefer not to say",
+                    },
+                    parentEmail: {
+                        text: "Parent/Guardian Email 📧",
+                        placeholder: "Enter your parent's email",
+                    },
+                    interests: {
+                        text: "What do you like? 🌈",
+                        placeholder: "E.g., games, books, sports",
+                    },
+                    consent: {
+                        text: "Do you have your parent's/guardian's permission to sign up? Type 'yes' to confirm. ✅",
+                        placeholder: "Type 'yes' or 'no'",
+                    },
+                    finished: {
+                        text: "Thank you for signing up! 🎉 You're all set to begin.",
+                        placeholder: "",
+                    },
+                },
             };
+        },
+        computed: {
+            currentPrompt() {
+                return this.prompts[this.currentStep];
+            },
         },
         methods: {
             sendMessage() {
@@ -37,128 +76,72 @@
                 // Add user's message to the chat
                 this.messages.push({ text: this.userInput, type: "user" });
 
-                // Clear the input field
-                const input = this.userInput;
+                const input = this.userInput.trim();
                 this.userInput = "";
 
-                // Generate automated response
                 setTimeout(() => {
-                    this.generateResponse(input);
-                }, 1000);
+                    this.handleResponse(input);
+                }, 500);
             },
-            generateResponse(input) {
-                // Simple keyword-based response logic
-                let response = "That's interesting. Can you tell me more?";
-                if (input.toLowerCase().includes("sad")) {
-                    response = "I'm sorry to hear you're feeling sad. Want to tell me why?";
-                } else if (input.toLowerCase().includes("scared")) {
-                    response = "It’s okay to feel scared sometimes. Do you want to talk about it?";
-                } else if (input.toLowerCase().includes("happy")) {
-                    response = "I’m glad you’re feeling happy! What’s making you feel that way?";
+            handleResponse(input) {
+                if (this.currentStep === "name") {
+                    this.form.name = input;
+                    this.advanceStep("age");
+                } else if (this.currentStep === "age") {
+                    const age = parseInt(input, 10);
+                    if (age >= 1 && age <= 18) {
+                        this.form.age = age;
+                        this.advanceStep("gender");
+                    } else {
+                        this.addBotMessage("Please enter a valid age between 1 and 18.");
+                    }
+                } else if (this.currentStep === "gender") {
+                    const validGenders = ["boy", "girl", "other", "prefer not to say"];
+                    if (validGenders.includes(input.toLowerCase())) {
+                        this.form.gender = input;
+                        this.advanceStep("parentEmail");
+                    } else {
+                        this.addBotMessage("Please enter a valid gender option.");
+                    }
+                } else if (this.currentStep === "parentEmail") {
+                    if (this.validateEmail(input)) {
+                        this.form.parentEmail = input;
+                        this.advanceStep("interests");
+                    } else {
+                        this.addBotMessage("Please enter a valid email address.");
+                    }
+                } else if (this.currentStep === "interests") {
+                    this.form.interests = input;
+                    this.advanceStep("consent");
+                } else if (this.currentStep === "consent") {
+                    if (input.toLowerCase() === "yes") {
+                        this.form.consent = true;
+                        this.advanceStep("finished");
+                    } else {
+                        this.addBotMessage("You need your parent's/guardian's permission to sign up.");
+                    }
                 }
-
-                // Add the bot's response to the chat
-                this.messages.push({ text: response, type: "bot" });
+            },
+            advanceStep(nextStep) {
+                this.currentStep = nextStep;
+                if (nextStep === "finished") {
+                    this.addBotMessage(this.prompts[nextStep].text);
+                    console.log("Collected Form Data:", this.form); // Here you can handle the form submission logic.
+                } else {
+                    this.addBotMessage(this.prompts[nextStep].text);
+                }
+            },
+            addBotMessage(text) {
+                this.messages.push({ text, type: "bot" });
+            },
+            validateEmail(email) {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return re.test(email);
             },
         },
     };
 </script>
 
 <style scoped>
-    .child-help-page {
-        font-family: 'Comic Sans MS', 'Arial', sans-serif;
-        padding: 20px;
-        max-width: 600px;
-        margin: 0 auto;
-        background-color: #fdf1ff;
-        /* Light lavender for a soft and welcoming feel */
-
-        /* Bright pink border for a friendly look */
-        border-radius: 20px;
-        box-shadow: 0 6px 14px rgba(255, 128, 171, 0.3);
-    }
-
-  
-
-    
-    .chat-container {
-        display: flex;
-        flex-direction: column;
-        background-color: #ffffff;
-        border-radius: 20px;
-        padding: 15px;
-        box-shadow: 0 4px 12px rgba(255, 128, 171, 0.15);
-    }
-
-    .chat-window {
-        overflow-y: auto;
-        margin-bottom: 15px;
-        padding: 15px;
-        background: #fff8e1;
-        /* Light pastel yellow for warmth */
-        border-radius: 20px;
-        scrollbar-width: thin;
-        scrollbar-color: #ff80ab transparent;
-        min-height: 300px;
-    }
-
-    .chat-window .bot {
-        background-color: #b2fab4;
-        /* Soft green for calmness */
-        color: #2e7d32;
-        padding: 12px;
-        border-radius: 15px 15px 15px 5px;
-        margin-bottom: 12px;
-        align-self: flex-start;
-        max-width: 75%;
-        word-wrap: break-word;
-        box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
-        font-style: italic;
-    }
-
-    .chat-window .user {
-        background-color: #ffccbc;
-        /* Warm orange for energy */
-        color: #bf360c;
-        padding: 12px;
-        border-radius: 15px 15px 5px 15px;
-        margin-bottom: 12px;
-        align-self: flex-end;
-        max-width: 75%;
-        word-wrap: break-word;
-        box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    
-
-   
-
-    @media (max-width: 600px) {
-        .child-help-page {
-            padding: 12px;
-        }
-
-        .header h1 {
-            font-size: 2rem;
-        }
-
-        .header p {
-            font-size: 1rem;
-        }
-
-        .chat-window {
-            min-height: 250px;
-        }
-
-        .chat-input input {
-            font-size: 0.9rem;
-        }
-
-        .chat-input button {
-            font-size: 0.9rem;
-            padding: 10px 18px;
-        }
-    }
+    /* Retain your existing styles */
 </style>
-
-

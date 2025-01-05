@@ -38,10 +38,28 @@ const router = createRouter({
       component: () => import('../views/SafeStoryShare.vue'),
     },
     {
-      path: '/start',
-      name: 'start',
-      component: () => import('../views/SignupForm.vue'),
+      path:'/memory-match',
+      name:'memory-match',
+      component: () => import('../views/MemoryMatch.vue')
     },
+    {
+      path: '/games/math-puzzle',
+      name: 'games/math-puzzle',
+      component: () => import('../views/MathPuzzle.vue')
+    },
+    {
+      path: '/games/word-scramble',
+      name: 'games/word-scramble',
+      component: () => import('../views/WordScramble.vue')
+    },
+    {
+      path: '/games/coloring-fun',
+      name: 'games/coloring-fun',
+      component: () => import('../views/ColouringFun.vue')
+    }
+
+
+
   ],
 })
 

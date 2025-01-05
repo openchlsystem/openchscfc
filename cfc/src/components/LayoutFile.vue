@@ -6,13 +6,13 @@
         </header>
 
         <!-- Hero Section -->
-        <section class="hero">
-            <HeroPage />
+        <section v-if="currentRoute === '/'" class="hero-section">
+            <HeroPage   />
         </section>
 
         <!-- Features Section -->
         <section id="features" class="features">
-            < <RouterView />
+            <RouterView />
 
         </section>
 
@@ -33,60 +33,44 @@
 </template>
 
 <script>
-    import ChildFriendlyCard from "@/components/ChildFriendlyCard.vue";
-    import NavBar from "./NavBar.vue";
+import { ref, watch } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import ChildFriendlyCard from "@/components/ChildFriendlyCard.vue";
+import NavBar from "./NavBar.vue";
 import HeroPage from "./HeroPage.vue";
 
-    export default {
-        components: {
-            ChildFriendlyCard,
-            NavBar,
-            HeroPage
-        },
-        data() {
-            return {
-                showBadge: false,
-                features: [
-                    {
-                        title: "Friendly Support",
-                        description: "Reach out to trained professionals for guidance and help.",
-                        buttonText: "Learn More",
-                        action: this.navigateToHelp,
-                    },
-                    {
-                        title: "Interactive Games",
-                        description: "Engage with activities that teach and entertain.",
-                        buttonText: "Play Games",
-                        action: this.navigateToGames,
-                    },
-                    {
-                        title: "Safe Sharing",
-                        description: "Share your story in a secure and non-judgmental environment.",
-                        buttonText: "Share Now",
-                        action: this.navigateToSafeSharing,
-                    },
-                ],
-            };
-        },
-        methods: {
-            navigateToStart() {
-                this.$router.push("/start");
-            },
-            navigateToGames() {
-                this.$router.push("/interactive-games");
-            },
-            navigateToHelp() {
-                this.$router.push("/child-help");
-            },
-            navigateToSafeSharing() {
-                this.$router.push("/safe-sharing");
-            },
-            closeBadge() {
-                this.showBadge = false;
-            },
-        },
+
+export default {
+  components: {
+    ChildFriendlyCard,
+    NavBar,
+    HeroPage,
+  },
+  setup() {
+    const router = useRouter();
+    const showBadge = ref(false);
+    const route = useRoute();
+    const currentRoute = ref(route.path);
+    watch(route, () => {
+      currentRoute.value = route.path;
+    });
+
+    
+    const closeBadge = () => {
+      showBadge.value = false;
     };
+
+    
+
+    return {
+      showBadge,
+      closeBadge,
+      currentRoute,
+    };
+  },
+};
 </script>
+
 
 <style scoped>
     .features-grid {

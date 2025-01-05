@@ -1,29 +1,34 @@
 <template>
     <nav class="nav-bar">
         <!-- Back Button -->
-        <button class="nav-button back-button" @click="navigateBack">
-            <span>&larr;</span> Back
-        </button>
 
+        <div>
+            <button class="back-btn" @click="navigateBack"><i class="bi bi-arrow-left"></i> Back</button>
+        </div>
         <!-- Home Icon -->
         <div class="home-icon" @click="navigateHome">
-            <span>&#127968;</span>
+            <span>🏠</span>
         </div>
 
-        <!-- Menu Toggle for Mobile -->
-        <button class="menu-toggle" @click="toggleMenu">
-            <span class="bar"></span>
-            <span class="bar"></span>
-            <span class="bar"></span>
-        </button>
+        <div>
 
-        <!-- Navigation Links -->
-        <ul :class="{ 'nav-links': true, 'nav-active': isMenuOpen }">
-            <li><a href="#features">Features</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#contact">Contact</a></li>
-        </ul>
+            <!-- Menu Toggle for Mobile -->
+            <button class="menu-toggle" @click="toggleMenu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+            <!-- Navigation Links -->
+            <ul :class="{ 'nav-links': true, 'nav-active': isMenuOpen }">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+
+
     </nav>
+
 </template>
 
 <script>

@@ -1,5 +1,5 @@
 {
-  "name": "cfc",
+  "name": "child-friendly-feedback-app",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -13,6 +13,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "bootstrap-icons": "^1.11.3",
     "pinia": "^2.2.6",
     "vue": "^3.5.13",
     "vue-router": "^4.4.5"

@@ -1,25 +1,7 @@
 <template>
 
    
-    <!-- Features Section -->
-    <section id="features" class="features">
-      <h2>Our Features</h2>
-      <div class="features-grid">
-        <ChildFriendlyCard v-for="(feature, index) in features" :key="index">
-          <template #header>
-            <h3>{{ feature.title }}</h3>
-          </template>
-          <template>
-            <p>{{ feature.description }}</p>
-          </template>
-          <template #footer>
-            <button class="card-button" @click="feature.action">
-              {{ feature.buttonText }}
-            </button>
-          </template>
-        </ChildFriendlyCard>
-      </div>
-    </section>
+    
 
    
     <!-- Thank You Badge Modal -->
@@ -34,11 +16,11 @@
 </template>
 
 <script>
-  import ChildFriendlyCard from "@/components/ChildFriendlyCard.vue";
+  // import ChildFriendlyCard from "@/components/ChildFriendlyCard.vue";
 
   export default {
     components: {
-      ChildFriendlyCard,
+      // ChildFriendlyCard,
     },
     data() {
       return {
