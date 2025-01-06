@@ -1,115 +1,102 @@
-from rest_framework import generics, permissions
-from .models import (
-   Category, Complaint, AudioFile, Translation,
-    Feedback, Metric, TriageLog, CaseworkerAction, Notification
-)
-from .serializers import *
-# MyUser Views
+from rest_framework import status, viewsets
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from .models import Complaint, CaseNote, ComplaintStatus
+from .serializers import ComplaintSerializer, CaseNoteSerializer, ComplaintStatusSerializer
+from rest_framework.views import APIView
 
-# Category Views
-class CategoryListCreateView(generics.ListCreateAPIView):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-
-class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-# Complaint Views
-class ComplaintListCreateView(generics.ListCreateAPIView):
+# View for creating and retrieving complaints
+class ComplaintViewSet(viewsets.ModelViewSet):
     queryset = Complaint.objects.all()
     serializer_class = ComplaintSerializer
-    # permission_classes = [permissions.IsAuthenticated]
 
+    def create(self, request, *args, **kwargs):
+        # Create a new complaint along with related victim and perpetrator if provided
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            complaint = serializer.save()
+            return Response({
+                'case_id': complaint.complaint_id,
+                'status': 'Complaint submitted successfully'
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class ComplaintDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Complaint.objects.all()
-    serializer_class = ComplaintSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+    def list(self, request, *args, **kwargs):
+        # Get list of all complaints (could be filtered based on query params, if needed)
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
-# Audio File Views
-class AudioFileListCreateView(generics.ListCreateAPIView):
-    queryset = AudioFile.objects.all()
-    serializer_class = AudioFileSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+# View for adding case notes
+class CaseNoteViewSet(viewsets.ModelViewSet):
+    queryset = CaseNote.objects.all()
+    serializer_class = CaseNoteSerializer
 
+    def create(self, request, *args, **kwargs):
+        # Add a new case note to an existing complaint
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            case_note = serializer.save()
+            return Response({
+                'message': 'Case note added successfully',
+                'case_note_id': case_note.id
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class AudioFileDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = AudioFile.objects.all()
-    serializer_class = AudioFileSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+    def list(self, request, *args, **kwargs):
+        # List all case notes (can be filtered by complaint_id if needed)
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
-# Translation Views
-class TranslationListCreateView(generics.ListCreateAPIView):
-    queryset = Translation.objects.all()
-    serializer_class = TranslationSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+# View for updating complaint status
+class ComplaintStatusUpdateView(APIView):
+    def put(self, request, *args, **kwargs):
+        # Update the status of an existing complaint
+        complaint_id = kwargs.get('complaint_id')
+        complaint = Complaint.objects.filter(complaint_id=complaint_id).first()
+        if not complaint:
+            return Response({'error': 'Complaint not found'}, status=status.HTTP_404_NOT_FOUND)
 
+        # Validate and update status
+        serializer = ComplaintStatusSerializer(data=request.data)
+        if serializer.is_valid():
+            status_data = serializer.save(complaint=complaint)
+            return Response({
+                'status': status_data.status,
+                'message': 'Complaint status updated successfully'
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class TranslationDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Translation.objects.all()
-    serializer_class = TranslationSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+# View for retrieving the status of a complaint
+@api_view(['GET'])
+def get_complaint_status(request, complaint_id):
+    # Retrieve the status of a complaint
+    complaint = Complaint.objects.filter(complaint_id=complaint_id).first()
+    if not complaint:
+        return Response({'error': 'Complaint not found'}, status=status.HTTP_404_NOT_FOUND)
 
-# Feedback Views
-class FeedbackListCreateView(generics.ListCreateAPIView):
-    queryset = Feedback.objects.all()
-    serializer_class = FeedbackSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+    # Fetch the most recent status update
+    status = ComplaintStatus.objects.filter(complaint=complaint).order_by('-updated_at').first()
+    if not status:
+        return Response({'error': 'Status not found'}, status=status.HTTP_404_NOT_FOUND)
 
+    return Response({
+        'case_id': complaint.complaint_id,
+        'status': status.status,
+        'updated_at': status.updated_at,
+        'updated_by': status.updated_by
+    })
 
-class FeedbackDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Feedback.objects.all()
-    serializer_class = FeedbackSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+# View for submitting feedback (optional step for the reporter)
+@api_view(['POST'])
+def submit_feedback(request):
+    # Submit feedback related to a case (e.g., satisfaction or additional comments)
+    feedback_data = request.data
+    # Handle feedback submission logic here
+    # For simplicity, assuming feedback is just a text field
+    feedback = feedback_data.get('feedback')
+    if feedback:
+        return Response({'message': 'Feedback submitted successfully'}, status=status.HTTP_200_OK)
+    return Response({'error': 'Feedback cannot be empty'}, status=status.HTTP_400_BAD_REQUEST)
 
-# Metric Views
-class MetricListCreateView(generics.ListCreateAPIView):
-    queryset = Metric.objects.all()
-    serializer_class = MetricSerializer
-    # permission_classes = [permissions.IsAuthenticated]
-
-
-class MetricDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Metric.objects.all()
-    serializer_class = MetricSerializer
-    # permission_classes = [permissions.IsAuthenticated]
-
-# Triage Log Views
-class TriageLogListCreateView(generics.ListCreateAPIView):
-    queryset = TriageLog.objects.all()
-    serializer_class = TriageLogSerializer
-    # permission_classes = [permissions.IsAuthenticated]
-
-
-class TriageLogDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = TriageLog.objects.all()
-    serializer_class = TriageLogSerializer
-    # permission_classes = [permissions.IsAuthenticated]
-
-# Caseworker Action Views
-class CaseworkerActionListCreateView(generics.ListCreateAPIView):
-    queryset = CaseworkerAction.objects.all()
-    serializer_class = CaseworkerActionSerializer
-    # permission_classes = [permissions.IsAuthenticated]
-
-
-class CaseworkerActionDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = CaseworkerAction.objects.all()
-    serializer_class = CaseworkerActionSerializer
-    # permission_classes = [permissions.IsAuthenticated]
-
-# Notification Views
-class NotificationListCreateView(generics.ListCreateAPIView):
-    queryset = Notification.objects.all()
-    serializer_class = NotificationSerializer
-    # permission_classes = [permissions.IsAuthenticated]
-
-
-class NotificationDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Notification.objects.all()
-    serializer_class = NotificationSerializer
-    # permission_classes = [permissions.IsAuthenticated]

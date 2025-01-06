@@ -1,90 +1,58 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+import uuid
 
-# Custom User model
+# Enum choices for categorizing complaints
+class ComplaintCategory(models.TextChoices):
+    ABUSE = 'ABUSE', 'Abuse'
+    HARASSMENT = 'HARASSMENT', 'Harassment'
+    FRAUD = 'FRAUD', 'Fraud'
+    NEGLECT = 'NEGLECT', 'Neglect'
+    OTHER = 'OTHER', 'Other'
 
-
-# Categories
-class Category(models.Model):
-    name = models.CharField(max_length=100)
-    description = models.TextField(blank=True)
+# Model to represent a Complaint
+class Complaint(models.Model):
+    complaint_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    reporter_nickname = models.CharField(max_length=100, null=True, blank=True)  # Anonymous reporter
+    case_category = models.CharField(max_length=50, choices=ComplaintCategory.choices, default=ComplaintCategory.OTHER)
+    complaint_text = models.TextField(blank=True, null=True)  # The text version of the complaint
+    complaint_audio = models.BinaryField(blank=True, null=True)  # The audio version of the complaint
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+
+    # Victim and perpetrator information
+    victim = models.ForeignKey('Person', related_name='victims', on_delete=models.CASCADE, null=True, blank=True)
+    perpetrator = models.ForeignKey('Person', related_name='perpetrators', on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return f"Complaint {self.complaint_id} by {self.reporter_nickname}"
+
+# Model for storing information about Victims or Perpetrators
+class Person(models.Model):
+    name = models.CharField(max_length=255)
+    age = models.PositiveIntegerField(null=True, blank=True)
+    gender = models.CharField(max_length=50, null=True, blank=True)
+    additional_info = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.name
 
-# Complaints
-class Complaint(models.Model):
-    SEVERITY_CHOICES = [
-        ('low', 'Low'),
-        ('medium', 'Medium'),
-        ('high', 'High'),
-    ]
-    STATUS_CHOICES = [
-        ('open', 'Open'),
-        ('in_progress', 'In Progress'),
-        ('resolved', 'Resolved'),
-        ('closed', 'Closed'),
-    ]
-    text = models.TextField(blank=True)
-    audio_url = models.TextField(blank=True, null=True)
-    language = models.CharField(max_length=50)
-    severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES, default='low')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+# Model for Case Notes (to document updates or notes related to the case)
+class CaseNote(models.Model):
+    complaint = models.ForeignKey(Complaint, related_name='case_notes', on_delete=models.CASCADE)
+    note_text = models.TextField()
+    note_audio = models.BinaryField(blank=True, null=True)  # Optional audio note
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.CharField(max_length=255)  # This could be an agent's name or system
 
-# Audio Files
-class AudioFile(models.Model):
-    complaint = models.ForeignKey(Complaint, on_delete=models.CASCADE)
-    file_path = models.TextField()
-    transcription = models.TextField(blank=True, null=True)
-    language = models.CharField(max_length=50)
-    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"CaseNote for {self.complaint.complaint_id} on {self.created_at}"
 
-# Translations
-class Translation(models.Model):
-    complaint = models.ForeignKey(Complaint, on_delete=models.CASCADE)
-    source_language = models.CharField(max_length=50)
-    target_language = models.CharField(max_length=50)
-    translated_text = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
-# Feedback
-class Feedback(models.Model):
+# Model for storing the status of a complaint (e.g., Under Investigation, Resolved, etc.)
+class ComplaintStatus(models.Model):
     complaint = models.OneToOneField(Complaint, on_delete=models.CASCADE)
-    rating = models.PositiveIntegerField()  # Rating out of 5
-    comments = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=100)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.CharField(max_length=255)  # This could be an agent's name or system
 
-# Metrics
-class Metric(models.Model):
-    METRIC_TYPE_CHOICES = [
-        ('response_time', 'Response Time'),
-        ('resolution_time', 'Resolution Time'),
-    ]
-    metric_type = models.CharField(max_length=50, choices=METRIC_TYPE_CHOICES)
-    value = models.FloatField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"Status for Complaint {self.complaint.complaint_id}: {self.status}"
 
-# Triage Logs
-class TriageLog(models.Model):
-    complaint = models.ForeignKey(Complaint, on_delete=models.CASCADE)
-    severity = models.CharField(max_length=20, choices=Complaint.SEVERITY_CHOICES)
-    keywords_detected = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-# Caseworker Actions
-class CaseworkerAction(models.Model):
-
-    complaint = models.ForeignKey(Complaint, on_delete=models.CASCADE)
-    action = models.TextField()
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-# Notifications
-class Notification(models.Model):
-    message = models.TextField()
-    read_status = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)

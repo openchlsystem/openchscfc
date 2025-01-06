@@ -1,73 +1,65 @@
 from rest_framework import serializers
-from .models import (
-    Category, Complaint, AudioFile, Translation,
-    Feedback, Metric, TriageLog, CaseworkerAction, Notification
-)
+from .models import Complaint, CaseNote, ComplaintStatus, Person
 
-
-# Category Serializer
-class CategorySerializer(serializers.ModelSerializer):
+# Serializer for the Person model (Victim/Perpetrator)
+class PersonSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Category
-        fields = '__all__'
+        model = Person
+        fields = ['id', 'name', 'age', 'gender', 'additional_info']
 
-# Complaint Serializer
+# Serializer for the Complaint model
 class ComplaintSerializer(serializers.ModelSerializer):
-# Include user details in the response
-    category = CategorySerializer(read_only=True)  # Include category details
-    category_id = serializers.PrimaryKeyRelatedField(
-        queryset=Category.objects.all(), source='category', write_only=True
-    )  # For creating/updating with category
+    victim = PersonSerializer(required=False)  # Nested serializer for the victim
+    perpetrator = PersonSerializer(required=False)  # Nested serializer for the perpetrator
 
     class Meta:
         model = Complaint
-        fields = '__all__'
+        fields = ['complaint_id', 'reporter_nickname', 'case_category', 'complaint_text', 
+                  'complaint_audio', 'victim', 'perpetrator', 'created_at']
+        read_only_fields = ['complaint_id', 'created_at']
 
-# Audio File Serializer
-class AudioFileSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        # Separate nested victim and perpetrator data, if provided
+        victim_data = validated_data.pop('victim', None)
+        perpetrator_data = validated_data.pop('perpetrator', None)
+
+        # Create the complaint first
+        complaint = Complaint.objects.create(**validated_data)
+
+        # Create related victim and perpetrator if data is provided
+        if victim_data:
+            victim = Person.objects.create(**victim_data)
+            complaint.victim = victim
+            complaint.save()
+
+        if perpetrator_data:
+            perpetrator = Person.objects.create(**perpetrator_data)
+            complaint.perpetrator = perpetrator
+            complaint.save()
+
+        return complaint
+
+# Serializer for the CaseNote model
+class CaseNoteSerializer(serializers.ModelSerializer):
     class Meta:
-        model = AudioFile
-        fields = '__all__'
-        
+        model = CaseNote
+        fields = ['complaint', 'note_text', 'note_audio', 'created_at', 'created_by']
+        read_only_fields = ['created_at', 'complaint']
 
-# Translation Serializer
-class TranslationSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        complaint = validated_data.get('complaint')
+        case_note = CaseNote.objects.create(**validated_data)
+        return case_note
+
+# Serializer for the ComplaintStatus model
+class ComplaintStatusSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Translation
-        fields = '__all__'
+        model = ComplaintStatus
+        fields = ['complaint', 'status', 'updated_at', 'updated_by']
+        read_only_fields = ['complaint', 'updated_at']
 
-
-# Feedback Serializer
-class FeedbackSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Feedback
-        fields = '__all__'
-
-
-# Metric Serializer
-class MetricSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Metric
-        fields = '__all__'
-        
-
-# Triage Log Serializer
-class TriageLogSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TriageLog
-        fields = '__all__'
-
-
-# Caseworker Action Serializer
-class CaseworkerActionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CaseworkerAction
-        fields = '__all__'
-
-
-# Notification Serializer
-class NotificationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Notification
-        fields = '__all__'
-
+    def update(self, instance, validated_data):
+        instance.status = validated_data.get('status', instance.status)
+        instance.updated_by = validated_data.get('updated_by', instance.updated_by)
+        instance.save()
+        return instance
