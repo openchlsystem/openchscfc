@@ -9,7 +9,7 @@ from .models import (
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name', 'description', 'created_at', 'updated_at']
+        fields = '__all__'
 
 # Complaint Serializer
 class ComplaintSerializer(serializers.ModelSerializer):
@@ -21,49 +21,53 @@ class ComplaintSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Complaint
-        fields = [
-            'id', 'user', 'text', 'audio_url', 'language', 'severity',
-            'status', 'category', 'category_id', 'created_at', 'updated_at'
-        ]
+        fields = '__all__'
 
 # Audio File Serializer
 class AudioFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = AudioFile
-        fields = ['id', 'complaint', 'file_path', 'transcription', 'language', 'created_at']
+        fields = '__all__'
+        
 
 # Translation Serializer
 class TranslationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Translation
-        fields = ['id', 'complaint', 'source_language', 'target_language', 'translated_text', 'created_at']
+        fields = '__all__'
+
 
 # Feedback Serializer
 class FeedbackSerializer(serializers.ModelSerializer):
     class Meta:
         model = Feedback
-        fields = ['id', 'complaint', 'rating', 'comments', 'created_at']
+        fields = '__all__'
+
 
 # Metric Serializer
 class MetricSerializer(serializers.ModelSerializer):
     class Meta:
         model = Metric
-        fields = ['id', 'metric_type', 'value', 'caseworker', 'created_at']
+        fields = '__all__'
+        
 
 # Triage Log Serializer
 class TriageLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = TriageLog
-        fields = ['id', 'complaint', 'severity', 'keywords_detected', 'created_at']
+        fields = '__all__'
+
 
 # Caseworker Action Serializer
 class CaseworkerActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = CaseworkerAction
-        fields = ['id', 'caseworker', 'complaint', 'action', 'timestamp']
+        fields = '__all__'
+
 
 # Notification Serializer
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
-        fields = ['id', 'user', 'message', 'read_status', 'created_at']
+        fields = '__all__'
+
