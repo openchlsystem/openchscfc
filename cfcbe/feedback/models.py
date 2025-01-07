@@ -1,6 +1,17 @@
 from django.db import models
 import uuid
 
+
+# Model for storing information about Victims or Perpetrators
+class Person(models.Model):
+    name = models.CharField(max_length=255)
+    age = models.PositiveIntegerField(null=True, blank=True)
+    gender = models.CharField(max_length=50, null=True, blank=True)
+    additional_info = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
 # Enum choices for categorizing complaints
 class ComplaintCategory(models.TextChoices):
     ABUSE = 'ABUSE', 'Abuse'
@@ -19,21 +30,13 @@ class Complaint(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     # Victim and perpetrator information
-    victim = models.ForeignKey('Person', related_name='victims', on_delete=models.CASCADE, null=True, blank=True)
-    perpetrator = models.ForeignKey('Person', related_name='perpetrators', on_delete=models.CASCADE, null=True, blank=True)
+    victim = models.ForeignKey(Person, related_name='victims', on_delete=models.CASCADE, null=True, blank=True)
+    perpetrator = models.ForeignKey(Person, related_name='perpetrators', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return f"Complaint {self.complaint_id} by {self.reporter_nickname}"
 
-# Model for storing information about Victims or Perpetrators
-class Person(models.Model):
-    name = models.CharField(max_length=255)
-    age = models.PositiveIntegerField(null=True, blank=True)
-    gender = models.CharField(max_length=50, null=True, blank=True)
-    additional_info = models.TextField(blank=True, null=True)
 
-    def __str__(self):
-        return self.name
 
 # Model for Case Notes (to document updates or notes related to the case)
 class CaseNote(models.Model):

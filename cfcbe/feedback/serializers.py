@@ -23,19 +23,16 @@ class ComplaintSerializer(serializers.ModelSerializer):
         victim_data = validated_data.pop('victim', None)
         perpetrator_data = validated_data.pop('perpetrator', None)
 
-        # Create the complaint first
+        # Create related victim and perpetrator first
+        victim = Person.objects.create(**victim_data) if victim_data else None
+        perpetrator = Person.objects.create(**perpetrator_data) if perpetrator_data else None
+
+        # Add victim and perpetrator to the validated data before creating the complaint
+        validated_data['victim'] = victim
+        validated_data['perpetrator'] = perpetrator
+
+        # Create the complaint with victim and perpetrator references
         complaint = Complaint.objects.create(**validated_data)
-
-        # Create related victim and perpetrator if data is provided
-        if victim_data:
-            victim = Person.objects.create(**victim_data)
-            complaint.victim = victim
-            complaint.save()
-
-        if perpetrator_data:
-            perpetrator = Person.objects.create(**perpetrator_data)
-            complaint.perpetrator = perpetrator
-            complaint.save()
 
         return complaint
 
