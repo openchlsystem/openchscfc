@@ -1,7 +1,7 @@
 <template>
         <div class="hero">
             <div class="hero-content">
-                <h1>Welcome to <span class="highlight">SAUTI</span></h1>
+                <h1>Welcome to <span class="highlight">OPENCFFS</span></h1>
                 <p class="hero-text">
                     A safe space for children and families. <br />
                     Share your voice, find help, and grow stronger together.
