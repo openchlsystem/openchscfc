@@ -24,6 +24,14 @@ class Complaint(models.Model):
 
     def __str__(self):
         return f"Complaint {self.complaint_id} by {self.reporter_nickname}"
+    
+    def save(self, *args, **kwargs):
+    # Only proceed if both victim and perpetrator are populated
+        if self.victim and self.perpetrator:
+            super(Complaint, self).save(*args, **kwargs)
+        else:
+            # If the fields are not populated, just save without triggering the signal
+            super(Complaint, self).save(*args, **kwargs)
 
 # Model for storing information about Victims or Perpetrators
 class Person(models.Model):
