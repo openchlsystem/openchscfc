@@ -18,7 +18,7 @@
 
         <!-- Footer Section -->
         <footer class="footer">
-            <p>&copy; 2024 SAUTI. All Rights Reserved.</p>
+            <p>&copy; 2024 OPENCFFS. All Rights Reserved.</p>
         </footer>
 
         <!-- Thank You Badge Modal -->
