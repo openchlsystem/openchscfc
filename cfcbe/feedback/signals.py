@@ -10,4 +10,4 @@ def create_notification(sender, instance, created, **kwargs):
         Notification.objects.create(
             complaint=instance,
             message=message
-        )
+        )   
