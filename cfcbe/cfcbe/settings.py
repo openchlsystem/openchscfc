@@ -133,11 +133,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOW_CREDENTIALS = True
 
 # Allow specific enable in production
-# CORS_ALLOWED_ORIGINS = [
-#     "https://example.com",
-#     "https://sub.example.com",
-#     "http://localhost:3000",  # For local development
-# ]
+CORS_ALLOWED_ORIGINS = [
+  
+    "http://localhost:8080",  # For local development
+]
 
 
 CORS_ALLOW_HEADERS = [
