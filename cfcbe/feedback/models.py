@@ -23,7 +23,7 @@ class ComplaintCategory(models.TextChoices):
 # Model to represent a Complaint
 class Complaint(models.Model):
     complaint_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
-    session_id = models.UUIDField(null=True, blank=True)  # Unique session ID for each complaint
+    session_id = models.UUIDField(default=uuid.uuid4, null=True, blank=True)  # Unique session ID for each complaint
     timestamp = models.DateTimeField(auto_now_add=True)
     reporter_nickname = models.CharField(max_length=100, null=True, blank=True)  # Anonymous reporter
     case_category = models.CharField(max_length=50, choices=ComplaintCategory.choices, default=ComplaintCategory.OTHER)
