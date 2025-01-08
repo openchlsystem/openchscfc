@@ -30,6 +30,7 @@ class Complaint(models.Model):
     complaint_text = models.TextField(blank=True, null=True)  # The text version of the complaint
     complaint_audio = models.BinaryField(blank=True, null=True)  # The audio version of the complaint
     created_at = models.DateTimeField(auto_now_add=True)
+    message_id_ref = models.CharField(max_length=255, null=True, blank=True) # Unique message ID for each complaint
 
     # Victim and perpetrator information
     victim = models.ForeignKey(Person, related_name='victims', on_delete=models.CASCADE, null=True, blank=True)
