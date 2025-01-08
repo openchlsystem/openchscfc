@@ -7,7 +7,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import Complaint, Notification
 
-API_URL = "http://localhost:8000/api/v1/notifications/"
+API_URL = "https://demo-openchs.bitz-itc.com/helpline/api/msg/"
 headers = {
     "Content-Type": "application/json",
     "Authorization": "Bearer sccjqsonvfvro3v2pn80iat2me",
@@ -39,6 +39,11 @@ def generate_notification(instance):
     # serialize the complaint object to json
     complaint_data = {
         "complaint_id": str(instance.complaint_id),
+        "channel":"chat",
+        "timestamp": instance.timestamp.isoformat(),
+        "session_id": str(instance.session_id),
+        "message_id": str(instance.complaint_id),
+        "from": str(instance.session_id),
         "reporter_nickname": instance.reporter_nickname,
         "case_category": instance.case_category,
         "victim": {
@@ -60,8 +65,33 @@ def generate_notification(instance):
     print(f"Complaint json_data: {complaint_json}")
 
     # Encode the json data to base64
-    encoded_data = base64.b64encode(complaint_json.encode())
+    encoded_data = base64.b64encode(complaint_json.encode()).decode("utf-8")
     print(f"base64 data: {encoded_data}")
+
+    # serialize timestamp to json
+
+    complaint = {
+        "channel":"chat",
+        "timestamp": instance.timestamp.isoformat(),
+        "session_id": str(instance.session_id),
+        "message_id": str(instance.complaint_id),
+        "from": str(instance.session_id), 
+        "message": encoded_data,
+        "mime":"appication/json",
+    }
+
+    # complaint = {
+    #     "channel":"chat",
+    #     "timestamp":"1680783378",
+    #     "session_id":"1680783378",
+    #     "message_id":"1680783378/00001",
+    #     "from":"0700112233",
+    #     "message":"eyJjb21wbGFpbnRfaWQiOiAiNjNmODA0OGMtMDc5Ny00YjcyLWE0N2UtYWMwNTk4NDZhNmU5IiwgInJlcG9ydGVyX25pY2tuYW1lIjogIkNhcHRhaW4gIElWViIsICJjYXNlX2NhdGVnb3J5IjogIk5FR0xFQ1QiLCAidmljdGltIjogeyJuYW1lIjogIlNhcnVuaSBJVlYiLCAiYWdlIjogMTIsICJnZW5kZXIiOiAibWFsZSJ9LCAicGVycGV0cmF0b3IiOiB7Im5hbWUiOiAiTXphemkgd2EgQ2FwIElWViIsICJhZ2UiOiAyMywgImdlbmRlciI6ICJGZW1hbGUifX0=",                                                  
+    #     "mime":"appication/json",
+    # }
+
+    json_data = json.dumps(complaint)
+    print(f"json_data: {json_data}")
 
 
     # Construct the notification message
@@ -80,10 +110,13 @@ def generate_notification(instance):
     )
 
     # Send complaint to the API
-    response = requests.post(API_URL, headers=headers, data=encoded_data)
-    print(f"API Response: {response.status_code}")
-    if response.status_code != 201:
-        logging.error(f"Failed to send notification to API: {response.status_code}")
-    else:
-        logging.info(f"Notification sent to API successfully: {response.status_code}")
+    try:
+        response = requests.post(API_URL, headers=headers, data=json_data)
+        print(f"API Response: {response.status_code}")
+        if response.status_code != 201:
+            logging.error(f"Failed to send notification to API: {response.status_code}")
+        else:
+            logging.info(f"Notification sent to API successfully: {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Failed to send notification to API: {e}")
     
