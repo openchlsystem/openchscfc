@@ -109,14 +109,27 @@ def generate_notification(instance):
         message=message
     )
 
-    # Send complaint to the API
+    # Send the complaint to the API
     try:
-        response = requests.post(API_URL, headers=headers, data=json_data)
-        print(f"API Response: {response.status_code}")
-        if response.status_code != 201:
-            logging.error(f"Failed to send notification to API: {response.status_code}")
+        response = requests.post(API_URL, headers=headers, json=complaint)
+        print(f"API Response: {response.status_code}, {response.text}")
+
+        if response.status_code == 201:
+            # Parse the response JSON
+            response_data = response.json()
+
+            # Extract the `messages[0][0]` value
+            message_id = response_data.get("messages", [[]])[0][0]
+
+            if message_id:
+                # Save the `message_id` to the `message_id_ref` field
+                instance.message_id_ref = message_id
+                instance.save(update_fields=["message_id_ref"])
+                logging.info(f"message_id_ref saved: {message_id}")
+            else:
+                logging.error("message_id not found in API response.")
         else:
-            logging.info(f"Notification sent to API successfully: {response.status_code}")
+            logging.error(f"API call failed with status: {response.status_code}, Response: {response.text}")
     except requests.exceptions.RequestException as e:
         logging.error(f"Failed to send notification to API: {e}")
     
