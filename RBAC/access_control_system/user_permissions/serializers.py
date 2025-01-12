@@ -7,8 +7,8 @@ class RoleSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class UserSerializer(serializers.ModelSerializer):
-    # Use a PrimaryKeyRelatedField for simplicity during write operations
     role = serializers.PrimaryKeyRelatedField(queryset=Role.objects.all())
+    permissions = serializers.PrimaryKeyRelatedField(queryset=Permission.objects.all(), many=True, required=False)  # Add permissions to serializer
 
     class Meta:
         model = User

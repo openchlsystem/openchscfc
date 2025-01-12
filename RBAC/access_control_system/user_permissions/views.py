@@ -4,21 +4,17 @@ from rest_framework.permissions import IsAuthenticated
 from .models import User, Role, Permission, Module
 from .serializers import UserSerializer, RoleSerializer, PermissionSerializer, ModuleSerializer
 
-
-def check_permissions(user, permission_name):
+def check_permissions(self, permission_name):
     """
     Helper function to check if the user has the required permission.
     """
-    if user.is_superuser:
-        return  # Superusers bypass permission checks
-    if not user.role or not user.role.permissions.filter(name=permission_name).exists():
-        raise PermissionDenied(f"You do not have permission to {permission_name}.")
-
+    if self.is_superuser:
+        return True  # Superusers bypass all permission checks
+    if self.role and self.role.permissions.filter(name=permission_name).exists():
+        return True
+    return False
 
 class RoleViewSet(viewsets.ModelViewSet):
-    """
-    Viewset for managing roles.
-    """
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
     permission_classes = [IsAuthenticated]
@@ -42,9 +38,6 @@ class RoleViewSet(viewsets.ModelViewSet):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    """
-    Viewset for managing users.
-    """
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
@@ -55,7 +48,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return super().get_queryset()
 
     def perform_create(self, serializer):
-        check_permissions(self.request.user, "create_user")
+        check_permissions(self.request.user, "create_user")  # Permission check remains role-based
         serializer.save()
 
     def perform_update(self, serializer):
@@ -68,9 +61,6 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class PermissionViewSet(viewsets.ModelViewSet):
-    """
-    Viewset for managing permissions.
-    """
     queryset = Permission.objects.all()
     serializer_class = PermissionSerializer
     permission_classes = [IsAuthenticated]
@@ -82,9 +72,6 @@ class PermissionViewSet(viewsets.ModelViewSet):
 
 
 class ModuleViewSet(viewsets.ModelViewSet):
-    """
-    Viewset for managing modules.
-    """
     queryset = Module.objects.all()
     serializer_class = ModuleSerializer
     permission_classes = [IsAuthenticated]
