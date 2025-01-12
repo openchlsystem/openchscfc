@@ -1,101 +1,109 @@
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAuthenticated
 from .models import User, Role, Permission, Module
 from .serializers import UserSerializer, RoleSerializer, PermissionSerializer, ModuleSerializer
 
+
+def check_permissions(user, permission_name):
+    """
+    Helper function to check if the user has the required permission.
+    """
+    if user.is_superuser:
+        return  # Superusers bypass permission checks
+    if not user.role or not user.role.permissions.filter(name=permission_name).exists():
+        raise PermissionDenied(f"You do not have permission to {permission_name}.")
+
+
 class RoleViewSet(viewsets.ModelViewSet):
+    """
+    Viewset for managing roles.
+    """
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Only superusers can view roles
         if not self.request.user.is_superuser:
             raise PermissionDenied("You do not have permission to view roles.")
         return super().get_queryset()
 
     def perform_create(self, serializer):
-        # Only superusers can create roles
-        if not self.request.user.is_superuser:
-            raise PermissionDenied("You do not have permission to create roles.")
+        check_permissions(self.request.user, "create_role")
         serializer.save()
 
     def perform_update(self, serializer):
-        # Only superusers can update roles
-        if not self.request.user.is_superuser:
-            raise PermissionDenied("You do not have permission to update roles.")
+        check_permissions(self.request.user, "update_role")
         serializer.save()
 
     def perform_destroy(self, instance):
-        # Only superusers can delete roles
-        if not self.request.user.is_superuser:
-            raise PermissionDenied("You do not have permission to delete roles.")
+        check_permissions(self.request.user, "delete_role")
         instance.delete()
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """
+    Viewset for managing users.
+    """
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Only superusers can view all users
         if not self.request.user.is_superuser:
             raise PermissionDenied("You do not have permission to view users.")
         return super().get_queryset()
 
     def perform_create(self, serializer):
-        # Only superusers can create users
-        if not self.request.user.is_superuser:
-            raise PermissionDenied("You do not have permission to create users.")
+        check_permissions(self.request.user, "create_user")
         serializer.save()
 
     def perform_update(self, serializer):
-        # Only superusers can update users
-        if not self.request.user.is_superuser:
-            raise PermissionDenied("You do not have permission to update users.")
+        check_permissions(self.request.user, "update_user")
         serializer.save()
 
     def perform_destroy(self, instance):
-        # Only superusers can delete users
-        if not self.request.user.is_superuser:
-            raise PermissionDenied("You do not have permission to delete users.")
+        check_permissions(self.request.user, "delete_user")
         instance.delete()
 
 
 class PermissionViewSet(viewsets.ModelViewSet):
+    """
+    Viewset for managing permissions.
+    """
     queryset = Permission.objects.all()
     serializer_class = PermissionSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Only superusers can view permissions
         if not self.request.user.is_superuser:
             raise PermissionDenied("You do not have permission to view permissions.")
         return super().get_queryset()
 
 
 class ModuleViewSet(viewsets.ModelViewSet):
+    """
+    Viewset for managing modules.
+    """
     queryset = Module.objects.all()
     serializer_class = ModuleSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Check if the user has the required permission to view modules
-        if not self.request.user.is_superuser and not self.request.user.role.permissions.filter(name="view_module").exists():
+        if self.request.user.is_superuser:
+            return super().get_queryset()
+        if not self.request.user.role or not self.request.user.role.permissions.filter(name="view_module").exists():
             raise PermissionDenied("You do not have permission to view modules.")
         return super().get_queryset()
 
     def perform_create(self, serializer):
-        # Only users with the 'create_module' permission can create modules
-        if not self.request.user.is_superuser and not self.request.user.role.permissions.filter(name="create_module").exists():
-            raise PermissionDenied("You do not have permission to create modules.")
+        check_permissions(self.request.user, "create_module")
         serializer.save()
 
     def perform_update(self, serializer):
-        # Only users with the 'update_module' permission can update modules
-        if not self.request.user.is_superuser and not self.request.user.role.permissions.filter(name="update_module").exists():
-            raise PermissionDenied("You do not have permission to update modules.")
+        check_permissions(self.request.user, "update_module")
         serializer.save()
 
     def perform_destroy(self, instance):
-        # Only users with the 'delete_module' permission can delete modules
-        if not self.request.user.is_superuser and not self.request.user.role.permissions.filter(name="delete_module").exists():
-            raise PermissionDenied("You do not have permission to delete modules.")
+        check_permissions(self.request.user, "delete_module")
         instance.delete()
