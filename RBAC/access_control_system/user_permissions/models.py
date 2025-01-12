@@ -1,10 +1,12 @@
 from django.db import models
 
-# Create your models here.
-
 class Role(models.Model):
     name = models.CharField(max_length=50, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # Add reverse relationships to permissions and modules
+    permissions = models.ManyToManyField('Permission', through='RolePermission', related_name='roles')
+    modules = models.ManyToManyField('Module', through='RoleModule', related_name='roles')
 
     def __str__(self):
         return self.name
@@ -18,7 +20,7 @@ class User(models.Model):
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_superuser = models.BooleanField(default=False)
-    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True)  # Enforce one-to-many relationship
+    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True)  # One-to-one relationship with role
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
