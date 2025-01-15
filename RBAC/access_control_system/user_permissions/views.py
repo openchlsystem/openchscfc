@@ -1,96 +1,79 @@
 from rest_framework import viewsets
-from rest_framework.exceptions import PermissionDenied
-from rest_framework.permissions import IsAuthenticated
-from .models import User, Role, Permission, Module
-from .serializers import UserSerializer, RoleSerializer, PermissionSerializer, ModuleSerializer
-
-def check_permissions(self, permission_name):
-    """
-    Helper function to check if the user has the required permission.
-    """
-    if self.is_superuser:
-        return True  # Superusers bypass all permission checks
-    if self.role and self.role.permissions.filter(name=permission_name).exists():
-        return True
-    return False
-
-class RoleViewSet(viewsets.ModelViewSet):
-    queryset = Role.objects.all()
-    serializer_class = RoleSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        if not self.request.user.is_superuser:
-            raise PermissionDenied("You do not have permission to view roles.")
-        return super().get_queryset()
-
-    def perform_create(self, serializer):
-        check_permissions(self.request.user, "create_role")
-        serializer.save()
-
-    def perform_update(self, serializer):
-        check_permissions(self.request.user, "update_role")
-        serializer.save()
-
-    def perform_destroy(self, instance):
-        check_permissions(self.request.user, "delete_role")
-        instance.delete()
+from rest_framework.response import Response
+from rest_framework.decorators import action
+from .models import Module, Permission, Role, RolePermissions, User
+from .serializers import ModuleSerializer, PermissionSerializer, RoleSerializer, UserSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        if not self.request.user.is_superuser:
-            raise PermissionDenied("You do not have permission to view users.")
-        return super().get_queryset()
+    @action(detail=True, methods=['get'], url_path='permissions_by_module')
+    def permissions_by_module(self, request, pk=None):
+        user = self.get_object()
+        module_id = request.query_params.get('module_id')
 
-    def perform_create(self, serializer):
-        check_permissions(self.request.user, "create_user")  # Permission check remains role-based
-        serializer.save()
+        if not module_id:
+            return Response({"error": "module_id is required."}, status=400)
 
-    def perform_update(self, serializer):
-        check_permissions(self.request.user, "update_user")
-        serializer.save()
+        try:
+            module = Module.objects.get(id=module_id)
+        except Module.DoesNotExist:
+            return Response({"error": "Module not found."}, status=404)
 
-    def perform_destroy(self, instance):
-        check_permissions(self.request.user, "delete_user")
-        instance.delete()
+        # Get permissions linked to the user's role and the module
+        if user.role:
+            permissions = Permission.objects.filter(
+                role_permissions__role=user.role,
+                role_permissions__module=module  # Ensure the module is linked to the role permission
+            ).distinct()
+        else:
+            permissions = Permission.objects.none()
 
-
-class PermissionViewSet(viewsets.ModelViewSet):
-    queryset = Permission.objects.all()
-    serializer_class = PermissionSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        if not self.request.user.is_superuser:
-            raise PermissionDenied("You do not have permission to view permissions.")
-        return super().get_queryset()
+        serializer = PermissionSerializer(permissions, many=True)
+        return Response(serializer.data)
 
 
 class ModuleViewSet(viewsets.ModelViewSet):
     queryset = Module.objects.all()
     serializer_class = ModuleSerializer
-    permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        if self.request.user.is_superuser:
-            return super().get_queryset()
-        if not self.request.user.role or not self.request.user.role.permissions.filter(name="view_module").exists():
-            raise PermissionDenied("You do not have permission to view modules.")
-        return super().get_queryset()
+    @action(detail=True, methods=['get'], url_path='permissions')
+    def permissions(self, request, pk=None):
+        module = self.get_object()
 
-    def perform_create(self, serializer):
-        check_permissions(self.request.user, "create_module")
-        serializer.save()
+        # Get permissions associated with this module
+        permissions = Permission.objects.filter(
+            role_permissions__module=module
+        ).distinct()
 
-    def perform_update(self, serializer):
-        check_permissions(self.request.user, "update_module")
-        serializer.save()
+        serializer = PermissionSerializer(permissions, many=True)
+        return Response(serializer.data)
 
-    def perform_destroy(self, instance):
-        check_permissions(self.request.user, "delete_module")
-        instance.delete()
+
+class RoleViewSet(viewsets.ModelViewSet):
+    queryset = Role.objects.all()
+    serializer_class = RoleSerializer
+
+    @action(detail=True, methods=['get'], url_path='permissions')
+    def permissions(self, request, pk=None):
+        role = self.get_object()
+
+        # Get permissions associated with this role
+        permissions = Permission.objects.filter(
+            role_permissions__role=role
+        ).distinct()
+
+        serializer = PermissionSerializer(permissions, many=True)
+        return Response(serializer.data)
+
+
+class PermissionViewSet(viewsets.ModelViewSet):
+    queryset = Permission.objects.all()
+    serializer_class = PermissionSerializer
+
+    # You could also add actions for permission management here, e.g., to link permissions to roles or modules
+    # Example: @action(detail=True, methods=['post'], url_path='assign_to_role')
+    #           def assign_to_role(self, request, pk=None):
+    #               ...

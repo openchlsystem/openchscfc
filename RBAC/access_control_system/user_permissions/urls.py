@@ -1,17 +1,16 @@
-from rest_framework.routers import DefaultRouter
 from django.urls import path, include
-from .views import UserViewSet, RoleViewSet, PermissionViewSet, ModuleViewSet
-from rest_framework.authtoken.views import obtain_auth_token
+from rest_framework.routers import DefaultRouter
+from .views import ModuleViewSet, PermissionViewSet, RoleViewSet, UserViewSet
 
-# Set up the router
+# Create a router and register viewsets
 router = DefaultRouter()
-router.register(r'users', UserViewSet, basename='user')
-router.register(r'roles', RoleViewSet, basename='role')
-router.register(r'permissions', PermissionViewSet, basename='permission')
-router.register(r'modules', ModuleViewSet, basename='module')
+router.register(r'modules', ModuleViewSet, basename='modules')
+router.register(r'permissions', PermissionViewSet, basename='permissions')
+router.register(r'roles', RoleViewSet, basename='roles')
+router.register(r'users', UserViewSet, basename='users')
 
-# Define app-specific URLs
+# Define urlpatterns
 urlpatterns = [
-    path('api-token-auth/', obtain_auth_token),
-    path('api/', include(router.urls)),
+    # Include all routes registered in the router
+    path('', include(router.urls)),
 ]

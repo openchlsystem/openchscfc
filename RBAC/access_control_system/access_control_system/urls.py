@@ -21,4 +21,3 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('user_permissions.urls')),  # Include the app-specific URLs
 ]
-
