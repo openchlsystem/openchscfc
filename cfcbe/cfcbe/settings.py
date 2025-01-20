@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'feedback',
     'ai',
     'corsheaders',
+    'emailfeedback',
 ]
 
 MIDDLEWARE = [
