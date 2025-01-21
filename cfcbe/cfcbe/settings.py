@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'feedback',
     'ai',
     'corsheaders',
+    'whatsapp',
 ]
 
 MIDDLEWARE = [
@@ -158,3 +159,5 @@ CORS_ALLOW_METHODS = [
     'OPTIONS',
 ]
 
+WHATSAPP_API_URL = "https://api.whatsapp.com/send"
+WHATSAPP_API_TOKEN = "your_api_token"
