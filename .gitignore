@@ -80,3 +80,8 @@ logs/
 *.temp
 *.swp
 *~
+
+# database
+cfcbe/db.sqlite3
+
+
