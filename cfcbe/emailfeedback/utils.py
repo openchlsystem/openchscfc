@@ -52,19 +52,7 @@ def fetch_emails(email_address, email_password, imap_host="mail.bitz-itc.com"):
                     continue  # Skip this email if the date is invalid
 
             # Extract email body
-            body = ""
-            if msg.is_multipart():
-                for part in msg.walk():
-                    # Check for text/plain parts
-                    if (
-                        part.get_content_type() == "text/plain"
-                        and part.get_content_disposition() is None
-                    ):
-                        body = part.get_payload(decode=True).decode()
-                        break
-            else:
-                # Handle non-multipart emails
-                body = msg.get_payload(decode=True).decode()
+            body = extract_email_body(msg)
 
             # Save to the database if it doesn't already exist
             if not Email.objects.filter(
@@ -89,74 +77,83 @@ def fetch_emails(email_address, email_password, imap_host="mail.bitz-itc.com"):
     except Exception as e:
         print(f"An error occurred: {e}")
 
+def extract_email_body(msg):
+    """
+    Extracts the email body, ignoring non-text parts like images.
+    """
+    body = ""
+    if msg.is_multipart():
+        for part in msg.walk():
+            # Check for text content
+            if part.get_content_type() in ["text/plain", "text/html"]:
+                try:
+                    # Decode the payload to a string
+                    body += part.get_payload(decode=True).decode("utf-8", errors="replace")
+                except Exception as e:
+                    logging.error(f"Failed to decode part: {e}")
+    else:
+        # For non-multipart messages
+        try:
+            if msg.get_content_type() in ["text/plain", "text/html"]:
+                body = msg.get_payload(decode=True).decode("utf-8", errors="replace")
+        except Exception as e:
+            logging.error(f"Failed to decode body: {e}")
+    return body
+
 
 def forward_email_to_main_system(email):
     """
     Sends the email details to the main system via a POST request.
-
     :param email: Email object to be forwarded
     """
-    # Define the API endpoint and authentication details
-    api_url = "https://demo-openchs.bitz-itc.com/helpline/api/msg/"  # Replace with the actual URL
+    # API configuration
+    api_url = "https://demo-openchs.bitz-itc.com/helpline/api/msg/"
     headers = {
         "Content-Type": "application/json",
         "Authorization": "Bearer sccjqsonvfvro3v2pn80iat2me",
     }
-    # Construct the payload
+
+    # Sanitize and construct payload
+    def sanitize_text(text):
+        if text:
+            return text.encode("utf-8", errors="replace").decode("utf-8")
+        return text
+
     payload = {
-        "sender": email.sender,
-        "recipient": email.recipient,
-        "subject": email.subject,
-        "body": email.body,
-        "received_date": email.received_date.isoformat(),  # Convert to ISO format
+        "sender": sanitize_text(email.sender),
+        "recipient": sanitize_text(email.recipient),
+        "subject": sanitize_text(email.subject),
+        "body": sanitize_text(email.body),
+        "received_date": email.received_date.isoformat(),
         "is_read": email.is_read,
     }
 
-    print(f"The email is: %s" % email)
-
-    # Convert the dictionary to json
-    payload_json = json.dumps(payload)
-    # print(f"Payload json_data: {payload_json}")
-
-    # Encode the json data to base64
-    encoded_data = base64.b64encode(payload_json.encode()).decode("utf-8")
-    # print(f"base64 data: {encoded_data}")
-
-    complaint = {
-        "channel": "chat",
-        "timestamp": email.received_date.isoformat(),
-        "session_id": "str(instance.session_id)",
-        "message_id": str(email.id),
-        "from": "str(instance.session_id)",
-        "message": encoded_data,
-        "mime": "appication/json",
-    }
+    logging.info(f"The email is: {email}")
+    logging.info(f"Payload JSON: {payload}")
 
     try:
-        # Send the POST request
+        # Base64 encoding
+        payload_json = json.dumps(payload)
+        encoded_data = base64.b64encode(payload_json.encode("utf-8")).decode("utf-8")
+        logging.info(f"Base64 Encoded Data: {encoded_data}")
+
+        # Construct complaint
+        complaint = {
+            "channel": "chat",
+            "timestamp": email.received_date.isoformat(),
+            "session_id": "str(instance.session_id)",  # Replace or derive session_id
+            "message_id": str(email.id),
+            "from": "str(instance.session_id)",  # Replace or derive session_id
+            "message": encoded_data,
+            "mime": "application/json",
+        }
+
+        # Send POST request
         response = requests.post(api_url, json=complaint, headers=headers)
-        print(f"API Response: {response.status_code}, {response.text}")
+        logging.info(f"API Response: {response.status_code}, {response.text}")
         response.raise_for_status()
 
-        # if response.status_code == 201:
-        #     # Parse the response JSON
-        #     response_data = response.json()
-
-        #     # # Extract the `messages[0][0]` value
-        #     # message_id = response_data.get("messages", [[]])[0][0]
-
-        #     # if message_id:
-        #     #     # Save the `message_id` to the `message_id_ref` field
-        #     #     instance.message_id_ref = message_id
-        #     #     instance.save(update_fields=["message_id_ref"])
-        #     #     logging.info(f"message_id_ref saved: {message_id}")
-        #     # else:
-        #     #     logging.error("message_id not found in API response.")
-        # else:
-        #     logging.error(
-        #         f"API call failed with status: {response.status_code}, Response: {response.text}"
-        #     )
+    except requests.exceptions.HTTPError as e:
+        logging.error(f"HTTP error occurred: {e} - Response: {response.text}")
     except requests.exceptions.RequestException as e:
-        # Log error details
         logging.error(f"Failed to forward email: {email.subject}. Error: {e}")
-        return None
