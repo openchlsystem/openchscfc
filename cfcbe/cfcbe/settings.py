@@ -163,3 +163,24 @@ CORS_ALLOW_METHODS = [
 
 WHATSAPP_API_URL = "https://api.whatsapp.com/send"
 WHATSAPP_API_TOKEN = "your_api_token"
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}
