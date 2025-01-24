@@ -81,7 +81,3 @@ logs/
 *.swp
 *~
 
-# database
-cfcbe/db.sqlite3
-
-
