@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'emailfeedback',
     'whatsapp',
-    
+    'transcription'
 ]
 
 MIDDLEWARE = [
