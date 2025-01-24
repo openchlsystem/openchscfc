@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import TriageRule, TriageAnalysis, Department, CaseHistory, ComplaintRouting, Complaint
+from .models import AudioFile, RawData, TriageRule, TriageAnalysis, Department, CaseHistory, ComplaintRouting, Complaint
 
 class TriageRuleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,3 +30,16 @@ class ComplaintSerializer(serializers.ModelSerializer):
     class Meta:
         model = Complaint
         fields = '__all__'
+
+
+class AudioFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AudioFile
+        fields = ['unique_id', 'audio_data']
+
+class RawDataSerializer(serializers.ModelSerializer):
+    unique_id = AudioFileSerializer()  # Nested serializer to include AudioFile data
+
+    class Meta:
+        model = RawData
+        fields = ['unique_id', 'date', 'talk_time', 'case_id', 'narrative', 'plan', 'main_category', 'sub_category', 'gbv']
