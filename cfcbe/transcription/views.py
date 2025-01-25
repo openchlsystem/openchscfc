@@ -15,10 +15,10 @@ ssl._create_default_https_context = ssl._create_unverified_context
 # model = whisper.load_model("small", download_root=os.path.dirname(MODEL_PATH), in_memory=False)
 
 # Manually specify the model path
-MODEL_PATH = os.path.expanduser("~/.cache/whisper/whisper-small.pt")
+# MODEL_PATH = os.path.expanduser("~/.cache/whisper/whisper-small.pt")
 
 # Load the model from the local file
-model = whisper.load_model(MODEL_PATH, device="cuda" if torch.cuda.is_available() else "cpu")
+model = whisper.load_model("turbo", device="cuda" if torch.cuda.is_available() else "cpu")
 
 
 @api_view(["POST"])
