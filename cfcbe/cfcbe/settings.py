@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import warnings
+
+# Suppress FutureWarning from torch.load in Whisper
+warnings.filterwarnings("ignore", category=FutureWarning, module="whisper")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -45,7 +49,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'emailfeedback',
     'whatsapp',
-    
+    'transcription'
 ]
 
 MIDDLEWARE = [
