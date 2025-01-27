@@ -22,4 +22,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/feedback/', include('feedback.urls')),
     path('api/ai/', include('ai.urls')),
+    path('api/whatsapp/', include('whatsapp.urls')),
+    path('api/emailfeedback/', include('emailfeedback.urls')),
+    path('api/transcription/',include('transcription.urls')),
 ]

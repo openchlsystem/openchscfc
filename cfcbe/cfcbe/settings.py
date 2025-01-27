@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import warnings
+
+# Suppress FutureWarning from torch.load in Whisper
+warnings.filterwarnings("ignore", category=FutureWarning, module="whisper")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -43,6 +47,9 @@ INSTALLED_APPS = [
     'feedback',
     'ai',
     'corsheaders',
+    'emailfeedback',
+    'whatsapp',
+    'transcription'
 ]
 
 MIDDLEWARE = [
@@ -158,3 +165,26 @@ CORS_ALLOW_METHODS = [
     'OPTIONS',
 ]
 
+WHATSAPP_API_URL = "https://api.whatsapp.com/send"
+WHATSAPP_API_TOKEN = "your_api_token"
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}
