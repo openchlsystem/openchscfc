@@ -1,8 +1,9 @@
 import os
+from django.http import HttpResponseBadRequest, JsonResponse
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from .models import AudioFile, ModelTranscription, ModelVersion, TriageRule, TriageAnalysis, Department, CaseHistory, ComplaintRouting, Complaint
@@ -97,22 +98,38 @@ class AudioFileViewSet(viewsets.ModelViewSet):
             return Response({"error": "No audio file provided."}, status=status.HTTP_400_BAD_REQUEST)
 
         audio_file = request.FILES['audio_file']
-        file_name = os.path.splitext(audio_file.name)[0]  # Extract filename without extension
-
-        # Ensure the audio file is read correctly
-        audio_binary = audio_file.read()
-        if not audio_binary:
-            return Response({"error": "Uploaded file is empty."}, status=status.HTTP_400_BAD_REQUEST)
-
+        # Sanitize and validate file name
+        file_name = os.path.basename(audio_file.name).strip()
+        if not file_name:
+            return HttpResponseBadRequest("Invalid file name")
+        
+        # Check for existing file with the same name
+        if AudioFile.objects.filter(file_name=file_name).exists():
+            return HttpResponseBadRequest("File with this name already exists")
+        
         try:
-            # Try to fetch an existing record
-            audio_instance, created = AudioFile.objects.get_or_create(file_name=file_name)
-            audio_instance.audio_file = audio_binary
-            audio_instance.save()
+            # Read file content as binary
+            audio_data = audio_file.read()
+            
+            # Create and save new audio file record
+            new_audio = AudioFile(
+                file_name=file_name,
+                audio_file=audio_data
+            )
+            new_audio.save()
+            
+            return JsonResponse({
+                'status': 'success',
+                'id': new_audio.id,
+                'file_name': new_audio.file_name
+            }, status=201)
+            
+        except IntegrityError:
+            # Handle race condition for duplicate file names
+            return HttpResponseBadRequest("File with this name already exists")
         except Exception as e:
-            return Response({"error": f"Database error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return HttpResponseBadRequest(f"Error processing file: {str(e)}")
 
-        return Response(AudioFileSerializer(audio_instance).data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
     
 class ModelTranscriptionViewSet(viewsets.ModelViewSet):
