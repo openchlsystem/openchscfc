@@ -6,10 +6,7 @@ class AudioFile(models.Model):
     feature_text = models.TextField(blank=True, null=True)
 
     def __str__(self):
-<<<<<<< HEAD
-        return self.file_name
-=======
-        return f"Transcription {self.id} - WER: {self.wer}"
+        return self.unique_id
 
 
 from django.db import models
@@ -17,16 +14,15 @@ from django.db import models
 import uuid
 
 # Audio File Model (to manage audio files and metadata)
-class AudioFile(models.Model):
-    case_record = models.OneToOneField('CaseRecord', related_name='audio_file', on_delete=models.CASCADE)
-    file = models.FileField(upload_to='audio/')  # Path to the uploaded audio file
-    file_size = models.PositiveIntegerField()  # Size of the audio file in bytes
-    duration = models.FloatField()  # Duration of the audio file in seconds (you could extract this on upload)
-    created_at = models.DateTimeField(auto_now_add=True)
+# class AudioFile(models.Model):
+#     case_record = models.OneToOneField('CaseRecord', related_name='audio_file', on_delete=models.CASCADE)
+#     file = models.FileField(upload_to='audio/')  # Path to the uploaded audio file
+#     file_size = models.PositiveIntegerField()  # Size of the audio file in bytes
+#     duration = models.FloatField()  # Duration of the audio file in seconds (you could extract this on upload)
+#     created_at = models.DateTimeField(auto_now_add=True)
     
-    def __str__(self):
-        return f"Audio for {self.case_record.case_id}"
->>>>>>> 8ac1186 (Updated files)
+#     def __str__(self):
+#         return f"Audio for {self.case_record.case_id}"
 
 # Transcription Model
 class Transcription_done(models.Model):

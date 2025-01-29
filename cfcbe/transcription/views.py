@@ -1,12 +1,12 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .models import ModelTranscription, CaseRecord
+from .models import ModelTranscription, CaseRecord,AudioFile
 import whisper
 import os
 from jiwer import wer
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from .models import Transcription, CaseRecord, AudioFile
+from .models import ModelTranscription, CaseRecord, AudioFile
 from .serializers import TranscriptionSerializer, CaseRecordSerializer, AudioFileSerializer
 
 import ssl
@@ -40,7 +40,7 @@ def transcribe_audio(request):
     true_transcription = request.data.get("true_transcription", None)
 
     # Save the uploaded audio file
-    audio_instance = ModelTranscription(
+    audio_instance = AudioFile(
         audio_file=request.FILES["audio_file"],
     )
     audio_instance.save()
@@ -84,12 +84,12 @@ class AudioFileListCreateView(generics.ListCreateAPIView):
 
 # Generic view for Transcription Model (List, Create, Retrieve, Update, Destroy)
 class TranscriptionListCreateView(generics.ListCreateAPIView):
-    queryset = Transcription.objects.all()
+    queryset = ModelTranscription.objects.all()
     serializer_class = TranscriptionSerializer
     #permission_classes = [IsAuthenticated]  # Adjust permissions as needed
 
 class TranscriptionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Transcription.objects.all()
+    queryset = ModelTranscription.objects.all()
     serializer_class = TranscriptionSerializer
     #permission_classes = [IsAuthenticated]  # Adjust permissions as needed
 
