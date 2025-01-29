@@ -1,10 +1,8 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .models import Transcription, CaseRecord
-from .serializers import TranscriptionSerializer
+from .models import ModelTranscription, CaseRecord
 import whisper
 import os
-import torch
 from jiwer import wer
 
 import ssl
@@ -38,9 +36,8 @@ def transcribe_audio(request):
     true_transcription = request.data.get("true_transcription", None)
 
     # Save the uploaded audio file
-    audio_instance = Transcription(
+    audio_instance = ModelTranscription(
         audio_file=request.FILES["audio_file"],
-        true_transcription=true_transcription
     )
     audio_instance.save()
 

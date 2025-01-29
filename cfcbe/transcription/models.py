@@ -1,21 +1,15 @@
 from django.db import models
 
-class Transcription(models.Model):
-    audio_file = models.FileField(upload_to="uploads/")
-    true_transcription = models.TextField(blank=True, null=True)
-    model_transcription = models.TextField(blank=True, null=True)
-    wer = models.FloatField(blank=True, null=True)  # Word Error Rate
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+class AudioFile(models.Model):
+    unique_id = models.CharField(max_length=50, unique=True)
+    audio_file = models.BinaryField()
+    feature_text = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"Transcription {self.id} - WER: {self.wer}"
-
-
-
+        return self.file_name
 
 class CaseRecord(models.Model):
-    unique_id = models.CharField(max_length=20, unique=True)
+    unique_id = models.OneToOneField('AudioFile', on_delete=models.CASCADE)
     date = models.DateTimeField()
     talk_time = models.TimeField()
     case_id = models.CharField(max_length=20)
@@ -27,3 +21,21 @@ class CaseRecord(models.Model):
     
     def __str__(self):
         return f"Case {self.case_id} - {self.main_category}"
+
+class ModelVersion(models.Model):
+    version = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.version
+
+class ModelTranscription(models.Model):
+    audio_id = models.ForeignKey(AudioFile, on_delete=models.CASCADE)
+    model_version_id = models.ForeignKey(ModelVersion, on_delete=models.CASCADE)
+    predicted_text = models.TextField()
+    wer = models.FloatField()
+    model_version = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Transcription for {self.audio_id.file_name} - {self.model_version}"

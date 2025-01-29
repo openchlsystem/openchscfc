@@ -83,30 +83,3 @@ class CaseRouting(models.Model):
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='case_routings')
     rationale = models.TextField()  # Why it was routed here (keywords, sentiment, etc.)
     created_at = models.DateTimeField(auto_now_add=True)
-    
-
-
-
-class AudioFile(models.Model):
-    # Model for storing audio files
-    unique_id = models.CharField(max_length=50, unique=True)
-    audio_data = models.BinaryField()  # Save the audio as binary data
-
-    def __str__(self):
-        return self.unique_id
-
-class RawData(models.Model):
-    # Model to represent the raw data from the CSV
-    unique_id = models.OneToOneField('AudioFile', on_delete=models.CASCADE)
-    date = models.DateTimeField()
-    talk_time = models.TimeField()
-    case_id = models.IntegerField()
-    narrative = models.TextField()
-    plan = models.TextField()
-    main_category = models.CharField(max_length=100)
-    sub_category = models.CharField(max_length=100)
-    gbv = models.BooleanField()  # Boolean field for GBV (Yes/No)
-
-    def __str__(self):
-        return f"Case {self.case_id} - {self.main_category}"
-

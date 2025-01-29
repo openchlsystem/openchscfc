@@ -13,12 +13,12 @@ class Person(models.Model):
         return self.name
 
 # Enum choices for categorizing complaints
-class ComplaintCategory(models.TextChoices):
-    ABUSE = 'ABUSE', 'Abuse'
-    HARASSMENT = 'HARASSMENT', 'Harassment'
-    FRAUD = 'FRAUD', 'Fraud'
-    NEGLECT = 'NEGLECT', 'Neglect'
-    OTHER = 'OTHER', 'Other'
+# class ComplaintCategory(models.TextChoices):
+#     ABUSE = 'ABUSE', 'Abuse'
+#     HARASSMENT = 'HARASSMENT', 'Harassment'
+#     FRAUD = 'FRAUD', 'Fraud'
+#     NEGLECT = 'NEGLECT', 'Neglect'
+#     OTHER = 'OTHER', 'Other'
 
 # Model to represent a Complaint
 class Complaint(models.Model):
