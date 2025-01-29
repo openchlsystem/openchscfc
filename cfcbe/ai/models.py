@@ -88,25 +88,27 @@ class CaseRouting(models.Model):
 
 
 class AudioFile(models.Model):
-    # Model for storing audio files
-    unique_id = models.CharField(max_length=50, unique=True)
-    audio_data = models.BinaryField()  # Save the audio as binary data
+    DEFAULT_FILE_NAME = 'unknown_audio'  # Default value for file_name
+    file_name = models.CharField(max_length=255, unique=True, default=DEFAULT_FILE_NAME)
+    audio_file = models.BinaryField()
+    feature_text = models.TextField(blank=True, null=True)
+    narrative = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return self.unique_id
+        return self.file_name
 
-class RawData(models.Model):
-    # Model to represent the raw data from the CSV
-    unique_id = models.OneToOneField('AudioFile', on_delete=models.CASCADE)
-    date = models.DateTimeField()
-    talk_time = models.TimeField()
-    case_id = models.IntegerField()
-    narrative = models.TextField()
-    plan = models.TextField()
-    main_category = models.CharField(max_length=100)
-    sub_category = models.CharField(max_length=100)
-    gbv = models.BooleanField()  # Boolean field for GBV (Yes/No)
+class ModelVersion(models.Model):
+    version = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
-        return f"Case {self.case_id} - {self.main_category}"
+        return self.version
 
+class ModelTranscription(models.Model):
+    audio_id = models.ForeignKey(AudioFile, on_delete=models.CASCADE)
+    model_version_id = models.ForeignKey(ModelVersion, on_delete=models.CASCADE)
+    predicted_text = models.TextField()
+    wer = models.FloatField()
+    model_version = models.CharField(max_length=50)
+
+    def __str__(self):
+        return f"{self.audio_id.file_name} - {self.model_version}"
