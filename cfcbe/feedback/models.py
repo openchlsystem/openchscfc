@@ -26,7 +26,7 @@ class Complaint(models.Model):
     session_id = models.UUIDField(default=uuid.uuid4, null=True, blank=True)  # Unique session ID for each complaint
     timestamp = models.DateTimeField(auto_now_add=True)
     reporter_nickname = models.CharField(max_length=100, null=True, blank=True)  # Anonymous reporter
-    case_category = models.CharField(max_length=50, choices=ComplaintCategory.choices, default=ComplaintCategory.OTHER)
+    case_category = models.CharField(max_length=255,default="Not Specified", null=True, blank=True)  # Category of the complaint
     complaint_text = models.TextField(blank=True, null=True)  # The text version of the complaint
     complaint_audio = models.BinaryField(blank=True, null=True)  # The audio version of the complaint
     created_at = models.DateTimeField(auto_now_add=True)
