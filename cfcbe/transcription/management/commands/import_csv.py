@@ -1,7 +1,7 @@
 import csv
 from datetime import datetime
 from django.core.management.base import BaseCommand
-from ai.models import RawData, AudioFile
+from transcription.models import AudioFile, CaseRecord
 from django.utils.timezone import make_aware
 
 class Command(BaseCommand):
@@ -22,7 +22,7 @@ class Command(BaseCommand):
                         audio_file = AudioFile.objects.get(unique_id=row['UNIQUEID'])
 
                         # Check if RawData exists for this audio file and update it, else create a new record
-                        raw_data, created = RawData.objects.update_or_create(
+                        raw_data, created = CaseRecord.objects.update_or_create(
                             unique_id=audio_file,
                             defaults={
                                 'date': make_aware(datetime.strptime(row['DATE'], '%d %b %Y %H:%M')),  # Add time zone awareness

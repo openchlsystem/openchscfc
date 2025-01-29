@@ -1,6 +1,6 @@
 import os
 from django.core.management.base import BaseCommand
-from ai.models import AudioFile
+from transcription.models import AudioFile
 
 class Command(BaseCommand):
     help = 'Save audio files as binary data in the AudioFile model'
@@ -25,7 +25,7 @@ class Command(BaseCommand):
                     unique_id = os.path.splitext(filename)[0]  # Use the filename (without extension) as unique_id
 
                     # Save the audio file to the database
-                    audio_file_instance = AudioFile(unique_id=unique_id, audio_data=audio_data)
+                    audio_file_instance = AudioFile(unique_id=unique_id, audio_file=audio_data)
                     audio_file_instance.save()
 
                     self.stdout.write(self.style.SUCCESS(f"Saved audio file: {filename}"))
