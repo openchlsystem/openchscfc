@@ -14,7 +14,7 @@ class ComplaintSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Complaint
-        fields = ['complaint_id', 'reporter_nickname', 'case_category', 'complaint_text', 
+        fields = ['complaint_id', 'reporter_nickname', 'complaint_text', 
                   'complaint_audio', 'victim', 'perpetrator', 'created_at']
         read_only_fields = ['complaint_id', 'created_at']
 
