@@ -2,14 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 
-# Router setup
-router = DefaultRouter()
-router.register(r'audio', views.AudioFileViewSet, basename='audio')
-router.register(r'transcriptions', views.ModelTranscriptionViewSet, basename='transcriptions')
-router.register(r'model_versions', views.ModelVersionViewSet, basename='model_versions')
-
 urlpatterns = [
-    path('data/', include(router.urls)),
     path('triage-rules/', views.TriageRuleListCreateView.as_view(), name='triage-rule-list-create'),
     path('triage-rules/<int:pk>/', views.TriageRuleRetrieveUpdateDestroyView.as_view(), name='triage-rule-detail'),
     path('triage-analyses/', views.TriageAnalysisListCreateView.as_view(), name='triage-analysis-list-create'),

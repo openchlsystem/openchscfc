@@ -83,32 +83,3 @@ class CaseRouting(models.Model):
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='case_routings')
     rationale = models.TextField()  # Why it was routed here (keywords, sentiment, etc.)
     created_at = models.DateTimeField(auto_now_add=True)
-    
-
-
-
-class AudioFile(models.Model):
-    DEFAULT_FILE_NAME = 'unknown_audio'  # Default value for file_name
-    file_name = models.CharField(max_length=255, unique=True, default=DEFAULT_FILE_NAME)
-    audio_file = models.BinaryField()
-    feature_text = models.TextField(blank=True, null=True)
-    narrative = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return self.file_name
-
-class ModelVersion(models.Model):
-    version = models.CharField(max_length=50, unique=True)
-
-    def __str__(self):
-        return self.version
-
-class ModelTranscription(models.Model):
-    audio_id = models.ForeignKey(AudioFile, on_delete=models.CASCADE)
-    model_version_id = models.ForeignKey(ModelVersion, on_delete=models.CASCADE)
-    predicted_text = models.TextField()
-    wer = models.FloatField()
-    model_version = models.CharField(max_length=50)
-
-    def __str__(self):
-        return f"{self.audio_id.file_name} - {self.model_version}"
