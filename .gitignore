@@ -86,3 +86,4 @@ cfcbe/uploads/
 __pycache__/
 *.pyc
 db.sqlite3
+cfcbe/cfcbe/__pycache__/
