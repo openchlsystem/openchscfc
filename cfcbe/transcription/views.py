@@ -4,6 +4,10 @@ from .models import ModelTranscription, CaseRecord
 import whisper
 import os
 from jiwer import wer
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
+from .models import Transcription, CaseRecord, AudioFile
+from .serializers import TranscriptionSerializer, CaseRecordSerializer, AudioFileSerializer
 
 import ssl
 from rest_framework import generics
@@ -71,12 +75,33 @@ def transcribe_audio(request):
         return Response({"error": str(e)}, status=500)
 
 
-# case records view for testing
 
+# Generic view for AudioFile Model (List and Create)
+class AudioFileListCreateView(generics.ListCreateAPIView):
+    queryset = AudioFile.objects.all()
+    serializer_class = AudioFileSerializer
+    #permission_classes = [IsAuthenticated]  # Adjust permissions as needed
+
+# Generic view for Transcription Model (List, Create, Retrieve, Update, Destroy)
+class TranscriptionListCreateView(generics.ListCreateAPIView):
+    queryset = Transcription.objects.all()
+    serializer_class = TranscriptionSerializer
+    #permission_classes = [IsAuthenticated]  # Adjust permissions as needed
+
+class TranscriptionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Transcription.objects.all()
+    serializer_class = TranscriptionSerializer
+    #permission_classes = [IsAuthenticated]  # Adjust permissions as needed
+
+# Generic view for CaseRecord Model (List, Create, Retrieve, Update, Destroy)
 class CaseRecordListCreateView(generics.ListCreateAPIView):
     queryset = CaseRecord.objects.all()
     serializer_class = CaseRecordSerializer
+    #permission_classes = [IsAuthenticated]  # Adjust permissions as needed
 
 class CaseRecordRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CaseRecord.objects.all()
     serializer_class = CaseRecordSerializer
+    #permission_classes = [IsAuthenticated]  # Adjust permissions as needed
+
+
