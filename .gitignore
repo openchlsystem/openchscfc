@@ -83,3 +83,6 @@ logs/
 
 cfcbe/db.sqlite3
 cfcbe/uploads/
+__pycache__/
+*.pyc
+db.sqlite3
