@@ -1,5 +1,4 @@
 from django.urls import path
-from .views import transcribe_audio
 from .views import transcribe_audio, AudioFileListCreateView, TranscriptionListCreateView, TranscriptionRetrieveUpdateDestroyView, CaseRecordListCreateView, CaseRecordRetrieveUpdateDestroyView
 
 urlpatterns = [
