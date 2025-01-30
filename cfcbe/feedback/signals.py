@@ -7,10 +7,10 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import Complaint, Notification
 
-API_URL = "https://demo-openchs.bitz-itc.com/helpline/api/msg/"
+API_URL = "http://127.0.0.1:8000/api/feedback/complaints/"
 headers = {
     "Content-Type": "application/json",
-    "Authorization": "Bearer sccjqsonvfvro3v2pn80iat2me",
+    # "Authorization": "Bearer sccjqsonvfvro3v2pn80iat2me",
 }
 
 @receiver(post_save, sender=Complaint)
@@ -77,7 +77,8 @@ def generate_notification(instance):
         "message_id": str(instance.complaint_id),
         "from": str(instance.session_id), 
         "message": encoded_data,
-        "mime":"appication/json",
+        "mime": "application/json",
+
     }
 
     # complaint = {

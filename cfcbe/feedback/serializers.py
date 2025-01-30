@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Complaint, CaseNote, ComplaintStatus, Person
+from .models import Complaint, CaseNote, ComplaintStatus, Person,Voicenotes
 
 # Serializer for the Person model (Victim/Perpetrator)
 class PersonSerializer(serializers.ModelSerializer):
@@ -60,3 +60,9 @@ class ComplaintStatusSerializer(serializers.ModelSerializer):
         instance.updated_by = validated_data.get('updated_by', instance.updated_by)
         instance.save()
         return instance
+
+# Serializer for Voicenotes model
+class VoicenotesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Voicenotes
+        fields = ['id', 'voicenote', 'created_at']

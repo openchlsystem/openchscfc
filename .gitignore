@@ -82,6 +82,12 @@ logs/
 *~
 
 cfcbe/db.sqlite3
+cfcbe/uploads/
 __pycache__/
 *.pyc
 db.sqlite3
+cfcbe/cfcbe/__pycache__/
+cfcbe/db.sqlite3
+cfcbe/**/migrations/
+cfcbe/db.sqlite3
+cfcbe/**/migrations/
