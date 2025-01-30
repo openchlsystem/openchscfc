@@ -26,4 +26,4 @@ class CaseRecordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CaseRecord
-        fields = ['unique_id', 'date', 'talk_time', 'case_id', 'narrative', 'plan', 'main_category', 'sub_category', 'gbv']
+        fields = ['unique_id', 'date', 'talk_time', 'case_id', 'audio_file', 'narrative', 'transcriptions','plan', 'main_category', 'sub_category', 'gbv']
