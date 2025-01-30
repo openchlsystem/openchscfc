@@ -1,9 +1,11 @@
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .models import Complaint, CaseNote, ComplaintStatus
-from .serializers import ComplaintSerializer, CaseNoteSerializer, ComplaintStatusSerializer
-from rest_framework.views import APIView
+from .models import Complaint, CaseNote, ComplaintStatus, Voicenotes
+from .serializers import ComplaintSerializer, CaseNoteSerializer, ComplaintStatusSerializer, VoicenotesSerializer
+from rest_framework.views import APIView, Response
+from rest_framework import generics
+
 
 # View for creating and retrieving complaints
 class ComplaintViewSet(viewsets.ModelViewSet):
@@ -100,3 +102,13 @@ def submit_feedback(request):
         return Response({'message': 'Feedback submitted successfully'}, status=status.HTTP_200_OK)
     return Response({'error': 'Feedback cannot be empty'}, status=status.HTTP_400_BAD_REQUEST)
 
+# Generic view for Voicenotes Model (List, Create, Retrieve, Update, Destroy)
+class VoicenotesListCreateView(generics.ListCreateAPIView):
+    queryset = Voicenotes.objects.all()
+    serializer_class = VoicenotesSerializer
+    #permission_classes = [IsAuthenticated]  # Adjust permissions as needed
+
+class VoicenotesRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Voicenotes.objects.all()
+    serializer_class = VoicenotesSerializer
+    #permission_classes = [IsAuthenticated]  # Adjust permissions as needed

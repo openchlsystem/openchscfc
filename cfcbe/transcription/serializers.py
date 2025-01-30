@@ -25,4 +25,29 @@ class ModelTranscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ModelTranscription
         fields = ['audio_id', 'model_version_id', 'predicted_text', 'wer', 'model_version', 'created_at', 'updated_at']
+from .models import  CaseRecord, AudioFile, Transcription_done
 
+# Serializer for AudioFile model
+class AudioFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AudioFile
+        fields = ['id', 'file', 'file_size', 'duration', 'created_at']
+
+# Serializer for Transcription model
+class TranscriptionSerializer(serializers.ModelSerializer):
+    # Include related AudioFile details in the serialization
+    #audio_file = AudioFileSerializer(read_only=True)  # Displaying audio file details
+
+    class Meta:
+        model = ModelTranscription
+        fields = '__all__'
+
+# Serializer for CaseRecord model
+class CaseRecordSerializer(serializers.ModelSerializer):
+    # Include related AudioFile and Transcriptions
+    audio_file = AudioFileSerializer(read_only=True)
+    transcriptions = TranscriptionSerializer(read_only=True, many=True)  # Nested serializer for transcriptions
+
+    class Meta:
+        model = CaseRecord
+        fields = '__all__'

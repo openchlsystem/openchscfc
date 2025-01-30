@@ -73,3 +73,11 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for Complaint {self.complaint.complaint_id}"
+
+class Voicenotes (models.Model):
+    # complaint = models.ForeignKey('Complaint', on_delete=models.CASCADE, related_name='voicenotes')
+    voicenote = models.BinaryField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Voicenote for Complaint {self.complaint.complaint_id}"
