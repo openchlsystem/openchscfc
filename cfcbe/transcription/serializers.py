@@ -4,14 +4,7 @@ from .models import AudioFile, CaseRecord, ModelVersion, ModelTranscription
 class AudioFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = AudioFile
-        fields = ['unique_id', 'audio_file', 'feature_text']
-
-class CaseRecordSerializer(serializers.ModelSerializer):
-    unique_id = AudioFileSerializer()  # Nested serializer to include AudioFile data
-
-    class Meta:
-        model = CaseRecord
-        fields = ['unique_id', 'date', 'talk_time', 'case_id', 'narrative', 'plan', 'main_category', 'sub_category', 'gbv']
+        fields = ['unique_id', 'audio_file', 'feature_text', 'duration', 'created_at']
 
 class ModelVersionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -24,30 +17,13 @@ class ModelTranscriptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ModelTranscription
-        fields = ['audio_id', 'model_version_id', 'predicted_text', 'wer', 'model_version', 'created_at', 'updated_at']
-from .models import  CaseRecord, AudioFile, Transcription_done
+        fields = ['audio_id', 'model_version_id', 'predicted_text', 'wer', 'created_at', 'updated_at']
 
-# Serializer for AudioFile model
-class AudioFileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AudioFile
-        fields = ['id', 'file', 'file_size', 'duration', 'created_at']
-
-# Serializer for Transcription model
-class TranscriptionSerializer(serializers.ModelSerializer):
-    # Include related AudioFile details in the serialization
-    #audio_file = AudioFileSerializer(read_only=True)  # Displaying audio file details
-
-    class Meta:
-        model = ModelTranscription
-        fields = '__all__'
-
-# Serializer for CaseRecord model
 class CaseRecordSerializer(serializers.ModelSerializer):
-    # Include related AudioFile and Transcriptions
+    unique_id = AudioFileSerializer()  # Nested serializer to include AudioFile data
     audio_file = AudioFileSerializer(read_only=True)
-    transcriptions = TranscriptionSerializer(read_only=True, many=True)  # Nested serializer for transcriptions
+    transcriptions = ModelTranscriptionSerializer(read_only=True, many=True)
 
     class Meta:
         model = CaseRecord
-        fields = '__all__'
+        fields = ['unique_id', 'date', 'talk_time', 'case_id', 'audio_file', 'narrative', 'transcriptions','plan', 'main_category', 'sub_category', 'gbv']
