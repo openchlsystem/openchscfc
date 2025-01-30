@@ -2,7 +2,7 @@ from django.db import models
 
 class AudioFile(models.Model):
     unique_id = models.CharField(max_length=50, unique=True)
-    audio_file = models.FileField(upload_to="uploads/")
+    audio_file = models.FileField(upload_to="")
     feature_text = models.TextField(blank=True, null=True)
     file_size = models.PositiveIntegerField(null=True)
     duration = models.FloatField(null=True)
