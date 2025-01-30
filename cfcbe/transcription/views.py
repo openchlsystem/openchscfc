@@ -27,7 +27,6 @@ CACHE_DIR = os.path.expanduser("~/.cache/whisper/")
 MODEL_PATH = os.path.join(CACHE_DIR, f"{MODEL_SIZE}.pt")
 
 if os.path.exists(os.path.expanduser("~/.cache/whisper/large-v3-turbo.pt")):
-    print("turbo model found 🔍")
     MODEL_SIZE = "large-v3-turbo"
 
 # ✅ Check if model exists in cache before downloading
