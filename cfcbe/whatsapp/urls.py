@@ -3,11 +3,11 @@ from .views import incomingMessageList, outgoingMessageList, receive_message, se
 
 
 urlpatterns = [
-    path('webhook/', whatsapp_webhook, name='whatsapp_webhook_handler'),
+    # path('webhook/', whatsapp_webhook, name='whatsapp_webhook_handler'),
     path('notify-user/', notify_user, name='notify_user'),
     
     # URL for WhatsApp webhook verification and message handling
-    path('whatsapp/webhook/', whatsapp_webhook, name='whatsapp_webhook'),
+    path('webhook/', whatsapp_webhook, name='whatsapp_webhook'),
 
     # URL for receiving incoming messages (if separate from webhook)
     path('whatsapp/receive/', receive_message, name='receive_message'),
