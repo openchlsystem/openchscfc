@@ -27,13 +27,13 @@ class WhatsAppMessage(models.Model):
 
 from django.db import models
 
-# from accounts.models import MyUser
-
-
 class IncomingMessage(models.Model):
     contact_wa_id = models.CharField(max_length=100)
     message_text = models.TextField()
     received_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-received_at']
 
     def __str__(self):
         return f"From {self.contact_wa_id} at {self.received_at.strftime('%Y-%m-%d %H:%M:%S')}"
@@ -44,45 +44,59 @@ class OutgoingMessage(models.Model):
     sent_at = models.DateTimeField(auto_now_add=True)
     was_successful = models.BooleanField(default=False)
 
+    class Meta:
+        ordering = ['-sent_at']
+
     def __str__(self):
         return f"To {self.contact_wa_id} at {self.sent_at.strftime('%Y-%m-%d %H:%M:%S')}"
 
-class WhatsAppMessage(models.Model):
+class WhatsAppMessageDetail(models.Model):
     messaging_product = models.CharField(max_length=50)
     display_phone_number = models.CharField(max_length=15)
     phone_number_id = models.CharField(max_length=50)
-    contact_name = models.CharField(max_length=255)
+    contact_name = models.CharField(max_length=255, blank=True)
     contact_wa_id = models.CharField(max_length=15)
     message_from = models.CharField(max_length=15)
     message_id = models.CharField(max_length=255)
     message_timestamp = models.DateTimeField()
     message_text = models.TextField()
 
+    class Meta:
+        ordering = ['-message_timestamp']
+
+    def __str__(self):
+        return f"Message from {self.contact_name or self.contact_wa_id} at {self.message_timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
+
     def get_responses(self):
-        return self.whatsappresponse_set.all()
+        return self.responses.all()
 
 class WhatsAppResponse(models.Model):
-    message = models.ForeignKey(WhatsAppMessage, on_delete=models.CASCADE)
+    message = models.ForeignKey(WhatsAppMessageDetail, on_delete=models.CASCADE, related_name='responses')
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"Response at {self.timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
 
     def get_message(self):
         return self.message
 
-
 class WhatsAppConversation(models.Model):
-    messages = models.ManyToManyField(WhatsAppMessage)
-    responses = models.ManyToManyField(WhatsAppResponse)
-    
-    
+    messages = models.ManyToManyField(WhatsAppMessageDetail, related_name='conversations')
+    responses = models.ManyToManyField(WhatsAppResponse, related_name='conversations')
 
-# models.py
-
-from django.db import models
-from django.contrib.auth.models import User
+    def __str__(self):
+        return f"Conversation with {self.messages.count()} messages and {self.responses.count()} responses"
 
 class Message(models.Model):
-    # sender = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='inapp_sent_messages')
-    # receiver = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='inapp_received_messages')
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"Message at {self.timestamp.strftime('%Y-%m-%d %H:%M:%S')}"

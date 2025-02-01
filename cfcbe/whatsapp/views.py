@@ -62,7 +62,7 @@ def handle_verification_request(request):
         logging.info("Webhook verified successfully with challenge: " + hub_challenge)
         return JsonResponse(int(hub_challenge), safe=False, status=200)
     else:
-        logging.error("Verification failed with the provided token: " + hub_verify_token)
+        # logging.error("Verification failed with the provided token: " + hub_verify_token)
         return HttpResponseBadRequest("Verification failed. Check your verification token.")
 
 @csrf_exempt

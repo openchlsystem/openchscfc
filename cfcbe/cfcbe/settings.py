@@ -52,7 +52,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'emailfeedback',
     'whatsapp',
-    'transcription'
+    'transcription',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
