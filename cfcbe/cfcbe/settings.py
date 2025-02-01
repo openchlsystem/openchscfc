@@ -191,3 +191,6 @@ LOGGING = {
         'level': 'INFO',
     },
 }
+
+
+VERIFICATION_TOKEN = "19021977"
