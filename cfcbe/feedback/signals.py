@@ -10,7 +10,7 @@ from .models import Complaint, Notification
 API_URL = "https://demo-openchs.bitz-itc.com/helpline/api/msg/"
 headers = {
     "Content-Type": "application/json",
-    "Authorization": "Bearer sccjqsonvfvro3v2pn80iat2me",
+    "Authorization": "Bearer sci9de994iddqlmj8fv7r1js74",
 }
 
 @receiver(post_save, sender=Complaint)
