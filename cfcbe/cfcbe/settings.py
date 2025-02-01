@@ -147,6 +147,7 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",  # For local development
     "http://localhost:5173",  # For local development
+    "https://webform.bitz-itc.com",
 ]
 
 
