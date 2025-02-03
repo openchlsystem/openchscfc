@@ -10,7 +10,11 @@ from .models import Complaint, Notification
 API_URL = "http://127.0.0.1:8000/api/feedback/complaints/"
 HEADERS = {
     "Content-Type": "application/json",
+<<<<<<< HEAD
     # "Authorization": "Bearer sccjqsonvfvro3v2pn80iat2me",
+=======
+    "Authorization": "Bearer sci9de994iddqlmj8fv7r1js74",
+>>>>>>> 8f90d6105c60537cd2f201080ae7dc0238ffeb4a
 }
 
 @receiver(post_save, sender=Complaint)
