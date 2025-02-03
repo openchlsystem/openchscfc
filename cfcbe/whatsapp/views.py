@@ -36,6 +36,7 @@ def handle_incoming_messages(request):
 
         # Print the complete JSON data structure with indentation for better readability
         logging.info(json.dumps(data, indent=4))  # This line logs the object
+        print(json.dumps(data, indent=4))  # This line prints the object
 
         # You will need to adjust the parsing logic based on the actual data structure sent by WhatsApp
         for message in data.get('messages', []):
