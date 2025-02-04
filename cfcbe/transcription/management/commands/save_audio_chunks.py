@@ -1,11 +1,12 @@
 import os
 import re
+import librosa
 from django.core.files import File
 from django.core.management.base import BaseCommand
 from transcription.models import AudioFile, AudioFileChunk
 
 class Command(BaseCommand):
-    help = "Save audio file chunks to the FileField"
+    help = "Save audio file chunks to the FileField with metadata (duration)."
 
     def add_arguments(self, parser):
         parser.add_argument("directory", type=str, help="The directory containing chunked audio files.")
@@ -14,7 +15,7 @@ class Command(BaseCommand):
         directory = kwargs["directory"]
 
         if not os.path.isdir(directory):
-            self.stderr.write(self.style.ERROR(f"Directory not found: {directory}"))
+            self.stderr.write(self.style.ERROR(f"❌ Directory not found: {directory}"))
             return
 
         for filename in sorted(os.listdir(directory)):  # Sort to maintain order
@@ -35,37 +36,50 @@ class Command(BaseCommand):
                     print(f"❌ No match for filename: {filename}")
                     continue  # Skip this file
 
-            try:
-                # ✅ Find the parent `AudioFile`
-                parent_audio = AudioFile.objects.filter(unique_id=unique_id).first()
-                if not parent_audio:
-                    self.stderr.write(self.style.ERROR(f"No matching AudioFile for {unique_id}, skipping {filename}"))
-                    continue
+                try:
+                    # ✅ Find the parent `AudioFile`
+                    parent_audio = AudioFile.objects.filter(unique_id=unique_id).first()
+                    if not parent_audio:
+                        self.stderr.write(self.style.ERROR(f"No matching AudioFile for {unique_id}, skipping {filename}"))
+                        continue
 
-                # ✅ Check if chunk already exists
-                chunk_instance, created = AudioFileChunk.objects.get_or_create(
-                    parent_audio=parent_audio,
-                    order=chunk_order,
-                    defaults={"chunk_file": file_path}  # ✅ Ensure chunk_file is set
-                )
+                    # ✅ Extract metadata
+                    duration = self.get_audio_duration(file_path)
 
-                # ✅ Open the file properly before saving
-                with open(file_path, "rb") as f:
-                    django_file = File(f)
-                    
-                    # ✅ Assign chunk_file correctly
-                    chunk_instance.chunk_file.save(filename, django_file, save=True)
+                    # ✅ Check if chunk already exists
+                    chunk_instance, created = AudioFileChunk.objects.get_or_create(
+                        parent_audio=parent_audio,
+                        order=chunk_order,
+                        defaults={"chunk_file": file_path, "duration": duration}  # ✅ Ensure metadata is saved
+                    )
 
-                if created:
-                    self.stdout.write(self.style.SUCCESS(f"🔹 New chunk saved: {filename}"))
-                else:
-                    self.stdout.write(self.style.WARNING(f"⚠️ Using existing chunk: {filename}"))
+                    # ✅ Open the file properly before saving
+                    with open(file_path, "rb") as f:
+                        django_file = File(f)
+                        chunk_instance.chunk_file.save(filename, django_file, save=True)
 
-            except Exception as e:
-                import traceback
-                error_details = traceback.format_exc()
-                self.stderr.write(self.style.ERROR(f"❌ Error saving file {filename}: {e}\n{error_details}"))
+                    # ✅ Update duration if missing
+                    if not created and chunk_instance.duration is None:
+                        chunk_instance.duration = duration
+                        chunk_instance.save()
 
+                    if created:
+                        self.stdout.write(self.style.SUCCESS(f"🔹 New chunk saved: {filename} (Duration: {duration:.2f}s)"))
+                    else:
+                        self.stdout.write(self.style.WARNING(f"⚠️ Using existing chunk: {filename} (Updated duration if missing)"))
 
+                except Exception as e:
+                    import traceback
+                    error_details = traceback.format_exc()
+                    self.stderr.write(self.style.ERROR(f"❌ Error saving file {filename}: {e}\n{error_details}"))
 
         self.stdout.write(self.style.SUCCESS("✅ All audio chunks processed successfully."))
+
+    def get_audio_duration(self, file_path):
+        """Extracts the duration of an audio file chunk."""
+        try:
+            y, sr = librosa.load(file_path, sr=None)  # Load audio with original sampling rate
+            return librosa.get_duration(y=y, sr=sr)  # Calculate duration in seconds
+        except Exception as e:
+            self.stderr.write(self.style.ERROR(f"⚠️ Error extracting duration for {file_path}: {e}"))
+            return None  # Return None if duration extraction fails
