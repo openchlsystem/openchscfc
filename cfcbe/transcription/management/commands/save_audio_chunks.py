@@ -1,12 +1,19 @@
 import os
 import re
+<<<<<<< HEAD
 import librosa
+=======
+>>>>>>> d44c978 (added chunks model and added endpoints)
 from django.core.files import File
 from django.core.management.base import BaseCommand
 from transcription.models import AudioFile, AudioFileChunk
 
 class Command(BaseCommand):
+<<<<<<< HEAD
     help = "Save audio file chunks to the FileField with metadata (duration)."
+=======
+    help = "Save audio file chunks to the FileField"
+>>>>>>> d44c978 (added chunks model and added endpoints)
 
     def add_arguments(self, parser):
         parser.add_argument("directory", type=str, help="The directory containing chunked audio files.")
@@ -15,7 +22,11 @@ class Command(BaseCommand):
         directory = kwargs["directory"]
 
         if not os.path.isdir(directory):
+<<<<<<< HEAD
             self.stderr.write(self.style.ERROR(f"❌ Directory not found: {directory}"))
+=======
+            self.stderr.write(self.style.ERROR(f"Directory not found: {directory}"))
+>>>>>>> d44c978 (added chunks model and added endpoints)
             return
 
         for filename in sorted(os.listdir(directory)):  # Sort to maintain order
@@ -36,6 +47,7 @@ class Command(BaseCommand):
                     print(f"❌ No match for filename: {filename}")
                     continue  # Skip this file
 
+<<<<<<< HEAD
                 try:
                     # ✅ Find the parent `AudioFile`
                     parent_audio = AudioFile.objects.filter(unique_id=unique_id).first()
@@ -83,3 +95,39 @@ class Command(BaseCommand):
         except Exception as e:
             self.stderr.write(self.style.ERROR(f"⚠️ Error extracting duration for {file_path}: {e}"))
             return None  # Return None if duration extraction fails
+=======
+            try:
+                # ✅ Find the parent `AudioFile`
+                parent_audio = AudioFile.objects.filter(unique_id=unique_id).first()
+                if not parent_audio:
+                    self.stderr.write(self.style.ERROR(f"No matching AudioFile for {unique_id}, skipping {filename}"))
+                    continue
+
+                # ✅ Check if chunk already exists
+                chunk_instance, created = AudioFileChunk.objects.get_or_create(
+                    parent_audio=parent_audio,
+                    order=chunk_order,
+                    defaults={"chunk_file": file_path}  # ✅ Ensure chunk_file is set
+                )
+
+                # ✅ Open the file properly before saving
+                with open(file_path, "rb") as f:
+                    django_file = File(f)
+                    
+                    # ✅ Assign chunk_file correctly
+                    chunk_instance.chunk_file.save(filename, django_file, save=True)
+
+                if created:
+                    self.stdout.write(self.style.SUCCESS(f"🔹 New chunk saved: {filename}"))
+                else:
+                    self.stdout.write(self.style.WARNING(f"⚠️ Using existing chunk: {filename}"))
+
+            except Exception as e:
+                import traceback
+                error_details = traceback.format_exc()
+                self.stderr.write(self.style.ERROR(f"❌ Error saving file {filename}: {e}\n{error_details}"))
+
+
+
+        self.stdout.write(self.style.SUCCESS("✅ All audio chunks processed successfully."))
+>>>>>>> d44c978 (added chunks model and added endpoints)

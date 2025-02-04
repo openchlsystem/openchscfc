@@ -19,7 +19,11 @@ class AudioFileChunkManager(models.Manager):
 
     def with_transcriptions(self):
         """Get all chunks that have a true transcription."""
+<<<<<<< HEAD
         return self.filter(true_transcription__isnull=False).exclude(true_transcription="").filter(is_rejected=False)
+=======
+        return self.filter(true_transcription__isnull=False).exclude(true_transcription="")
+>>>>>>> d44c978 (added chunks model and added endpoints)
 
     def without_transcriptions(self):
         """Get all chunks that do not have a true transcription."""
