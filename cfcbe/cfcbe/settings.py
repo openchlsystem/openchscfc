@@ -30,7 +30,11 @@ SECRET_KEY = 'django-insecure-hb(yb)v5&^t3^42-320z=zw_$agrp-4+%ss^90l+y=3ua@k$7$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+<<<<<<< HEAD
+ALLOWED_HOSTS = ['bit-itc.com','127.0.0.1' ]
+=======
+ALLOWED_HOSTS = ['backend.bitz-itc.com', 'localhost', '0.0.0.0','127.0.0.1']
+>>>>>>> 8f90d6105c60537cd2f201080ae7dc0238ffeb4a
 
 MEDIA_URL = '/uploads/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads')
@@ -52,7 +56,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'emailfeedback',
     'whatsapp',
-    'transcription'
+    'transcription',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -67,6 +72,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'cfcbe.urls'
+CORS_ALLOW_ALL_ORIGINS = True
 
 TEMPLATES = [
     {
@@ -146,6 +152,7 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",  # For local development
     "http://localhost:5173",  # For local development
+    "https://webform.bitz-itc.com",
 ]
 
 
@@ -191,3 +198,6 @@ LOGGING = {
         'level': 'INFO',
     },
 }
+
+
+VERIFICATION_TOKEN = "19021977"
