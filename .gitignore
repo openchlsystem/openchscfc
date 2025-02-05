@@ -91,3 +91,4 @@ cfcbe/db.sqlite3
 cfcbe/**/migrations/
 cfcbe/db.sqlite3
 cfcbe/**/migrations/
+openchs/
