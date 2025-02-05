@@ -1,7 +1,29 @@
 from rest_framework import serializers
-from .models import Transcription
+from .models import AudioFile, CaseRecord, ModelVersion, ModelTranscription
 
-class TranscriptionSerializer(serializers.ModelSerializer):
+class AudioFileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Transcription
-        fields = ["id", "audio_file", "transcript", "created_at"]
+        model = AudioFile
+        fields = ['unique_id', 'audio_file', 'feature_text', 'duration', 'created_at']
+
+class ModelVersionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ModelVersion
+        fields = ['version']
+
+class ModelTranscriptionSerializer(serializers.ModelSerializer):
+    audio_id = AudioFileSerializer()  # Nested serializer to include AudioFile data
+    model_version_id = ModelVersionSerializer()  # Nested serializer to include ModelVersion data
+
+    class Meta:
+        model = ModelTranscription
+        fields = ['audio_id', 'model_version_id', 'predicted_text', 'wer', 'created_at', 'updated_at']
+
+class CaseRecordSerializer(serializers.ModelSerializer):
+    unique_id = AudioFileSerializer()  # Nested serializer to include AudioFile data
+    audio_file = AudioFileSerializer(read_only=True)
+    transcriptions = ModelTranscriptionSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = CaseRecord
+        fields = ['unique_id', 'date', 'talk_time', 'case_id', 'audio_file', 'narrative', 'transcriptions','plan', 'main_category', 'sub_category', 'gbv']

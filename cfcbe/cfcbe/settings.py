@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 import warnings
 
@@ -29,8 +30,10 @@ SECRET_KEY = 'django-insecure-hb(yb)v5&^t3^42-320z=zw_$agrp-4+%ss^90l+y=3ua@k$7$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['backend.bitz-itc.com', 'localhost', '0.0.0.0','127.0.0.1']
 
+MEDIA_URL = '/uploads/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads')
 
 # Application definition
 
@@ -49,7 +52,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'emailfeedback',
     'whatsapp',
-    'transcription'
+    'transcription',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -141,8 +145,9 @@ CORS_ALLOW_CREDENTIALS = True
 
 # Allow specific enable in production
 CORS_ALLOWED_ORIGINS = [
-  
     "http://localhost:8080",  # For local development
+    "http://localhost:5173",  # For local development
+    "https://webform.bitz-itc.com",
 ]
 
 
@@ -188,3 +193,6 @@ LOGGING = {
         'level': 'INFO',
     },
 }
+
+
+VERIFICATION_TOKEN = "19021977"
