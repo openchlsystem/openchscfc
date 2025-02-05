@@ -12,12 +12,21 @@ class PersonSerializer(serializers.ModelSerializer):
         }
 
 # Serializer for the Complaint model
+from rest_framework import serializers
+from .models import Complaint, Person
+from rest_framework import serializers
+from .models import Complaint, Person
+
 class ComplaintSerializer(serializers.ModelSerializer):
-    victim = PersonSerializer(required=False)  # Nested serializer for the victim
-    perpetrator = PersonSerializer(required=False)  # Nested serializer for the perpetrator
+    victim = PersonSerializer(required=False)  
+    perpetrator = PersonSerializer(required=False)  
+    complaint_image = serializers.ImageField(required=False, allow_null=True)
+    complaint_audio = serializers.FileField(required=False, allow_null=True)  # Ensure FileField is handled
+    complaint_video = serializers.FileField(required=False, allow_null=True)
 
     class Meta:
         model = Complaint
+<<<<<<< HEAD
         fields = '__all__'
         read_only_fields = ['complaint_id', 'created_at']
 
@@ -45,6 +54,27 @@ class ComplaintSerializer(serializers.ModelSerializer):
         # Create and return the complaint instance
         complaint = Complaint.objects.create(**validated_data)
         return complaint
+=======
+        fields = [
+            'complaint_id', 'session_id', 'timestamp', 'reporter_nickname', 'case_category',
+            'complaint_text', 'complaint_image', 'complaint_audio', 'complaint_video',
+            'message_id_ref', 'victim', 'perpetrator', 'created_at'
+        ]
+        read_only_fields = ['complaint_id', 'created_at', 'timestamp']
+
+    def create(self, validated_data):
+        victim_data = validated_data.pop('victim', None)
+        perpetrator_data = validated_data.pop('perpetrator', None)
+
+        victim = Person.objects.create(**victim_data) if victim_data else None
+        perpetrator = Person.objects.create(**perpetrator_data) if perpetrator_data else None
+
+        validated_data['victim'] = victim
+        validated_data['perpetrator'] = perpetrator
+
+        return Complaint.objects.create(**validated_data)
+
+>>>>>>> e92361f (Update changes)
 
 # Serializer for the CaseNote model
 class CaseNoteSerializer(serializers.ModelSerializer):
