@@ -158,39 +158,39 @@ def forward_whatsapp_message_to_main_system(message):
     api_url = "https://demo-openchs.bitz-itc.com/helpline/api/msg/"
     headers = {
         "Content-Type": "application/json",
-        "Authorization": "Bearer sccjqsonvfvro3v2pn80iat2me",
+        "Authorization": "Bearer sci9de994iddqlmj8fv7r1js74",
     }
 
     def sanitize_text(text):
         return text.encode("utf-8", errors="replace").decode("utf-8") if text else text
 
-    payload = {
-        "sender": sanitize_text(message.sender.wa_id if message.sender else None),
-        "recipient": sanitize_text(message.recipient.wa_id if message.recipient else None),
-        "message_type": sanitize_text(message.message_type),
-        "content": sanitize_text(message.content),
-        "caption": sanitize_text(message.caption),
-        "media_url": sanitize_text(message.media.media_url if message.media else None),
-        "media_mime_type": sanitize_text(message.media.media_mime_type if message.media else None),
-        "timestamp": message.timestamp.isoformat(),
-    }
+    # payload = {
+    #     "sender": sanitize_text(message.sender.wa_id if message.sender else None),
+    #     "recipient": sanitize_text(message.recipient.wa_id if message.recipient else None),
+    #     "message_type": sanitize_text(message.message_type),
+    #     "content": sanitize_text(message.content),
+    #     "caption": sanitize_text(message.caption),
+    #     "media_url": sanitize_text(message.media.media_url if message.media else None),
+    #     "media_mime_type": sanitize_text(message.media.media_mime_type if message.media else None),
+    #     "timestamp": message.timestamp.isoformat(),
+    # }
 
-    logging.info(f"Payload JSON: {payload}")
+    logging.info(f"Payload JSON: {message.content}")
 
     try:
         # Base64 encode the payload
-        payload_json = json.dumps(payload)
+        payload_json = json.dumps(message.content)
         encoded_data = base64.b64encode(payload_json.encode("utf-8")).decode("utf-8")
         logging.info(f"Base64 Encoded Data: {encoded_data}")
 
         complaint = {
-            "channel": "chat",
+            "channel": "whatsup",
             "timestamp": message.timestamp.isoformat(),
-            "session_id": "session_id_placeholder",
+            "session_id": message.sender.wa_id,
             "message_id": str(message.id),
             "from": message.sender.wa_id if message.sender else None,
             "message": encoded_data,
-            "mime": "application/json",
+            "mime": "text/plain",
         }
 
         response = requests.post(api_url, json=complaint, headers=headers)
