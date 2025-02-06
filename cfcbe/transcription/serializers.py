@@ -37,6 +37,10 @@ class AudioFileSerializer(serializers.ModelSerializer):
             "id",
             "unique_id",
             "audio_file",
+
+            "duration",
+            "file_size",
+
             "duration",
             "file_size",
             "total_chunks",  # ✅ Total chunks

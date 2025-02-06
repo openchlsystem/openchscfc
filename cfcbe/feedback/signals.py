@@ -2,41 +2,31 @@ import json
 import logging
 import base64
 import requests
+from django.conf import settings
 from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import Complaint, Notification
 
-API_URL = "http://127.0.0.1:8000/api/feedback/complaints/"
+API_URL = "https://demo-openchs.bitz-itc.com/helpline/api/msg/"
 HEADERS = {
     "Content-Type": "application/json",
-    "Authorization": "Bearer sci9de994iddqlmj8fv7r1js74",
+    "Authorization": f"Bearer {settings.BEARER_TOKEN}",
 }
 
 @receiver(post_save, sender=Complaint)
-def generate_notification(sender, instance, created, **kwargs):
-    """Handles notification creation and API request for complaints."""
-    
-    # Refresh instance to ensure related data is loaded
+def create_notification(sender, instance, created, **kwargs):
+    if created:
+        print(f"Signal triggered for complaint: {instance.complaint_id}, created: {created}")
+        transaction.on_commit(lambda: generate_notification(instance))
+
+def generate_notification(instance):
     instance.refresh_from_db()
 
-    # Extract victim and perpetrator details safely
     victim = instance.victim
     perpetrator = instance.perpetrator
 
-    victim_info = (
-        f"Victim: {victim.name} Age: {victim.age or 'N/A'}, Gender: {victim.gender or 'N/A'}"
-        if victim else "No victim data provided."
-    )
-    perpetrator_info = (
-        f"Perpetrator: {perpetrator.name} Age: {perpetrator.age or 'N/A'}, Gender: {perpetrator.gender or 'N/A'}"
-        if perpetrator else "No perpetrator data provided."
-    )
-
-    print(f"Victim data: {victim}")
-    print(f"Perpetrator data: {perpetrator}")
-
-    # Construct complaint data
+    # Construct complaint JSON data
     complaint_data = {
         "complaint_id": str(instance.complaint_id),
         "channel": "chat",
@@ -58,17 +48,13 @@ def generate_notification(sender, instance, created, **kwargs):
         },
     }
 
-    print(f"Complaint object: {complaint_data}")
-
-    # Convert to JSON and encode in Base64
+    # Convert JSON to base64
     complaint_json = json.dumps(complaint_data)
     encoded_data = base64.b64encode(complaint_json.encode()).decode("utf-8")
 
-    print(f"Base64 encoded data: {encoded_data}")
-
-    # Construct final payload for API
+    # Construct the message payload
     complaint_payload = {
-        "channel": "chat",
+        "channel": "safepal",
         "timestamp": instance.timestamp.isoformat(),
         "session_id": str(instance.session_id),
         "message_id": str(instance.complaint_id),
@@ -77,34 +63,23 @@ def generate_notification(sender, instance, created, **kwargs):
         "mime": "application/json",
     }
 
-    json_payload = json.dumps(complaint_payload)
-    print(f"JSON payload: {json_payload}")
+    print(f"Sending payload: {json.dumps(complaint_payload, indent=2)}")
 
-    # Construct notification message
-    notification_message = (
+    # Create Notification
+    message = (
         f"A new complaint has been filed by {instance.reporter_nickname or 'an anonymous reporter'} "
-        f"in the category {instance.case_category}. {victim_info} {perpetrator_info}"
+        f"in the category {instance.case_category}."
     )
+    Notification.objects.create(complaint=instance, message=message)
 
-    print(f"Notification: {notification_message}")
-
-    # Save Notification
-    Notification.objects.create(
-        complaint=instance,
-        message=notification_message
-    )
-
-    # Send the complaint to API
+    # Send to API
     try:
         response = requests.post(API_URL, headers=HEADERS, json=complaint_payload)
         print(f"API Response: {response.status_code}, {response.text}")
 
         if response.status_code == 201:
             response_data = response.json()
-
-            # Extract message_id from API response
-            message_id = response_data.get("messages", [[]])[0][0]
-
+            message_id = response_data.get("messages", [[]])[0][0]  # Extract message ID
             if message_id:
                 instance.message_id_ref = message_id
                 instance.save(update_fields=["message_id_ref"])
@@ -112,7 +87,6 @@ def generate_notification(sender, instance, created, **kwargs):
             else:
                 logging.error("message_id not found in API response.")
         else:
-            logging.error(f"API call failed with status: {response.status_code}, Response: {response.text}")
-
+            logging.error(f"API call failed: {response.status_code}, Response: {response.text}")
     except requests.exceptions.RequestException as e:
-        logging.error(f"Failed to send notification to API: {e}")
+        logging.error(f"Failed to send complaint to API: {e}")
