@@ -1,255 +1,291 @@
-
 import json
 import logging
 import requests
 from django.conf import settings
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
-from .models import IncomingMessage, OutgoingMessage
-from .serializers import IncomingMessageSerializer, OutgoingMessageSerializer
-from .utils import get_access_token  # Assume this function is well implemented
 from rest_framework import generics
 from django_filters import rest_framework as filters
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+from .models import Contact, WhatsAppMessage, WhatsAppMedia
+from .serializers import (
+    WhatsAppMessageSerializer,
+    WhatsAppMediaSerializer,
+    ContactSerializer,
+)
+from .utils import (
+    download_media,
+    get_access_token,
+    get_media_url_from_whatsapp,
+)  # Assume this function is well implemented
 
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
 
 @csrf_exempt
 def whatsapp_webhook(request):
-    if request.method == 'GET':
+    if request.method == "GET":
         return handle_verification_request(request)
-    elif request.method == 'POST':
+    elif request.method == "POST":
         return handle_incoming_messages(request)
     else:
         logging.warning(f"Received invalid HTTP method: {request.method}")
-        return HttpResponseBadRequest("Invalid HTTP method. This endpoint expects a GET or POST request.")
+        return HttpResponseBadRequest(
+            "Invalid HTTP method. This endpoint expects a GET or POST request."
+        )
+
+
+def handle_verification_request(request):
+    """Handles WhatsApp webhook verification."""
+    hub_mode = request.GET.get("hub.mode")
+    hub_challenge = request.GET.get("hub.challenge")
+    hub_verify_token = request.GET.get("hub.verify_token")
+
+    logging.debug(
+        f"Received verification request: mode={hub_mode}, challenge={hub_challenge}, token={hub_verify_token}"
+    )
+
+    if hub_mode == "subscribe" and hub_verify_token == settings.VERIFICATION_TOKEN:
+        logging.info("Webhook verified successfully.")
+        return JsonResponse(int(hub_challenge), safe=False, status=200)
+
+    return HttpResponseBadRequest("Verification failed. Check your verification token.")
+
+
+logger = logging.getLogger(__name__)
 
 
 def handle_incoming_messages(request):
     try:
-        # Parse the JSON body of the request
-        data = json.loads(request.body.decode('utf-8'))
-        logging.debug(f'Incoming message data: {data}')
+        # Parse the JSON payload
+        data = json.loads(request.body.decode("utf-8"))
+        logger.info(f"Received payload: {json.dumps(data, indent=4)}")
 
-        # Print the complete JSON data structure with indentation for better readability
-        logging.info(json.dumps(data, indent=4))  # This line logs the object
-        print(json.dumps(data, indent=4))  # This line prints the object
+        # Extract messages from the payload
+        entries = data.get("entry", [])
+        for entry in entries:
+            changes = entry.get("changes", [])
+            for change in changes:
+                value = change.get("value", {})
+                contacts = value.get("contacts", [])
+                messages = value.get("messages", [])
 
-        # You will need to adjust the parsing logic based on the actual data structure sent by WhatsApp
-        for message in data.get('messages', []):
-            # Assuming 'from' and 'text' are keys in the JSON data structure
-            IncomingMessage.objects.create(
-                contact_wa_id=message['from'],
-                message_text=message['text']['body']
-            )
+                for message in messages:
+                    # Extract sender and message type
+                    sender_wa_id = message.get("from")  # Sender's WhatsApp ID
+                    message_type = message.get("type")
 
-        # Respond back to WhatsApp to acknowledge receipt of the messages
-        return JsonResponse({'status': 'Success', 'message': 'Messages received and saved successfully'})
+                    # Extract contact name if available
+                    contact_name = None
+                    if contacts:
+                        contact_name = contacts[0].get("profile", {}).get("name")
+
+                    # Extract message content
+                    content = (
+                        message.get("text", {}).get("body")
+                        if message_type == "text"
+                        else None
+                    )
+                    caption = message.get("caption", None)
+
+                    # Ensure the message data is valid
+                    if not sender_wa_id:
+                        logger.error(
+                            "Message does not contain a sender (from). Skipping."
+                        )
+                        continue
+
+                    # Get or create the contact
+                    contact, _ = Contact.objects.get_or_create(
+                        wa_id=sender_wa_id, defaults={"name": contact_name}
+                    )
+                    logger.info(f"Contact retrieved/created: {contact}")
+
+                    # Handle media messages
+                    media_instance = None
+                    if message_type in ["image", "video", "audio", "document"]:
+                        media_id = message.get(message_type, {}).get("id")
+                        mime_type = message.get(message_type, {}).get("mime_type")
+
+                        if media_id:
+                            media_url = get_media_url_from_whatsapp(media_id)
+                            media_file = (
+                                download_media(media_url, message_type)
+                                if media_url
+                                else None
+                            )
+                            if media_url:
+                                media_instance = WhatsAppMedia.objects.create(
+                                    media_type=message_type,
+                                    media_url=media_url,
+                                    media_mime_type=mime_type,
+                                )
+                            # Save file if downloaded successfully
+                            if media_file:
+                                media_instance.media_file.save(
+                                     media_file
+                                )
+                                logger.info(f"Saved media file: {media_file}")
+
+                            media_instance.save()
+                            logger.info(f"Saved media: {media_instance}")
+
+                    # Save the message
+                    whatsapp_message = WhatsAppMessage.objects.create(
+                        sender=contact,
+                        recipient=None,  # Incoming messages have no recipient
+                        message_type=message_type,
+                        content=content,
+                        caption=caption,
+                        media=media_instance,
+                        status="received",
+                    )
+                    logger.info(f"Message saved: {whatsapp_message}")
+
+        return JsonResponse(
+            {"status": "Success", "message": "Messages received and saved successfully"}
+        )
+
     except Exception as e:
-        logging.error(f'Error handling incoming message: {str(e)}')
+        logger.error(f"Error handling incoming message: {str(e)}")
         return HttpResponseBadRequest(f"Error handling incoming message: {str(e)}")
-
-
-def handle_verification_request(request):
-    hub_mode = request.GET.get('hub.mode')
-    hub_challenge = request.GET.get('hub.challenge')
-    hub_verify_token = request.GET.get('hub.verify_token')
-    
-    logging.debug(f"Received verification request with mode={hub_mode}, challenge={hub_challenge}, token={hub_verify_token}")
-    if hub_mode == 'subscribe' and hub_verify_token == settings.VERIFICATION_TOKEN:
-        logging.info("Webhook verified successfully with challenge: " + hub_challenge)
-        return JsonResponse(int(hub_challenge), safe=False, status=200)
-    else:
-        # logging.error("Verification failed with the provided token: " + hub_verify_token)
-        return HttpResponseBadRequest("Verification failed. Check your verification token.")
-
-@csrf_exempt
-def receive_message(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            IncomingMessage.objects.create(
-                contact_wa_id=data['from'],
-                message_text=data['text']['body']
-            )
-            return JsonResponse({'status': 'Success', 'message': 'Message received and saved'})
-        except Exception as e:
-            logging.error(f'Error receiving message: {str(e)}')
-            return HttpResponseBadRequest(f"Error processing message: {str(e)}")
-    else:
-        return HttpResponseBadRequest("Invalid request method. Only POST requests are accepted.")
 
 
 @csrf_exempt
 def send_message(request):
-    if request.method == 'POST':
+    """Handles sending messages to WhatsApp."""
+    if request.method == "POST":
         try:
             data = json.loads(request.body)
-            recipient = data['recipient']
-            message = data['message']
+            recipient_wa_id = data["recipient"]
+            message_type = data.get("message_type", "text")
+            content = data.get("content", "")
+            caption = data.get("caption", None)
+            media_url = data.get("media_url", None)
+            mime_type = data.get("mime_type", None)
+
             access_token = get_access_token()
-            response = send_whatsapp_message(access_token, recipient, message)
-            OutgoingMessage.objects.create(
-                contact_wa_id=recipient,
-                message_text=message,
-                was_successful=response['success'] if response else False
+            response = send_whatsapp_message(
+                access_token, recipient_wa_id, message_type, content, caption, media_url
             )
-            return JsonResponse({'status': 'Success', 'response': 'Message sent and logged'})
+
+            recipient, _ = Contact.objects.get_or_create(wa_id=recipient_wa_id)
+
+            media_instance = None
+            if media_url:
+                media_instance = WhatsAppMedia.objects.create(
+                    media_type=message_type,
+                    media_url=media_url,
+                    media_mime_type=mime_type,
+                )
+
+            WhatsAppMessage.objects.create(
+                sender=None,  # Will be populated for incoming messages
+                recipient=recipient,
+                message_type=message_type,
+                content=content,
+                caption=caption,
+                media=media_instance,
+                status="sent" if response["success"] else "failed",
+            )
+
+            return JsonResponse(
+                {"status": "Success", "response": "Message sent and logged"}
+            )
+
         except Exception as e:
             logging.error(f"Failed to send message: {str(e)}")
-            return JsonResponse({'status': 'Error', 'message': str(e)}, status=400)
-    else:
-        return HttpResponseBadRequest("This endpoint only supports POST requests.")
+            return JsonResponse({"status": "Error", "message": str(e)}, status=400)
 
-@receiver(post_save, sender=OutgoingMessage)
+    return HttpResponseBadRequest("This endpoint only supports POST requests.")
+
+
+@receiver(post_save, sender=WhatsAppMessage)
 def send_whatsapp_message_on_create(sender, instance, created, **kwargs):
-    if created:
+    """Automatically sends a message when a new outgoing message is created."""
+    if created and instance.recipient:
         access_token = get_access_token()
-        recipient = instance.contact_wa_id
-        message = instance.message_text
-        send_whatsapp_message(access_token, recipient, message)
+        send_whatsapp_message(
+            access_token,
+            instance.recipient.wa_id,
+            instance.message_type,
+            instance.content,
+            instance.caption,
+            instance.media.media_url if instance.media else None,
+        )
 
-def send_whatsapp_message(access_token, recipient, message):
+
+def send_whatsapp_message(
+    access_token, recipient, message_type, content=None, caption=None, media_url=None
+):
+    """Sends a message via the WhatsApp API."""
     endpoint_url = "https://graph.facebook.com/v18.0/101592599705197/messages"
-    headers = {'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'}
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+    }
+
     request_body = {
         "messaging_product": "whatsapp",
         "recipient_type": "individual",
         "to": recipient,
-        "type": "text",
-        "text": {"preview_url": False, "body": message}
+        "type": message_type,
     }
+
+    if message_type == "text":
+        request_body["text"] = {"preview_url": False, "body": content}
+    elif message_type in ["image", "video", "audio", "document"]:
+        request_body[message_type] = (
+            {"link": media_url, "caption": caption} if caption else {"link": media_url}
+        )
 
     try:
         response = requests.post(endpoint_url, json=request_body, headers=headers)
         response.raise_for_status()
         logging.info("Message sent successfully.")
-        return {'success': True}
+        return {"success": True}
     except requests.exceptions.RequestException as e:
         logging.error(f"Error sending message: {e}")
-        return {'success': False}
+        return {"success": False}
 
-class incomingMessageList(generics.ListCreateAPIView):
-    queryset = IncomingMessage.objects.all()
-    serializer_class = IncomingMessageSerializer
+
+# Lists only incoming messages (where recipient is NULL)
+class IncomingMessageList(generics.ListAPIView):
+    queryset = WhatsAppMessage.objects.filter(recipient=None)
+    serializer_class = WhatsAppMessageSerializer
     filter_backends = [filters.DjangoFilterBackend]
-    filterset_fields = ['contact_wa_id']
-    
-class outgoingMessageList(generics.ListCreateAPIView):
-    queryset = OutgoingMessage.objects.all()
-    serializer_class = OutgoingMessageSerializer
+    filterset_fields = ["sender", "message_type", "status"]
+
+
+# Lists only outgoing messages (where sender is NULL)
+class OutgoingMessageList(generics.ListAPIView):
+    queryset = WhatsAppMessage.objects.filter(sender=None)
+    serializer_class = WhatsAppMessageSerializer
     filter_backends = [filters.DjangoFilterBackend]
-    filterset_fields = ['contact_wa_id']
+    filterset_fields = ["recipient", "message_type", "status"]
 
 
+# API Views using Django REST Framework
+class WhatsAppMessageList(generics.ListCreateAPIView):
+    queryset = WhatsAppMessage.objects.all()
+    serializer_class = WhatsAppMessageSerializer
+    filter_backends = [filters.DjangoFilterBackend]
+    filterset_fields = ["sender", "recipient", "message_type", "status"]
 
 
+class WhatsAppMediaList(generics.ListCreateAPIView):
+    queryset = WhatsAppMedia.objects.all()
+    serializer_class = WhatsAppMediaSerializer
 
 
-
-
-
-
-
-
-
-# New code for sending messages to WhatsApp
-
-
-# import json
-# from django.views.decorators.csrf import csrf_exempt
-# from django.http import JsonResponse
-# from .services import send_whatsapp_message
-# from .utils import decode_and_save_message
-# import logging
-
-# logger = logging.getLogger(__name__)
-
-# @csrf_exempt
-# def whatsapp_webhook(request):
-#     if request.method == "POST":
-#         try:
-#             # Parse the incoming JSON payload
-#             payload = json.loads(request.body)
-
-#             # Extract the first message from the payload
-#             message_data = payload['entry'][0]['changes'][0]['value']['messages'][0]
-#             metadata = payload['entry'][0]['changes'][0]['value']['metadata']
-
-#             # Derive the phone_number_id
-#             phone_number_id = metadata.get("phone_number_id")
-
-#             # Decode and save the message
-#             access_token = "19021977"
-#             message = decode_and_save_message(message_data, phone_number_id, access_token)
-
-#             if message:
-#                 return JsonResponse({"status": "success"}, status=200)
-#             else:
-#                 return JsonResponse({"status": "error", "message": "Failed to process message"}, status=400)
-
-#         except KeyError as e:
-#             logger.error(f"Missing key in payload: {e}")
-#             return JsonResponse({"error": f"Missing key: {e}"}, status=400)
-#         except Exception as e:
-#             logger.error(f"Error processing webhook: {e}")
-#             return JsonResponse({"error": str(e)}, status=500)
-#     else:
-#         return JsonResponse({"message": "Invalid method"}, status=405)
-
-# """
-# Sample Payload:
-
-# {
-#   "object": "whatsapp_business_account",
-#   "entry": [
-#     {
-#       "id": "1234567890",
-#       "changes": [
-#         {
-#           "value": {
-#             "messaging_product": "whatsapp",
-#             "metadata": {
-#               "display_phone_number": "15551234567",
-#               "phone_number_id": "123456789012345"
-#             },
-#             "contacts": [
-#               {
-#                 "profile": {
-#                   "name": "John Doe"
-#                 },
-#                 "wa_id": "1234567890"
-#               }
-#             ],
-#             "messages": [
-#               {
-#                 "from": "1234567890",
-#                 "id": "ABCD1234",
-#                 "timestamp": "1672531200",
-#                 "type": "text",
-#                 "text": {
-#                   "body": "Hello, this is a test message!"
-#                 }
-#               }
-#             ]
-#           },
-#           "field": "messages"
-#         }
-#       ]
-#     }
-#   ]
-# }
-
-# """
-
-def notify_user(request):
-    """
-    View to send a WhatsApp message to a user.
-    """
-    phone_number = "+1234567890"
-    message = "Hello, this is a test message from our Django app."
-    response = send_whatsapp_message(phone_number, message)
-    return JsonResponse(response)
+class ContactList(generics.ListCreateAPIView):
+    queryset = Contact.objects.all()
+    serializer_class = ContactSerializer
+    filter_backends = [filters.DjangoFilterBackend]
+    filterset_fields = ["wa_id"]

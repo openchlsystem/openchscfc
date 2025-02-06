@@ -1,5 +1,34 @@
 from django.db import models
 
+# Stores WhatsApp contacts to avoid redundancy
+class Contact(models.Model):
+    wa_id = models.CharField(max_length=15, unique=True)  # WhatsApp ID
+    name = models.CharField(max_length=255, blank=True, null=True)  # Optional name
+    display_phone_number = models.CharField(max_length=15, blank=True, null=True)
+
+    def __str__(self):
+        return self.name if self.name else self.wa_id
+
+
+# Stores media files linked to WhatsApp messages
+class WhatsAppMedia(models.Model):
+    MEDIA_TYPES = [
+        ("image", "Image"),
+        ("video", "Video"),
+        ("audio", "Audio"),
+        ("document", "Document"),
+    ]
+
+    media_type = models.CharField(max_length=50, choices=MEDIA_TYPES, help_text="Type of the media file")
+    media_url = models.URLField(blank=True, null=True, help_text="URL of the media file, if applicable")
+    media_file = models.FileField(upload_to='whatsapp_media/', blank=True, null=True, help_text="Uploaded media file")
+    media_mime_type = models.CharField(max_length=100, blank=True, null=True, help_text="MIME type of the media file")
+
+    def __str__(self):
+        return f"Media ({self.media_type}) - {self.media_url or self.media_file}"
+
+
+# Handles different types of WhatsApp messages
 class WhatsAppMessage(models.Model):
     MESSAGE_TYPES = [
         ("text", "Text"),
@@ -7,71 +36,59 @@ class WhatsAppMessage(models.Model):
         ("video", "Video"),
         ("audio", "Audio"),
         ("document", "Document"),
+        ("sticker", "Sticker"),
+        ("location", "Location"),
+        ("contact", "Contact"),
     ]
 
-    sender = models.CharField(max_length=255, help_text="WhatsApp number of the sender")
-    recipient = models.CharField(max_length=255, help_text="WhatsApp number of the recipient")
+    MESSAGE_STATUS = [
+        ("pending", "Pending"),
+        ("sent", "Sent"),
+        ("failed", "Failed"),
+        ("delivered", "Delivered"),
+        ("read", "Read"),
+    ]
+
+    sender = models.ForeignKey(Contact, on_delete=models.CASCADE, related_name="sent_messages")
+    recipient = models.ForeignKey(Contact, on_delete=models.CASCADE, related_name="received_messages", blank=True, null=True)  # ✅ Allow null
     message_type = models.CharField(max_length=50, choices=MESSAGE_TYPES, default="text", help_text="Type of the message")
     content = models.TextField(blank=True, null=True, help_text="Text content of the message, if applicable")
-    caption = models.TextField(blank=True, null=True, help_text="Caption for media messages, if applicable")  # New field
-    media_url = models.URLField(blank=True, null=True, help_text="URL of the media file, if applicable")
-    media_base64 = models.TextField(blank=True, null=True, help_text="Base64-encoded representation of the media")
-    media_mime_type = models.CharField(max_length=100, blank=True, null=True, help_text="MIME type of the media, e.g., image/jpeg")
-    timestamp = models.DateTimeField(help_text="Timestamp of when the message was received")
+    caption = models.TextField(blank=True, null=True, help_text="Caption for media messages, if applicable")
+    media = models.ForeignKey(WhatsAppMedia, on_delete=models.SET_NULL, blank=True, null=True, help_text="Linked media file")
+    timestamp = models.DateTimeField(auto_now_add=True, help_text="Timestamp of when the message was sent/received")
+    status = models.CharField(max_length=20, choices=MESSAGE_STATUS, default="pending", help_text="Current status of the message")
     is_forwarded_to_main_system = models.BooleanField(default=False, help_text="Flag to track if the message was forwarded to the main system")
 
-    def __str__(self):
-        return f"Message from {self.sender} to {self.recipient} ({self.message_type})"
-
-
-
-from django.db import models
-
-class IncomingMessage(models.Model):
-    contact_wa_id = models.CharField(max_length=100)
-    message_text = models.TextField()
-    received_at = models.DateTimeField(auto_now_add=True)
-
     class Meta:
-        ordering = ['-received_at']
+        ordering = ['-timestamp']
+
+    def mark_as_sent(self):
+        """Update the message status to 'sent'."""
+        self.status = "sent"
+        self.save()
+
+    def mark_as_failed(self):
+        """Update the message status to 'failed'."""
+        self.status = "failed"
+        self.save()
+
+    def mark_as_delivered(self):
+        """Update the message status to 'delivered'."""
+        self.status = "delivered"
+        self.save()
+
+    def mark_as_read(self):
+        """Update the message status to 'read'."""
+        self.status = "read"
+        self.save()
 
     def __str__(self):
-        return f"From {self.contact_wa_id} at {self.received_at.strftime('%Y-%m-%d %H:%M:%S')}"
+        return f"Message from {self.sender} to {self.recipient} ({self.message_type}, {self.status})"
 
-class OutgoingMessage(models.Model):
-    contact_wa_id = models.CharField(max_length=100)
-    message_text = models.TextField()
-    sent_at = models.DateTimeField(auto_now_add=True)
-    was_successful = models.BooleanField(default=False)
 
-    class Meta:
-        ordering = ['-sent_at']
-
-    def __str__(self):
-        return f"To {self.contact_wa_id} at {self.sent_at.strftime('%Y-%m-%d %H:%M:%S')}"
-
-class WhatsAppMessageDetail(models.Model):
-    messaging_product = models.CharField(max_length=50)
-    display_phone_number = models.CharField(max_length=15)
-    phone_number_id = models.CharField(max_length=50)
-    contact_name = models.CharField(max_length=255, blank=True)
-    contact_wa_id = models.CharField(max_length=15)
-    message_from = models.CharField(max_length=15)
-    message_id = models.CharField(max_length=255)
-    message_timestamp = models.DateTimeField()
-    message_text = models.TextField()
-
-    class Meta:
-        ordering = ['-message_timestamp']
-
-    def __str__(self):
-        return f"Message from {self.contact_name or self.contact_wa_id} at {self.message_timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
-
-    def get_responses(self):
-        return self.responses.all()
-
+# Represents responses to WhatsApp messages
 class WhatsAppResponse(models.Model):
-    message = models.ForeignKey(WhatsAppMessageDetail, on_delete=models.CASCADE, related_name='responses')
+    message = models.ForeignKey(WhatsAppMessage, on_delete=models.CASCADE, related_name="responses")
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
@@ -84,19 +101,12 @@ class WhatsAppResponse(models.Model):
     def get_message(self):
         return self.message
 
+
+# Represents a conversation containing messages and responses
 class WhatsAppConversation(models.Model):
-    messages = models.ManyToManyField(WhatsAppMessageDetail, related_name='conversations')
+    contact = models.ForeignKey(Contact, on_delete=models.CASCADE, related_name="conversations")
+    messages = models.ManyToManyField(WhatsAppMessage, related_name='conversations')
     responses = models.ManyToManyField(WhatsAppResponse, related_name='conversations')
 
     def __str__(self):
-        return f"Conversation with {self.messages.count()} messages and {self.responses.count()} responses"
-
-class Message(models.Model):
-    content = models.TextField()
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-timestamp']
-
-    def __str__(self):
-        return f"Message at {self.timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
+        return f"Conversation with {self.contact} - {self.messages.count()} messages"
