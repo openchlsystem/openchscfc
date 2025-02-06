@@ -37,16 +37,12 @@ class AudioFileSerializer(serializers.ModelSerializer):
             "id",
             "unique_id",
             "audio_file",
-<<<<<<< HEAD
-<<<<<<< HEAD
+
             "duration",
             "file_size",
-=======
->>>>>>> d44c978 (added chunks model and added endpoints)
-=======
+
             "duration",
             "file_size",
->>>>>>> 95908c0 (saving also file_size and duration)
             "total_chunks",  # ✅ Total chunks
             "transcribed_chunks",  # ✅ Transcribed chunks
             "untranscribed_chunks",  # ✅ Untranscribed chunks

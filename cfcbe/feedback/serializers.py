@@ -26,35 +26,6 @@ class ComplaintSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Complaint
-<<<<<<< HEAD
-        fields = '__all__'
-        read_only_fields = ['complaint_id', 'created_at']
-
-    def create(self, validated_data):
-        # Extract and remove nested victim and perpetrator data
-        victim_data = validated_data.pop('victim', None)
-        perpetrator_data = validated_data.pop('perpetrator', None)
-
-        # Initialize victim and perpetrator as None
-        victim = None
-        perpetrator = None
-
-        # Create victim and perpetrator instances if the data is provided
-        if victim_data:
-            victim = Person.objects.create(**victim_data)
-        if perpetrator_data:
-            perpetrator = Person.objects.create(**perpetrator_data)
-
-        # Add the victim and perpetrator objects to validated data before creating the complaint
-        if victim:
-            validated_data['victim'] = victim
-        if perpetrator:
-            validated_data['perpetrator'] = perpetrator
-
-        # Create and return the complaint instance
-        complaint = Complaint.objects.create(**validated_data)
-        return complaint
-=======
         fields = [
             'complaint_id', 'session_id', 'timestamp', 'reporter_nickname', 'case_category',
             'complaint_text', 'complaint_image', 'complaint_audio', 'complaint_video',
@@ -74,7 +45,6 @@ class ComplaintSerializer(serializers.ModelSerializer):
 
         return Complaint.objects.create(**validated_data)
 
->>>>>>> e92361f (Update changes)
 
 # Serializer for the CaseNote model
 class CaseNoteSerializer(serializers.ModelSerializer):
