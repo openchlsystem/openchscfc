@@ -21,9 +21,9 @@ urlpatterns = [
     # path('notify-user/', notify_user, name='notify_user'),
 
     # API Endpoints for WhatsApp Message, Media, and Contacts
-    path('messages/', WhatsAppMessageList.as_view(), name='_messages'),
+    path('messages/', WhatsAppMessageList.as_view(), name='whatsapp_messages'),
     path('messages/incoming/', IncomingMessageList.as_view(), name='incoming_messages'),
     path('messages/outgoing/', OutgoingMessageList.as_view(), name='outgoing_messages'),
-    path('media/', WhatsAppMediaList.as_view(), name='_media'),
+    path('media/', WhatsAppMediaList.as_view(), name='whatsapp_media'),
     path('contacts/', ContactList.as_view(), name='whatsapp_contacts'),
 ]
