@@ -1,11 +1,15 @@
 from rest_framework import serializers
-from .models import Complaint, CaseNote, ComplaintStatus, Person,Voicenotes
+from .models import Complaint, CaseNote, ComplaintStatus, Person, Voicenotes
 
-# Serializer for the Person model (Victim/Perpetrator)
 class PersonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Person
         fields = ['id', 'name', 'age', 'gender', 'additional_info']
+        extra_kwargs = {
+            'age': {'required': False, 'allow_null': True},
+            'gender': {'required': False, 'allow_null': True, 'allow_blank': True},
+            'additional_info': {'required': False, 'allow_blank': True},
+        }
 
 # Serializer for the Complaint model
 from rest_framework import serializers
@@ -50,7 +54,12 @@ class CaseNoteSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'complaint']
 
     def create(self, validated_data):
+        # Ensure complaint field is required
         complaint = validated_data.get('complaint')
+        if not complaint:
+            raise serializers.ValidationError('Complaint field is required.')
+
+        # Create and return the CaseNote instance
         case_note = CaseNote.objects.create(**validated_data)
         return case_note
 
