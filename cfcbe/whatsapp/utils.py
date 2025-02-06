@@ -179,8 +179,7 @@ def forward_whatsapp_message_to_main_system(message):
 
     try:
         # Base64 encode the payload
-        payload_json = json.dumps(message.content)
-        encoded_data = base64.b64encode(payload_json.encode("utf-8")).decode("utf-8")
+        encoded_data = base64.b64encode(message.content.encode("utf-8")).decode("utf-8")
         logging.info(f"Base64 Encoded Data: {encoded_data}")
 
         complaint = {
