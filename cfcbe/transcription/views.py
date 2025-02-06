@@ -1,13 +1,17 @@
 import io
 from rest_framework.response import Response
+from django.db.models import Count, Q
 from rest_framework.decorators import api_view
-from .models import ModelTranscription, CaseRecord, AudioFile, ModelVersion
+from rest_framework import status
+from .models import AudioFileChunk, ModelTranscription, CaseRecord, AudioFile, ModelVersion
 import whisper
 import os
 from jiwer import wer
 from rest_framework import generics
 from .models import ModelTranscription, CaseRecord, AudioFile
 from .serializers import (
+    AudioFileChunkSerializer,
+    AudioFileChunkUpdateSerializer,
     ModelTranscriptionSerializer,
     CaseRecordSerializer,
     AudioFileSerializer,
@@ -33,7 +37,6 @@ if os.path.exists(os.path.expanduser("~/.cache/whisper/tiny.pt")):
 if not os.path.exists(MODEL_PATH):
     print(f"🔍 Model not found in cache: {MODEL_PATH}. Downloading...")
 model = whisper.load_model(MODEL_SIZE, download_root=CACHE_DIR)
-
 
 @api_view(["POST"])
 def transcribe_audio(request):
@@ -159,3 +162,124 @@ class CaseRecordRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView)
     queryset = CaseRecord.objects.all()
     serializer_class = CaseRecordSerializer
     # permission_classes = [IsAuthenticated]  # Adjust permissions as needed
+
+@api_view(["GET"])
+def chunk_statistics(request):
+    """Returns useful transcription statistics."""
+    data = {
+        "total_chunks": AudioFileChunk.objects.total_chunks(),
+        "transcribed_chunks": AudioFileChunk.objects.total_transcribed_chunks(),
+        "untranscribed_chunks": AudioFileChunk.objects.total_untranscribed_chunks(),
+        "rejected_chunks": AudioFileChunk.objects.total_rejected_chunks(),
+    }
+    return Response(data)
+
+@api_view(["GET"])
+def transcribed_chunks(request):
+    """Returns all transcribed chunks."""
+    chunks = AudioFileChunk.objects.with_transcriptions()
+    serializer = AudioFileChunkSerializer(chunks, many=True)
+    return Response(serializer.data)
+
+@api_view(["GET"])
+def untranscribed_chunks(request):
+    """Returns all chunks without a transcription."""
+    chunks = AudioFileChunk.objects.without_transcriptions()
+    serializer = AudioFileChunkSerializer(chunks, many=True)
+    return Response(serializer.data)
+
+@api_view(["GET"])
+def rejected_chunks(request):
+    """Returns all rejected chunks."""
+    chunks = AudioFileChunk.objects.rejected_chunks()
+    serializer = AudioFileChunkSerializer(chunks, many=True)
+    return Response(serializer.data)
+
+@api_view(["GET"])
+def case_records_with_chunk_stats(request):
+    """Fetch all case records along with chunk statistics."""
+
+    # ✅ Annotate the number of transcribed and untranscribed chunks
+    case_records = CaseRecord.objects.select_related("unique_id").annotate(
+        total_chunks=Count("unique_id__chunks"),
+        transcribed_chunks=Count("unique_id__chunks", filter=Q(unique_id__chunks__true_transcription__isnull=False) & ~Q(unique_id__chunks__true_transcription="")),
+        untranscribed_chunks=Count("unique_id__chunks", filter=Q(unique_id__chunks__true_transcription__isnull=True) | Q(unique_id__chunks__true_transcription="")),
+    )
+
+    serializer = CaseRecordSerializer(case_records, many=True)
+    return Response(serializer.data)
+
+@api_view(["POST"])
+def update_chunk_transcription(request, chunk_id):
+    """✅ Update the `true_transcription` field of an AudioFileChunk."""
+    
+    try:
+        chunk = AudioFileChunk.objects.get(id=chunk_id)
+    except AudioFileChunk.DoesNotExist:
+        return Response({"error": "Chunk not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = AudioFileChunkUpdateSerializer(chunk, data=request.data, partial=True)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"message": "Transcription updated successfully", "chunk": serializer.data})
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["POST"])
+def update_chunk_rejection_status(request, chunk_id):
+    """✅ Update the `is_rejected` field of an AudioFileChunk."""
+
+    try:
+        chunk = AudioFileChunk.objects.get(id=chunk_id)
+    except AudioFileChunk.DoesNotExist:
+        return Response({"error": "Chunk not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = AudioFileChunkUpdateSerializer(chunk, data=request.data, partial=True)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"message": "Rejection status updated successfully", "chunk": serializer.data})
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["GET"])
+def get_audio_file_chunks(request, audio_id):
+    """Retrieve all chunks for a specific Audio File (GET)."""
+
+    chunks = AudioFileChunk.objects.filter(parent_audio__id=audio_id)  # ✅ Filter by parent AudioFile ID
+
+    if not chunks.exists():
+        return Response({"error": "No chunks found for this audio file"}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = AudioFileChunkSerializer(chunks, many=True)  # ✅ Serialize all chunks
+    return Response(serializer.data)
+
+@api_view(["GET"])
+def get_filtered_audio_file_chunks(request, audio_id, filter_type):
+    """
+    Retrieve chunks for a specific audio file, filtered by category.
+    
+    Available `filter_type` options:
+    - "transcribed" → Chunks with valid transcriptions
+    - "untranscribed" → Chunks with no transcription
+    - "rejected" → Chunks marked as rejected
+    """
+    
+    # ✅ Ensure audio file exists
+    if not AudioFile.objects.filter(id=audio_id).exists():
+        return Response({"error": "Audio file not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    # ✅ Filter chunks based on type
+    if filter_type == "transcribed":
+        chunks = AudioFileChunk.objects.with_transcriptions().filter(parent_audio_id=audio_id)
+    elif filter_type == "untranscribed":
+        chunks = AudioFileChunk.objects.without_transcriptions().filter(parent_audio_id=audio_id)
+    elif filter_type == "rejected":
+        chunks = AudioFileChunk.objects.rejected_chunks().filter(parent_audio_id=audio_id)
+    else:
+        return Response({"error": "Invalid filter type. Use 'transcribed', 'untranscribed', or 'rejected'."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # ✅ Serialize the chunks
+    serializer = AudioFileChunkSerializer(chunks, many=True)
+    return Response(serializer.data)

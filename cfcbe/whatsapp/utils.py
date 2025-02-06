@@ -3,24 +3,21 @@ import requests
 import base64
 import logging
 from django.utils.timezone import now
-from .models import WhatsAppMessage
-
-logger = logging.getLogger(__name__)
-
-
-
-import os
-import requests
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.core.cache import cache
-import logging
+from django.core.files.base import ContentFile
+
+from .models import Contact, WhatsAppMessage, WhatsAppMedia
+
+logger = logging.getLogger(__name__)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Set the token refresh threshold in minutes
 TOKEN_REFRESH_THRESHOLD = getattr(settings, 'TOKEN_REFRESH_THRESHOLD', 30)  # Default to 30 minutes if not set
+
 
 def get_access_token():
     """
@@ -33,6 +30,7 @@ def get_access_token():
     else:
         logging.info("Access token from cache is expired or missing; refreshing token.")
         return refresh_access_token()
+
 
 def refresh_access_token():
     """
@@ -49,18 +47,18 @@ def refresh_access_token():
     if response.status_code == 200:
         data = response.json()
         new_token = data['access_token']
-        # Use a default of 60 days (5184000 seconds) if expires_in is not provided
-        expires_in = data.get('expires_in', 5184000)
-        
+        expires_in = data.get('expires_in', 5184000)  # Default to 60 days if not provided
+
         expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
-        
+
         cache.set('whatsapp_access_token', {'access_token': new_token, 'expires_at': expires_at}, timeout=expires_in)
-        
+
         logging.info("Successfully refreshed access token.")
         return new_token
     else:
         logging.error(f"Failed to refresh token: {response.status_code} {response.text}")
         response.raise_for_status()
+
 
 def setup():
     """
@@ -71,166 +69,157 @@ def setup():
         refresh_access_token()
 
 
-def send_whatsapp_message(phone_number, message):
+def send_whatsapp_message(phone_number, message_type, content=None, caption=None, media_url=None):
+    """
+    Sends a message to WhatsApp via API.
+    """
     url = f"{settings.WHATSAPP_API_URL}/v1/messages"
     headers = {
-        "Authorization": f"Bearer {settings.WHATSAPP_API_TOKEN}",
+        "Authorization": f"Bearer {get_access_token()}",
         "Content-Type": "application/json",
     }
+
     payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
         "to": phone_number,
-        "type": "text",
-        "text": {"body": message},
+        "type": message_type,
     }
+
+    if message_type == "text":
+        payload["text"] = {"body": content}
+    elif message_type in ["image", "video", "audio", "document"]:
+        payload[message_type] = {"link": media_url, "caption": caption} if caption else {"link": media_url}
+
     response = requests.post(url, json=payload, headers=headers)
     return response.json()
 
 
-def download_media(media_id, access_token):
+# def download_media(media_id, access_token):
+#     """
+#     Downloads media using WhatsApp API and returns the Base64 representation.
+#     """
+#     api_url = f"https://graph.facebook.com/v17.0/{media_id}"
+#     headers = {"Authorization": f"Bearer {access_token}"}
+
+#     try:
+#         # Fetch media metadata
+#         response = requests.get(api_url, headers=headers)
+#         response.raise_for_status()
+#         media_url = response.json().get("url")
+
+#         # Download media file
+#         media_response = requests.get(media_url, headers=headers)
+#         media_response.raise_for_status()
+
+#         # Convert media content to Base64
+#         media_base64 = base64.b64encode(media_response.content).decode("utf-8")
+#         return media_base64
+#     except Exception as e:
+#         logging.error(f"Error downloading media: {e}")
+#         return None
+
+def download_media(media_url, media_type):
     """
-    Downloads media using WhatsApp API and converts it to Base64.
+    Downloads media from a given URL and returns a Django ContentFile object.
     """
-    api_url = f"https://graph.facebook.com/v17.0/{media_id}"
-    headers = {
-        "Authorization": f"Bearer {access_token}"
-    }
+    headers = {"Authorization": f"Bearer {get_access_token()}"}
+
     try:
-        # Fetch media metadata
-        response = requests.get(api_url, headers=headers)
+        response = requests.get(media_url, headers=headers)
         response.raise_for_status()
-        media_url = response.json().get("url")
 
-        # Download media file
-        media_response = requests.get(media_url, headers=headers)
-        media_response.raise_for_status()
+        # Determine the file extension based on media type
+        extension_map = {
+            "image": "jpg",
+            "video": "mp4",
+            "audio": "mp3",
+            "document": "pdf"
+        }
+        file_extension = extension_map.get(media_type, "bin")
 
-        # Convert media content to Base64
-        media_base64 = base64.b64encode(media_response.content).decode("utf-8")
-        return media_base64
+        # Save as Django ContentFile
+        file_content = ContentFile(response.content, name=f"downloaded_media.{file_extension}")
+        return file_content
+
     except Exception as e:
-        logging.error(f"Error downloading media: {e}")
+        logger.error(f"Error downloading media: {e}")
         return None
 
-# Mapping of phone_number_id to actual WhatsApp numbers
+
 PHONE_NUMBER_MAPPING = {
     "123456789012345": "15551234567",  # phone_number_id -> actual phone number
 }
 
-def decode_and_save_message(message_data, phone_number_id, access_token):
-    """
-    Decodes incoming WhatsApp message data, converts it to a string or Base64 if applicable,
-    and saves it in the database.
-
-    :param message_data: Dictionary containing WhatsApp message details
-    :param phone_number_id: The phone_number_id from metadata (used to derive recipient)
-    :param access_token: WhatsApp API access token for downloading media
-    :return: WhatsAppMessage instance or None if failed
-    """
-    try:
-        # Derive the recipient from phone_number_id
-        recipient = PHONE_NUMBER_MAPPING.get(phone_number_id, "UNKNOWN_RECIPIENT")
-        sender = message_data.get('from')  # WhatsApp number of the sender
-        message_type = message_data.get('type')
-        timestamp = message_data.get('timestamp')
-
-        # Convert Unix timestamp to timezone-aware datetime
-        if timestamp:
-            timestamp = now()
-
-        # Initialize fields for saving
-        content = None
-        media_url = None
-        media_base64 = None
-        media_mime_type = None
-        caption = None
-
-        # Handle different message types
-        if message_type == 'text':
-            content = message_data['text']['body']
-        elif message_type in ['image', 'video', 'audio', 'document']:
-            media_id = message_data[message_type]['id']
-            media_mime_type = message_data[message_type].get('mime_type')
-            caption = message_data[message_type].get('caption')
-            # Download and convert the media to Base64
-            media_base64 = download_media(media_id, access_token)
-        else:
-            content = f"Unsupported message type: {message_type}"
-
-        # Save the message to the database
-        message = WhatsAppMessage.objects.create(
-            sender=sender,
-            recipient=recipient,
-            message_type=message_type,
-            content=content,
-            caption=caption,
-            media_url=media_url,
-            media_base64=media_base64,
-            media_mime_type=media_mime_type,
-            timestamp=timestamp,
-        )
-        logger.info(f"Message from {sender} saved successfully.")
-        return message
-
-    except Exception as e:
-        logger.error(f"Failed to decode and save message: {e}")
-        return None
-
 def forward_whatsapp_message_to_main_system(message):
     """
     Sends the WhatsApp message details to the main system via a POST request.
-    
-    :param message: WhatsAppMessage object to be forwarded
     """
-    # API configuration
     api_url = "https://demo-openchs.bitz-itc.com/helpline/api/msg/"
     headers = {
         "Content-Type": "application/json",
         "Authorization": "Bearer sccjqsonvfvro3v2pn80iat2me",
     }
 
-        # Sanitize and construct payload
     def sanitize_text(text):
-        if text:
-            return text.encode("utf-8", errors="replace").decode("utf-8")
-        return text
+        return text.encode("utf-8", errors="replace").decode("utf-8") if text else text
 
     payload = {
-        "sender": sanitize_text(message.sender),
-        "recipient": sanitize_text(message.recipient),
+        "sender": sanitize_text(message.sender.wa_id if message.sender else None),
+        "recipient": sanitize_text(message.recipient.wa_id if message.recipient else None),
         "message_type": sanitize_text(message.message_type),
         "content": sanitize_text(message.content),
         "caption": sanitize_text(message.caption),
-        "media_url": sanitize_text(message.media_url),
-        "media_base64": sanitize_text(message.media_base64),
-        "media_mime_type": sanitize_text(message.media_mime_type),
+        "media_url": sanitize_text(message.media.media_url if message.media else None),
+        "media_mime_type": sanitize_text(message.media.media_mime_type if message.media else None),
         "timestamp": message.timestamp.isoformat(),
     }
-    
+
     logging.info(f"Payload JSON: {payload}")
 
     try:
-        # Base64 encoding
+        # Base64 encode the payload
         payload_json = json.dumps(payload)
         encoded_data = base64.b64encode(payload_json.encode("utf-8")).decode("utf-8")
         logging.info(f"Base64 Encoded Data: {encoded_data}")
 
-        # Construct complaint
         complaint = {
             "channel": "chat",
             "timestamp": message.timestamp.isoformat(),
-            "session_id": "str(instance.session_id)",  # Replace or derive session_id
+            "session_id": "session_id_placeholder",
             "message_id": str(message.id),
-            "from": "str(instance.session_id)",  # Replace or derive session_id
+            "from": message.sender.wa_id if message.sender else None,
             "message": encoded_data,
             "mime": "application/json",
         }
 
-        # Send POST request
         response = requests.post(api_url, json=complaint, headers=headers)
         logging.info(f"API Response: {response.status_code}, {response.text}")
         response.raise_for_status()
 
-    except requests.exceptions.HTTPError as e:
-        logging.error(f"HTTP error occurred: {e} - Response: {response.text}")
     except requests.exceptions.RequestException as e:
-        logging.error(f"Failed to forward email: {message.sender}. Error: {e}")
+        logging.error(f"Failed to forward message: {message.id}. Error: {e}")
+
+def get_media_url_from_whatsapp(media_id):
+    """
+    Fetches the media URL from WhatsApp API using the provided media ID.
+    """
+    access_token = get_access_token()  # Function that fetches your access token
+
+    url = f"https://graph.facebook.com/v18.0/{media_id}"
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        media_url = response.json().get("url")
+
+        if not media_url:
+            logger.error("Failed to get media URL from WhatsApp API.")
+            return None
+
+        return media_url
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching media URL: {e}")
+        return None
