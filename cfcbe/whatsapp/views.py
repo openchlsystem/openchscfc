@@ -157,71 +157,128 @@ def handle_incoming_messages(request):
         return HttpResponseBadRequest(f"Error handling incoming message: {str(e)}")
 
 
+# @csrf_exempt
+# def send_message(request):
+#     """Handles sending and replying to WhatsApp messages."""
+#     if request.method != "POST":
+#         return HttpResponseBadRequest("This endpoint only supports POST requests.")
+
+#     try:
+#         data = json.loads(request.body)
+#         recipient_wa_id = data.get("recipient")
+#         message_type = data.get("message_type", "text")
+#         content = data.get("content", "")
+#         caption = data.get("caption", None)
+#         media_url = data.get("media_url", None)
+#         mime_type = data.get("mime_type", None)
+#         sender_id = data.get("sender_id")
+
+#         if not recipient_wa_id:
+#             return JsonResponse({"status": "Error", "message": "Recipient ID is missing"}, status=400)
+
+#         # Ensure sender exists
+#         sender = None
+#         if sender_id:
+#             sender =" 254101541655" # Use `first()` to avoid NoneType errors
+#             if not sender:
+#                 return JsonResponse({"status": "Error", "message": "Invalid sender ID"}, status=400)
+
+#         # Ensure recipient exists or create it if not
+#         recipient, created = Contact.objects.get_or_create(wa_id=recipient_wa_id)
+        
+#         if not recipient:
+#             return JsonResponse({"status": "Error", "message": "Recipient not found or could not be created"}, status=400)
+
+#         access_token = get_access_token()
+#         response = send_whatsapp_message(
+#             access_token, recipient_wa_id, message_type, content, caption, media_url
+#         )
+
+#         media_instance = None
+#         if media_url:
+#             media_instance = WhatsAppMedia.objects.create(
+#                 media_type=message_type,
+#                 media_url=media_url,
+#                 media_mime_type=mime_type,
+#             )
+
+#         # Save the message
+#         WhatsAppMessage.objects.create(
+#             sender=sender,  # Sender is now validated
+#             recipient=recipient,
+#             message_type=message_type,
+#             content=content,
+#             caption=caption,
+#             media=media_instance,
+#             status="sent" if response["success"] else "failed",
+#         )
+
+#         return JsonResponse({"status": "Success", "response": "Message sent and logged"})
+
+#     except json.JSONDecodeError:
+#         return JsonResponse({"status": "Error", "message": "Invalid JSON format"}, status=400)
+#     except Exception as e:
+#         logging.error(f"Failed to send message: {str(e)}")
+#         return JsonResponse({"status": "Error", "message": str(e)}, status=400)
+
 @csrf_exempt
 def send_message(request):
-    """Handles sending and replying to WhatsApp messages."""
-    if request.method != "POST":
-        return HttpResponseBadRequest("This endpoint only supports POST requests.")
+    """
+    Handles sending WhatsApp messages and logs them in the database.
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            logger.info(f"Received outgoing message request: {json.dumps(data, indent=4)}")
 
-    try:
-        data = json.loads(request.body)
-        recipient_wa_id = data.get("recipient")
-        message_type = data.get("message_type", "text")
-        content = data.get("content", "")
-        caption = data.get("caption", None)
-        media_url = data.get("media_url", None)
-        mime_type = data.get("mime_type", None)
-        sender_id = data.get("sender_id")
+            # Extract recipient and message details
+            recipient_wa_id = data.get('recipient')
+            message_type = data.get('message_type', 'text')
+            content = data.get('content', '')
+            caption = data.get('caption', None)
+            media_url = data.get('media_url', None)
+            mime_type = data.get('mime_type', None)
 
-        if not recipient_wa_id:
-            return JsonResponse({"status": "Error", "message": "Recipient ID is missing"}, status=400)
+            if not recipient_wa_id:
+                logger.error("Recipient is missing. Cannot send message.")
+                return JsonResponse({'status': 'Error', 'message': 'Recipient is required'}, status=400)
 
-        # Ensure sender exists
-        sender = None
-        if sender_id:
-            sender =" 254101541655" # Use `first()` to avoid NoneType errors
-            if not sender:
-                return JsonResponse({"status": "Error", "message": "Invalid sender ID"}, status=400)
+            access_token = get_access_token()
 
-        # Ensure recipient exists or create it if not
-        recipient, created = Contact.objects.get_or_create(wa_id=recipient_wa_id)
-        
-        if not recipient:
-            return JsonResponse({"status": "Error", "message": "Recipient not found or could not be created"}, status=400)
+            # 🔽 Send message to WhatsApp API
+            response = send_whatsapp_message(access_token, recipient_wa_id, message_type, content, caption, media_url)
 
-        access_token = get_access_token()
-        response = send_whatsapp_message(
-            access_token, recipient_wa_id, message_type, content, caption, media_url
-        )
+            # Get or create recipient contact
+            recipient, _ = Contact.objects.get_or_create(wa_id=recipient_wa_id)
 
-        media_instance = None
-        if media_url:
-            media_instance = WhatsAppMedia.objects.create(
-                media_type=message_type,
-                media_url=media_url,
-                media_mime_type=mime_type,
+            media_instance = None
+            if media_url:
+                media_instance = WhatsAppMedia.objects.create(
+                    media_type=message_type,
+                    media_url=media_url,
+                    media_mime_type=mime_type
+                )
+                logger.info(f"Saved media: {media_instance}")
+
+            # ✅ Save the outgoing message with sender=NULL, recipient set
+            whatsapp_message = WhatsAppMessage.objects.create(
+                sender=None,  # System sends the message
+                recipient=recipient,  # Recipient is a WhatsApp user
+                message_type=message_type,
+                content=content,
+                caption=caption,
+                media=media_instance,
+                status="sent" if response.get('success') else "failed"
             )
+            logger.info(f"Outgoing message saved: {whatsapp_message}")
 
-        # Save the message
-        WhatsAppMessage.objects.create(
-            sender=sender,  # Sender is now validated
-            recipient=recipient,
-            message_type=message_type,
-            content=content,
-            caption=caption,
-            media=media_instance,
-            status="sent" if response["success"] else "failed",
-        )
+            return JsonResponse({'status': 'Success', 'response': 'Message sent and logged'})
 
-        return JsonResponse({"status": "Success", "response": "Message sent and logged"})
+        except Exception as e:
+            logger.error(f"Failed to send message: {str(e)}")
+            return JsonResponse({'status': 'Error', 'message': str(e)}, status=400)
 
-    except json.JSONDecodeError:
-        return JsonResponse({"status": "Error", "message": "Invalid JSON format"}, status=400)
-    except Exception as e:
-        logging.error(f"Failed to send message: {str(e)}")
-        return JsonResponse({"status": "Error", "message": str(e)}, status=400)
-
-
+    return HttpResponseBadRequest("This endpoint only supports POST requests.")
 
 @receiver(post_save, sender=WhatsAppMessage)
 def send_whatsapp_message_on_create(sender, instance, created, **kwargs):
