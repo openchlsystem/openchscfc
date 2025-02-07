@@ -223,49 +223,27 @@ def handle_incoming_messages(request):
 #         logging.error(f"Failed to send message: {str(e)}")
 #         return JsonResponse({"status": "Error", "message": str(e)}, status=400)
 
-
 @csrf_exempt
 def send_message(request):
-    """Handles sending and replying to WhatsApp messages."""
-    
-    # Ensure the request is a POST request
-    if request.method != "POST":
-        return HttpResponseBadRequest("This endpoint only supports POST requests.")
+    """
+    Handles sending WhatsApp messages and logs them in the database.
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            logger.info(f"Received outgoing message request: {json.dumps(data, indent=4)}")
 
-    try:
-        # Parse JSON data from request body
-        data = json.loads(request.body)
-        recipient_wa_id = data.get("recipient")  # WhatsApp recipient ID
-        message_type = data.get("message_type", "text")  # Message type (default: text)
-        content = data.get("content", "")  # Message content (for text messages)
-        caption = data.get("caption", None)  # Caption for media messages (optional)
-        media_url = data.get("media_url", None)  # Media URL (for image, video, etc.)
-        mime_type = data.get("mime_type", None)  # MIME type of media (optional)
+            # Extract recipient and message details
+            recipient_wa_id = data.get('recipient')
+            message_type = data.get('message_type', 'text')
+            content = data.get('content', '')
+            caption = data.get('caption', None)
+            media_url = data.get('media_url', None)
+            mime_type = data.get('mime_type', None)
 
-        # Fixed sender (WhatsApp Business ID) from settings
-        fixed_sender_wa_id = settings.WHATSAPP_BUSINESS_ID  
-
-        # Validate recipient ID
-        if not recipient_wa_id:
-            return JsonResponse({"status": "Error", "message": "Recipient ID is required"}, status=400)
-
-        # Validate message content based on message type
-        if message_type == "text" and not content:
-            return JsonResponse({"status": "Error", "message": "Text message requires content"}, status=400)
-        if message_type in ["image", "video", "audio", "document"] and not media_url:
-            return JsonResponse({"status": "Error", "message": "Media message requires media_url"}, status=400)
-
-        # Ensure the recipient exists in the database, or create a new entry
-        recipient, _ = Contact.objects.get_or_create(wa_id=recipient_wa_id)
-        if not recipient or not recipient.wa_id:
-            logging.error(f"Failed to create or retrieve recipient: {recipient_wa_id}")
-            return JsonResponse({"status": "Error", "message": "Recipient could not be created"}, status=400)
-
-        # Ensure the sender exists in the database, or create a new entry
-        sender, _ = Contact.objects.get_or_create(wa_id=fixed_sender_wa_id)
-        if not sender or not sender.wa_id:
-            logging.error(f"Failed to create or retrieve sender: {fixed_sender_wa_id}")
-            return JsonResponse({"status": "Error", "message": "Sender could not be created"}, status=400)
+            if not recipient_wa_id:
+                logger.error("Recipient is missing. Cannot send message.")
+                return JsonResponse({'status': 'Error', 'message': 'Recipient is required'}, status=400)
 
         # Log message details before sending
         logging.info(f"Sending {message_type} message to {recipient_wa_id}")
@@ -293,16 +271,17 @@ def send_message(request):
                 media_mime_type=mime_type,
             )
 
-        # Save message details in the database
-        WhatsAppMessage.objects.create(
-            sender=sender,  # Sender is the fixed WhatsApp Business ID
-            recipient=recipient,  # Recipient who receives the message
-            message_type=message_type,  # Type of message (text, image, etc.)
-            content=content,  # Message content for text messages
-            caption=caption,  # Caption for media messages
-            media=media_instance,  # Media instance if applicable
-            status="sent" if response.get("success") else "failed",  # Track message status
-        )
+            # ✅ Save the outgoing message with sender=NULL, recipient set
+            whatsapp_message = WhatsAppMessage.objects.create(
+                sender=None,  # System sends the message
+                recipient=recipient,  # Recipient is a WhatsApp user
+                message_type=message_type,
+                content=content,
+                caption=caption,
+                media=media_instance,
+                status="sent" if response.get('success') else "failed"
+            )
+            logger.info(f"Outgoing message saved: {whatsapp_message}")
 
         # Return success response
         return JsonResponse({"status": "Success", "response": "Message sent and logged"})
