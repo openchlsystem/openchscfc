@@ -49,7 +49,7 @@ class WhatsAppMessage(models.Model):
         ("read", "Read"),
     ]
 
-    sender = models.ForeignKey(Contact, on_delete=models.CASCADE, related_name="sent_messages")
+    sender = models.CharField(max_length=12,null=True,blank=False)
     recipient = models.ForeignKey(Contact, on_delete=models.CASCADE, related_name="received_messages", blank=True, null=True)  # ✅ Allow null
     message_type = models.CharField(max_length=50, choices=MESSAGE_TYPES, default="text", help_text="Type of the message")
     content = models.TextField(blank=True, null=True, help_text="Text content of the message, if applicable")
