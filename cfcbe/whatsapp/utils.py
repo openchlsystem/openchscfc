@@ -8,6 +8,8 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.files.base import ContentFile
 
+from cfcbe.settings import WHATSAPP_API_URL, WHATSAPP_PHONE_NUMBER_ID
+
 from .models import Contact, WhatsAppMessage, WhatsAppMedia
 
 logger = logging.getLogger(__name__)
@@ -41,7 +43,7 @@ def refresh_access_token():
         'grant_type': 'fb_exchange_token',
         'client_id': settings.WHATSAPP_CLIENT_ID,
         'client_secret': settings.WHATSAPP_CLIENT_SECRET,
-        'fb_exchange_token': settings.WHATSAPP_INITIAL_ACCESS_TOKEN,
+        'fb_exchange_token': settings.WHATSAPP_ACCESS_TOKEN,
     }
     response = requests.get(refresh_url, params=payload)
     if response.status_code == 200:
@@ -69,11 +71,17 @@ def setup():
         refresh_access_token()
 
 
+import requests
+import logging
+
 def send_whatsapp_message(phone_number, message_type, content=None, caption=None, media_url=None):
     """
     Sends a message to WhatsApp via API.
     """
-    url = f"{settings.WHATSAPP_API_URL}/v1/messages"
+    # url = f"https://graph.facebook.com/v18.0/{settings.WHATSAPP_PHONE_NUMBER_ID}/messages"
+    url = f"{WHATSAPP_API_URL}/{WHATSAPP_PHONE_NUMBER_ID}/messages"
+
+    
     headers = {
         "Authorization": f"Bearer {get_access_token()}",
         "Content-Type": "application/json",
@@ -81,7 +89,6 @@ def send_whatsapp_message(phone_number, message_type, content=None, caption=None
 
     payload = {
         "messaging_product": "whatsapp",
-        "recipient_type": "individual",
         "to": phone_number,
         "type": message_type,
     }
@@ -89,10 +96,18 @@ def send_whatsapp_message(phone_number, message_type, content=None, caption=None
     if message_type == "text":
         payload["text"] = {"body": content}
     elif message_type in ["image", "video", "audio", "document"]:
-        payload[message_type] = {"link": media_url, "caption": caption} if caption else {"link": media_url}
+        payload[message_type] = {"link": media_url}
+        if caption:
+            payload[message_type]["caption"] = caption
+
+    logging.info(f"Sending WhatsApp message: {payload}")
 
     response = requests.post(url, json=payload, headers=headers)
+    
+    logging.info(f"WhatsApp API Response: {response.status_code} {response.text}")
+
     return response.json()
+
 
 
 # def download_media(media_id, access_token):
