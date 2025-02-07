@@ -17,7 +17,6 @@ def fetch_emails(email_address, email_password, imap_host="mail.bitz-itc.com"):
         server.select("inbox")
 
         # Search for all emails
-        # Search for unread emails only
         status, messages = server.search(None, "ALL")
         email_ids = messages[0].split()
 
@@ -61,6 +60,7 @@ def fetch_emails(email_address, email_password, imap_host="mail.bitz-itc.com"):
                 subject=subject,
                 body=body,
                 received_date=received_date,
+                raw_message=raw_email,
             ).exists():
                 Email.objects.create(
                     sender=sender,
@@ -68,6 +68,7 @@ def fetch_emails(email_address, email_password, imap_host="mail.bitz-itc.com"):
                     subject=subject,
                     body=body,
                     received_date=received_date,
+                    raw_message=raw_email,
                 )
 
         # Close the server connection
@@ -110,42 +111,40 @@ def forward_email_to_main_system(email):
     api_url = "https://demo-openchs.bitz-itc.com/helpline/api/msg/"
     headers = {
         "Content-Type": "application/json",
-        "Authorization": "Bearer sccjqsonvfvro3v2pn80iat2me",
+        "Authorization": "Bearer sci9de994iddqlmj8fv7r1js74",
     }
 
     # Sanitize and construct payload
-    def sanitize_text(text):
-        if text:
-            return text.encode("utf-8", errors="replace").decode("utf-8")
-        return text
+    # def sanitize_text(text):
+    #     if text:
+    #         return text.encode("utf-8", errors="replace").decode("utf-8")
+    #     return text
 
-    payload = {
-        "sender": sanitize_text(email.sender),
-        "recipient": sanitize_text(email.recipient),
-        "subject": sanitize_text(email.subject),
-        "body": sanitize_text(email.body),
-        "received_date": email.received_date.isoformat(),
-        "is_read": email.is_read,
-    }
+    # payload = {
+    #     "sender": sanitize_text(email.sender),
+    #     "recipient": sanitize_text(email.recipient),
+    #     "subject": sanitize_text(email.subject),
+    #     "body": sanitize_text(email.body),
+    #     "received_date": email.received_date.isoformat(),
+    #     "is_read": email.is_read,
+    # }
 
-    logging.info(f"The email is: {email}")
-    logging.info(f"Payload JSON: {payload}")
+    # logging.info(f"The email is: {email}")
 
     try:
-        # Base64 encoding
-        payload_json = json.dumps(payload)
-        encoded_data = base64.b64encode(payload_json.encode("utf-8")).decode("utf-8")
-        logging.info(f"Base64 Encoded Data: {encoded_data}")
+        # Base64 encoding (Fix: Remove `.encode("utf-8")`)
+        logging.info(f"Payload: {email.raw_message}")
+        encoded_data = base64.b64encode(email.raw_message).decode("utf-8")  # Fix applied
 
-        # Construct complaint
+        # Construct complaint payload
         complaint = {
-            "channel": "chat",
+            "channel": "email",
             "timestamp": email.received_date.isoformat(),
-            "session_id": "str(instance.session_id)",  # Replace or derive session_id
+            "session_id": email.id,
             "message_id": str(email.id),
-            "from": "str(instance.session_id)",  # Replace or derive session_id
-            "message": encoded_data,
-            "mime": "application/json",
+            "from": email.sender,
+            "message": encoded_data,  # Correctly Base64 encoded email
+            "mime": "text/plain",
         }
 
         # Send POST request
