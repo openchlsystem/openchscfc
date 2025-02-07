@@ -269,31 +269,22 @@ def send_message(request):
             logging.error(f"Failed to create or retrieve sender: {fixed_sender_wa_id}")
             return JsonResponse({"status": "Error", "message": "Sender could not be created"}, status=400)
 
-        # Log message details before sending
-        logging.info(f"Sending {message_type} message to {recipient_wa_id}")
+            access_token = get_access_token()
 
-        # Retrieve the access token for WhatsApp API
-        access_token = get_access_token()
-        if not access_token:
-            logging.error("Failed to retrieve WhatsApp API access token.")
-            return JsonResponse({"status": "Error", "message": "Access token retrieval failed"}, status=500)
+            # 🔽 Send message to WhatsApp API
+            response = send_whatsapp_message(access_token, recipient_wa_id, message_type, content, caption, media_url)
 
-        # Send the message using WhatsApp API
-        response = send_whatsapp_message(
-            access_token, recipient_wa_id, message_type, content, caption, media_url
-        )
+            # Get or create recipient contact
+            recipient, _ = Contact.objects.get_or_create(wa_id=recipient_wa_id)
 
-        # Log response from the WhatsApp API
-        logging.info(f"WhatsApp API Response: {response}")
-
-        # Handle media message storage (if media is sent)
-        media_instance = None
-        if media_url:
-            media_instance = WhatsAppMedia.objects.create(
-                media_type=message_type,
-                media_url=media_url,
-                media_mime_type=mime_type,
-            )
+            media_instance = None
+            if media_url:
+                media_instance = WhatsAppMedia.objects.create(
+                    media_type=message_type,
+                    media_url=media_url,
+                    media_mime_type=mime_type
+                )
+                logger.info(f"Saved media: {media_instance}")
 
         # Save message details in the database
         WhatsAppMessage.objects.create(
@@ -306,18 +297,13 @@ def send_message(request):
             status="sent" if response.get("success") else "failed",  # Track message status
         )
 
-        # Return success response
-        return JsonResponse({"status": "Success", "response": "Message sent and logged"})
+            return JsonResponse({'status': 'Success', 'response': 'Message sent and logged'})
 
-    except json.JSONDecodeError:
-        # Handle invalid JSON format errors
-        return JsonResponse({"status": "Error", "message": "Invalid JSON format"}, status=400)
-    
-    except Exception as e:
-        # Log unexpected errors and return a server error response
-        logging.error(f"Error processing request: {str(e)}", exc_info=True)
-        return JsonResponse({"status": "Error", "message": "Internal Server Error"}, status=500)
+        except Exception as e:
+            logger.error(f"Failed to send message: {str(e)}")
+            return JsonResponse({'status': 'Error', 'message': str(e)}, status=400)
 
+    return HttpResponseBadRequest("This endpoint only supports POST requests.")
 
 @receiver(post_save, sender=WhatsAppMessage)
 def send_whatsapp_message_on_create(sender, instance, created, **kwargs):
