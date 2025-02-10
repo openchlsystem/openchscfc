@@ -10,7 +10,7 @@ from whatsapp.models import WhatsAppCredential
 
 from cfcbe.settings import WHATSAPP_API_URL, WHATSAPP_PHONE_NUMBER_ID
 
-from .models import Contact, WhatsAppMessage, WhatsAppMedia
+from .models import Contact, Organization, WhatsAppMessage, WhatsAppMedia
 
 logger = logging.getLogger(__name__)
 
@@ -28,27 +28,44 @@ TOKEN_REFRESH_THRESHOLD = getattr(
 
 TOKEN_REFRESH_THRESHOLD = 5  # Refresh if less than 5 minutes left
 
+from django.core.exceptions import ObjectDoesNotExist
 def get_access_token(org_id):
     """
-    Retrieve the current access token from the database if available.
-    Otherwise, use the initial token from settings and save it in the database.
+    Retrieve or create a WhatsApp access token.
     """
+    from whatsapp.models import WhatsAppCredential, Organization
+    from datetime import datetime, timezone, timedelta
+
     try:
-        creds = WhatsAppCredential.objects.get(organization_id=org_id)
+        org = Organization.objects.get(id=org_id)
 
-        if creds.token_expiry:
+        # Ensure WhatsApp credentials exist
+        creds, created = WhatsAppCredential.objects.get_or_create(
+            organization=org,
+            defaults={
+                "access_token": "your_default_access_token",
+                "client_id": "your_default_client_id",
+                "client_secret": "your_default_client_secret",
+                "phone_number_id": "your_default_phone_number_id",
+                "business_id": "your_default_business_id",
+                "token_expiry": datetime.now(timezone.utc) + timedelta(days=60),
+            }
+        )
 
-            if creds.token_expiry > datetime.now(timezone.utc) + timedelta(minutes=TOKEN_REFRESH_THRESHOLD):
-                logging.info("Using access token from database.")
-                return creds.get_access_token()  # Assuming decryption method in model
-        
-        logging.info("Access token is expired; refreshing token.")
-        return refresh_access_token(org_id)
+        if created:
+            logging.info(f"✅ Created WhatsAppCredential for organization {org_id}.")
 
-    except WhatsAppCredential.DoesNotExist:
-        logging.info(f"No token found for org_id {org_id}. Refreshing token.")
-        return refresh_access_token(org_id)
+        # Refresh token if expired
+        if not creds.token_expiry or creds.token_expiry <= datetime.now(timezone.utc) + timedelta(minutes=5):
+            logging.info(f"🔄 Token expired for org_id {org_id}. Refreshing...")
+            return refresh_access_token(org_id)
 
+        logging.info("✔️ Using stored access token.")
+        return creds.access_token
+
+    except Organization.DoesNotExist:
+        logging.error(f"❌ Organization with ID {org_id} does not exist.")
+        return None
 
 def refresh_access_token(org_id):
     """
@@ -73,7 +90,9 @@ def refresh_access_token(org_id):
             new_token = data["access_token"]
             expires_in = data.get("expires_in", 5184000)  # Default 60 days if missing
             expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
-            print("Token expires at:" + {expires_at})
+            # print("Token expires at:" + {expires_at})
+            print(f"Token expires at: {expires_at}")  # ✅ Correct formatting
+
 
             # Update database with new token
             creds.access_token = new_token  # Encrypt before saving
@@ -306,3 +325,23 @@ def send_to_main_system(message, encoded_message, mime_type):
     response = requests.post(API_URL, json=payload, headers=HEADERS)
     logging.info(f"API Response: {response.status_code}, {response.text}")
     response.raise_for_status()
+    
+    
+    from whatsapp.models import Organization
+
+def create_dummy_organization():
+    """
+    Creates a dummy organization with hardcoded values if none exists.
+    """
+    if not Organization.objects.exists():
+        org = Organization.objects.create(
+            name="Demo Organization",
+            email="demo@organization.com",
+            phone="+1234567890"
+        )
+        logging.info(f"Dummy organization created with ID {org.id}.")
+        return org
+    else:
+        org = Organization.objects.first()
+        logging.info(f"Using existing organization with ID {org.id}.")
+        return org
