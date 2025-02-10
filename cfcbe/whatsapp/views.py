@@ -21,6 +21,7 @@ from .utils import (
     download_media,
     get_access_token,
     get_media_url_from_whatsapp,
+    setup,
 )  # Assume this function is well implemented
 
 
@@ -162,6 +163,7 @@ def handle_incoming_messages(request):
 
 @csrf_exempt
 def send_message(request):
+    setup() 
     """Handles sending and replying to WhatsApp messages."""
     
     # Ensure the request is a POST request

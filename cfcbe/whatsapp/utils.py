@@ -20,42 +20,56 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # Set the token refresh threshold in minutes
 TOKEN_REFRESH_THRESHOLD = getattr(settings, 'TOKEN_REFRESH_THRESHOLD', 30)  # Default to 30 minutes if not set
 
+import logging
+import requests
+from datetime import datetime, timedelta
+from django.core.cache import cache
+from django.conf import settings
+
+TOKEN_REFRESH_THRESHOLD = 5  # Minutes before expiration to refresh
 
 def get_access_token():
     """
     Retrieve the current access token from cache or refresh it if needed.
     """
     token_info = cache.get('whatsapp_access_token')
+
     if token_info and token_info['expires_at'] > datetime.utcnow() + timedelta(minutes=TOKEN_REFRESH_THRESHOLD):
         logging.info("Using cached access token.")
         return token_info['access_token']
-    else:
-        logging.info("Access token from cache is expired or missing; refreshing token.")
-        return refresh_access_token()
+    
+    logging.info("Access token from cache is expired or missing; refreshing token.")
+    return refresh_access_token()
 
 
 def refresh_access_token():
     """
     Refresh the WhatsApp API access token using Facebook's OAuth API.
     """
+    # 🔥 Get the most recent token from cache instead of settings
+    cached_token = cache.get('whatsapp_access_token')
+    latest_token = cached_token['access_token'] if cached_token else settings.WHATSAPP_ACCESS_TOKEN
+
     refresh_url = "https://graph.facebook.com/v19.0/oauth/access_token"
     payload = {
         'grant_type': 'fb_exchange_token',
         'client_id': settings.WHATSAPP_CLIENT_ID,
         'client_secret': settings.WHATSAPP_CLIENT_SECRET,
-        'fb_exchange_token': settings.WHATSAPP_ACCESS_TOKEN,
+        'fb_exchange_token': latest_token,  # Use latest token
     }
+
     response = requests.get(refresh_url, params=payload)
+
     if response.status_code == 200:
         data = response.json()
         new_token = data['access_token']
-        expires_in = data.get('expires_in', 5184000)  # Default to 60 days if not provided
-
+        expires_in = data.get('expires_in', 5184000)  # Default 60 days if missing
         expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
 
+        # 🔥 Store new token in cache
         cache.set('whatsapp_access_token', {'access_token': new_token, 'expires_at': expires_at}, timeout=expires_in)
 
-        logging.info("Successfully refreshed access token.")
+        logging.info("Successfully refreshed and stored new access token.")
         return new_token
     else:
         logging.error(f"Failed to refresh token: {response.status_code} {response.text}")
@@ -66,6 +80,7 @@ def setup():
     """
     Initial setup for storing the access token in cache if not already present.
     """
+    
     if not cache.get('whatsapp_access_token'):
         logging.info("No access token in cache; attempting to refresh.")
         refresh_access_token()
@@ -92,7 +107,6 @@ def send_whatsapp_message(phone_number, message_type, content=None, caption=None
         "to": phone_number,
         "type": message_type,
     }
-
     if message_type == "text":
         payload["text"] = {"body": content}
     elif message_type in ["image", "video", "audio", "document"]:
