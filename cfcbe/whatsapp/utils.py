@@ -28,26 +28,35 @@ TOKEN_REFRESH_THRESHOLD = getattr(
 
 TOKEN_REFRESH_THRESHOLD = 5  # Refresh if less than 5 minutes left
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-def get_access_token(org_id):
+
+def get_access_token(org_id=None):
     """
     Retrieve or create a WhatsApp access token.
+    Ensures that an organization exists before creating credentials.
     """
     from whatsapp.models import WhatsAppCredential, Organization
     from datetime import datetime, timezone, timedelta
 
     try:
-        org = Organization.objects.get(id=org_id)
+        # If org_id is not provided or does not exist, create a dummy organization
+        if org_id is None or not Organization.objects.filter(id=org_id).exists():
+            logging.info(f"⚠️ Organization {org_id} not found. Creating dummy organization.")
+            org = create_dummy_organization()
+            org_id = org.id  # Update org_id with the new organization's ID
+        else:
+            org = Organization.objects.get(id=org_id)
 
-        # Ensure WhatsApp credentials exist
+        # Ensure WhatsApp credentials exist for this organization
         creds, created = WhatsAppCredential.objects.get_or_create(
             organization=org,
             defaults={
-                "access_token": "your_default_access_token",
-                "client_id": "your_default_client_id",
-                "client_secret": "your_default_client_secret",
-                "phone_number_id": "your_default_phone_number_id",
-                "business_id": "your_default_business_id",
+                "access_token": getattr(settings, "WHATSAPP_ACCESS_TOKEN", "your_default_access_token"),
+                "client_id": getattr(settings, "WHATSAPP_CLIENT_ID", ""),
+                "client_secret": getattr(settings, "WHATSAPP_CLIENT_SECRET", ""),
+                "phone_number_id": getattr(settings, "WHATSAPP_PHONE_NUMBER_ID", ""),
+                "business_id": getattr(settings, "WHATSAPP_BUSINESS_ID", ""),
                 "token_expiry": datetime.now(timezone.utc) + timedelta(days=60),
             }
         )
@@ -63,7 +72,10 @@ def get_access_token(org_id):
         logging.info("✔️ Using stored access token.")
         return creds.access_token
 
-    except Organization.DoesNotExist:
+    except Exception as e:
+        logging.error(f"❌ Error retrieving access token: {e}")
+        return None
+
         logging.error(f"❌ Organization with ID {org_id} does not exist.")
         return None
 
