@@ -2,7 +2,10 @@ from rest_framework import serializers
 from .models import AudioFile, AudioFileChunk, CaseRecord, ModelVersion, ModelTranscription
 
 class AudioFileChunkSerializer(serializers.ModelSerializer):
-    """Serializer for AudioFileChunk model."""
+    """Serializer for AudioFileChunk including gender and locale fields."""
+    
+    gender = serializers.ChoiceField(choices=AudioFileChunk.GENDER_CHOICES, default="not_sure")
+    locale = serializers.ChoiceField(choices=AudioFileChunk.LOCALE_CHOICES, default="both")
 
     class Meta:
         model = AudioFileChunk
@@ -14,15 +17,17 @@ class AudioFileChunkSerializer(serializers.ModelSerializer):
             "duration",
             "true_transcription",
             "is_rejected",
+            "gender",  # ✅ New field
+            "locale",  # ✅ New field
             "created_at",
         ]
 
 class AudioFileChunkUpdateSerializer(serializers.ModelSerializer):
-    """Serializer for updating AudioFileChunk attributes."""
-
+    """Serializer for updating AudioFileChunk attributes, including gender and locale."""
+    
     class Meta:
         model = AudioFileChunk
-        fields = ["true_transcription", "is_rejected"]  # ✅ Allow updating these fields
+        fields = ["true_transcription", "is_rejected", "gender", "locale"]  # ✅ Added new fields
 
 class AudioFileSerializer(serializers.ModelSerializer):
     """Serializer for AudioFile, including chunk statistics."""

@@ -46,19 +46,36 @@ class AudioFileChunkManager(models.Manager):
         """Get the total number of rejected chunks."""
         return self.rejected_chunks().count()
 
+from django.db import models
+
 class AudioFileChunk(models.Model):
+    GENDER_CHOICES = [
+        ("male", "Male"),
+        ("female", "Female"),
+        ("not_sure", "Not Sure"),
+    ]
+
+    LOCALE_CHOICES = [
+        ("en", "English"),
+        ("sw", "Swahili"),
+        ("both", "Both"),
+    ]
+
     parent_audio = models.ForeignKey("AudioFile", on_delete=models.CASCADE, related_name="chunks")
     chunk_file = models.FileField(upload_to="audio_chunks/")
     order = models.PositiveIntegerField()  # Order of the chunk in the original file
     duration = models.FloatField(null=True)
     true_transcription = models.TextField(blank=True, null=True)  # ✅ Holds ground-truth transcriptions
     is_rejected = models.BooleanField(default=False)  # ✅ Tracks whether chunk is rejected
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="not_sure")  # ✅ Gender field
+    locale = models.CharField(max_length=5, choices=LOCALE_CHOICES, default="both")  # ✅ Locale field
     created_at = models.DateTimeField(auto_now_add=True)
 
     objects = AudioFileChunkManager()  # ✅ Attach the custom manager
 
     class Meta:
         unique_together = ('parent_audio', 'order')  # Prevent duplicate chunk orders
+
 
     def save(self, *args, **kwargs):
         """
