@@ -229,7 +229,7 @@ def send_message(request):
     """
     Handles sending WhatsApp messages and logs them in the database.
     """
-    setup(1) 
+    # setup(1) 
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
