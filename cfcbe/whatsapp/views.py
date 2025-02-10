@@ -119,7 +119,7 @@ def handle_incoming_messages(request):
                         if media_id:
                             media_url = get_media_url_from_whatsapp(media_id)
                             media_file = (
-                                download_media(media_url, message_type)
+                                download_media(media_url, message_type, media_id)
                                 if media_url
                                 else None
                             )
@@ -131,10 +131,9 @@ def handle_incoming_messages(request):
                                 )
                             # Save file if downloaded successfully
                             if media_file:
-                                media_instance.media_file.save(
-                                     media_file
-                                )
-                                logger.info(f"Saved media file: {media_file}")
+                                media_instance.media_file.save(media_file.name, media_file, save=True)
+                                logger.info(f"Saved media file: {media_file.name}")
+
 
                             media_instance.save()
                             logger.info(f"Saved media: {media_instance}")
