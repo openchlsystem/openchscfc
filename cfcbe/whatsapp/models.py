@@ -118,3 +118,41 @@ class WhatsAppConversation(models.Model):
 
     def __str__(self):
         return f"Conversation with {self.contact} - {self.messages.count()} messages"
+
+# Encryption utility
+# def encrypt(data):
+#     cipher = Fernet(settings.ENCRYPTION_KEY)
+#     return cipher.encrypt(data.encode()).decode()
+
+# def decrypt(data):
+#     cipher = Fernet(settings.ENCRYPTION_KEY)
+#     return cipher.decrypt(data.encode()).decode()
+
+class Organization(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+class WhatsAppCredential(models.Model):
+    organization = models.OneToOneField('Organization', on_delete=models.CASCADE)
+    client_id = models.CharField(max_length=255)
+    client_secret = models.TextField()  # Encrypted
+    business_id = models.CharField(max_length=255)
+    phone_number_id = models.CharField(max_length=255)
+    access_token = models.TextField()  # Encrypted
+    token_expiry = models.DateTimeField(null=True)
+
+    # def save(self, *args, **kwargs):
+    #     self.client_secret = encrypt(self.client_secret)
+    #     self.access_token = encrypt(self.access_token)
+    #     super().save(*args, **kwargs)
+
+    # def get_client_secret(self):
+    #     return decrypt(self.client_secret)
+
+    # def get_access_token(self):
+    #     return decrypt(self.access_token)

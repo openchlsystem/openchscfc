@@ -7,5 +7,5 @@ class WhatsappConfig(AppConfig):
 
     def ready(self):
             import whatsapp.signals
-            from whatsapp.utils import setup
-            setup()  # Ensures the token is refreshed on app startup
+            # from whatsapp.utils import setup
+            # setup(1)  # Ensures the token is refreshed on app startup

@@ -118,25 +118,25 @@ def handle_incoming_messages(request):
 
                         if media_id:
                             media_url = get_media_url_from_whatsapp(media_id)
-                            media_file = (
-                                download_media(media_url, message_type, media_id)
-                                if media_url
-                                else None
-                            )
                             if media_url:
-                                media_instance = WhatsAppMedia.objects.create(
-                                    media_type=message_type,
-                                    media_url=media_url,
-                                    media_mime_type=mime_type,
-                                )
-                            # Save file if downloaded successfully
-                            if media_file:
-                                media_instance.media_file.save(media_file.name, media_file, save=True)
-                                logger.info(f"Saved media file: {media_file.name}")
+                                media_file = (
+                                    download_media(media_url, message_type, media_id)
+                                    if media_url
+                                    else None
+                            )
+                                # Save file if downloaded successfully
+                                if media_file:
+                                    media_instance.media_file.save(media_file.name, media_file, save=True)
+                                    logger.info(f"Saved media file: {media_file.name}")
+                                    media_instance = WhatsAppMedia.objects.create(
+                                        media_type=message_type,
+                                        media_url=media_url,
+                                        media_mime_type=mime_type,
+                                    )
+                            
 
-
-                            media_instance.save()
-                            logger.info(f"Saved media: {media_instance}")
+                                    media_instance.save()
+                                    logger.info(f"Saved media: {media_instance}")
 
                     # Save the message
                     whatsapp_message = WhatsAppMessage.objects.create(
@@ -229,7 +229,7 @@ def send_message(request):
     """
     Handles sending WhatsApp messages and logs them in the database.
     """
-    setup() 
+    setup(1) 
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -247,7 +247,7 @@ def send_message(request):
                 logger.error("Recipient is missing. Cannot send message.")
                 return JsonResponse({'status': 'Error', 'message': 'Recipient is required'}, status=400)
 
-            access_token = get_access_token()
+            access_token = get_access_token(1)
 
             # 🔽 Send message to WhatsApp API
             response = send_whatsapp_message(access_token, recipient_wa_id, message_type, content, caption, media_url)
@@ -287,7 +287,7 @@ def send_message(request):
 def send_whatsapp_message_on_create(sender, instance, created, **kwargs):
     """Automatically sends a message when a new outgoing message is created."""
     if created and instance.recipient:
-        access_token = get_access_token()
+        access_token = get_access_token(1)
         send_whatsapp_message(
             access_token,
             instance.recipient.wa_id,
