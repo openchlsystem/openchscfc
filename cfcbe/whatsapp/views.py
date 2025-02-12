@@ -298,10 +298,21 @@ def send_whatsapp_message_on_create(sender, instance, created, **kwargs):
         )
 
 
-def send_whatsapp_message(
-    access_token, recipient, message_type, content=None, caption=None, media_url=None
-):
+import requests
+import logging
+from django.conf import settings
+
+def send_whatsapp_message(org_id, recipient, message_type, content=None, caption=None, media_url=None):
     """Sends a message via the WhatsApp API."""
+    from .utils import get_access_token, refresh_access_token  # Import helper functions
+    
+    org_id = 1  # 🔹 Replace with the actual organization ID
+    
+    access_token = get_access_token(org_id)  # 🔹 Fetch stored token
+    if not access_token:
+        logging.error(f"❌ Failed to retrieve access token for org_id {org_id}.")
+        return {"success": False, "error": "Unable to retrieve access token"}
+
     endpoint_url = f"{settings.WHATSAPP_API_URL}/{settings.WHATSAPP_PHONE_NUMBER_ID}/messages"
     headers = {
         "Authorization": f"Bearer {access_token}",
@@ -324,13 +335,25 @@ def send_whatsapp_message(
 
     try:
         response = requests.post(endpoint_url, json=request_body, headers=headers)
-        response.raise_for_status()
-        logging.info("Message sent successfully.")
-        return {"success": True}
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Error sending message: {e}")
-        return {"success": False}
 
+        # 🔹 If token is expired (401), refresh and retry
+        if response.status_code == 401:
+            logging.warning("🔄 Access token expired. Refreshing...")
+            access_token = refresh_access_token(org_id)
+            if not access_token:
+                return {"success": False, "error": "Failed to refresh access token"}
+            
+            # Retry the request with the new token
+            headers["Authorization"] = f"Bearer {access_token}"
+            response = requests.post(endpoint_url, json=request_body, headers=headers)
+
+        response.raise_for_status()
+        logging.info("✅ Message sent successfully.")
+        return {"success": True, "response": response.json()}
+
+    except requests.exceptions.RequestException as e:
+        logging.error(f"❌ Error sending message: {e}")
+        return {"success": False, "error": str(e)}
 
 # Lists only incoming messages (where recipient is NULL)
 class IncomingMessageList(generics.ListAPIView):

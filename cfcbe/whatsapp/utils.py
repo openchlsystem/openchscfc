@@ -78,53 +78,59 @@ def get_access_token(org_id=None):
 
         logging.error(f"❌ Organization with ID {org_id} does not exist.")
         return None
+import requests
+import logging
+from django.conf import settings
+from datetime import datetime, timezone, timedelta
 
 def refresh_access_token(org_id):
-    """
-    Refresh the WhatsApp API access token using Facebook's OAuth API.
-    If credentials exist, update them. Otherwise, create a new entry.
-    """
+    """Refreshes the WhatsApp access token if expired, otherwise falls back to default settings."""
+    from whatsapp.models import WhatsAppCredential
+
     try:
-        creds, created = WhatsAppCredential.objects.get_or_create(organization_id=org_id)
+        creds = WhatsAppCredential.objects.get(organization_id=org_id)
 
-        refresh_url = "https://graph.facebook.com/v19.0/oauth/access_token"
-        payload = {
-            "grant_type": "fb_exchange_token",
-            "client_id": creds.client_id or settings.WHATSAPP_CLIENT_ID,
-            "client_secret": creds.client_secret or settings.WHATSAPP_CLIENT_SECRET,
-            "fb_exchange_token": creds.access_token or settings.WHATSAPP_ACCESS_TOKEN,
-        }
+        refresh_url = (
+            f"https://graph.facebook.com/v19.0/oauth/access_token"
+            f"?grant_type=fb_exchange_token"
+            f"&client_id={settings.WHATSAPP_CLIENT_ID}"
+            f"&client_secret={settings.WHATSAPP_CLIENT_SECRET}"
+            f"&fb_exchange_token={creds.access_token}"
+        )
 
-        response = requests.get(refresh_url, params=payload)
+        response = requests.get(refresh_url)
+        response_data = response.json()
 
-        if response.status_code == 200:
-            data = response.json()
-            new_token = data["access_token"]
-            expires_in = data.get("expires_in", 5184000)  # Default 60 days if missing
-            expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
-            # print("Token expires at:" + {expires_at})
-            print(f"Token expires at: {expires_at}")  # ✅ Correct formatting
+        if response.status_code == 400:
+            error_message = response_data.get("error", {}).get("message", "Unknown error")
+            logging.error(f"❌ Failed to refresh token: {error_message}")
+            
+            if "expired" in error_message.lower():
+                logging.critical("🚨 Refresh token expired! Falling back to default settings.")
 
+                # Use default token from settings
+                creds.access_token = getattr(settings, "WHATSAPP_ACCESS_TOKEN", "default_token")
+                creds.token_expiry = datetime.now(timezone.utc) + timedelta(days=60)  # Extend expiry
+                creds.save()
+                return creds.access_token
 
-            # Update database with new token
-            creds.access_token = new_token  # Encrypt before saving
-            creds.token_expiry = expires_at
-            creds.client_id = creds.client_id or settings.WHATSAPP_CLIENT_ID
-            creds.client_secret = creds.client_secret or settings.WHATSAPP_CLIENT_SECRET
-            creds.phone_number_id = creds.phone_number_id or settings.WHATSAPP_PHONE_NUMBER_ID
-            creds.business_id = creds.business_id or settings.WHATSAPP_BUSINESS_ID
+        elif "access_token" in response_data:
+            new_token = response_data["access_token"]
+            creds.access_token = new_token
+            creds.token_expiry = datetime.now(timezone.utc) + timedelta(days=60)  # Extend expiry
             creds.save()
-
-            logging.info("Successfully refreshed and stored new access token in DB.")
+            logging.info("✅ Successfully refreshed WhatsApp access token.")
             return new_token
 
-        else:
-            logging.error(f"Failed to refresh token: {response.status_code} {response.text}")
-            response.raise_for_status()
+    except WhatsAppCredential.DoesNotExist:
+        logging.error(f"❌ No WhatsApp credentials found for org {org_id}. Using default settings.")
+        return getattr(settings, "WHATSAPP_ACCESS_TOKEN", "default_token")
 
     except Exception as e:
-        logging.error(f"Error refreshing token: {e}")
-        return None
+        logging.error(f"❌ Error refreshing token: {e}")
+
+    # If everything fails, return default token
+    return getattr(settings, "WHATSAPP_ACCESS_TOKEN", "default_token")
 
 
 def setup(org_id):
