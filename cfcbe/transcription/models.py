@@ -148,3 +148,5 @@ class ModelTranscription(models.Model):
             return f"Transcription for Chunk {self.audio_chunk_id.order} of {self.audio_chunk_id.parent_audio.unique_id}"
         else:
             return f"Transcription for {self.audio_id.unique_id} - {self.model_version_id.version}"
+
+
