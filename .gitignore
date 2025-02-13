@@ -68,7 +68,7 @@ target/
 
 # Build directories and dependencies
 build/
-dist/
+
 out/
 target/
 
