@@ -5,6 +5,7 @@ from .views import (
     ContactList,
     IncomingMessageList,
     OutgoingMessageList,
+    generate_long_lived_token_view,
     send_message,
     whatsapp_webhook,
     # notify_user
@@ -26,4 +27,7 @@ urlpatterns = [
     path('messages/outgoing/', OutgoingMessageList.as_view(), name='outgoing_messages'),
     path('media/', WhatsAppMediaList.as_view(), name='whatsapp_media'),
     path('contacts/', ContactList.as_view(), name='whatsapp_contacts'),
-]
+    
+    # generate a long-lived token
+    path("generate_long_lived_token/", generate_long_lived_token_view, name="generate_long_lived_token"),
+    ]
