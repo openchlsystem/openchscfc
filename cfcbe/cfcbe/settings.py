@@ -48,11 +48,11 @@ INSTALLED_APPS = [
     # my apps
     'rest_framework',
     'feedback',
-    'ai',
+    # 'ai',
     'corsheaders',
     'emailfeedback',
     'whatsapp',
-    'transcription',
+    # 'transcription',
     'django_filters',
 ]
 
