@@ -35,7 +35,6 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
@@ -69,7 +68,7 @@ target/
 
 # Build directories and dependencies
 build/
-dist/
+
 out/
 target/
 

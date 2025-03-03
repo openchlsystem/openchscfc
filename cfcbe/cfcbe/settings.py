@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     
     # my apps
     'rest_framework',
+    'rest_framework_simplejwt',
     'feedback',
     # 'ai',
     'corsheaders',
@@ -54,6 +55,7 @@ INSTALLED_APPS = [
     'whatsapp',
     # 'transcription',
     'django_filters',
+    'authapp',
 ]
 
 MIDDLEWARE = [
@@ -68,6 +70,13 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'cfcbe.urls'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
 CORS_ALLOW_ALL_ORIGINS = True
 
 TEMPLATES = [
@@ -208,7 +217,7 @@ WHATSAPP_BUSINESS_ID = "101592599705197"
 WHATSAPP_PHONE_NUMBER_ID = "555567910973933"
 
 # Your refreshed long-lived access token
-WHATSAPP_ACCESS_TOKEN = "EACHQN1W8JWkBO4YFTZAvZAkC7W7ZC4XGTaFyX1sTUTfwivqKYTRnOSXkyoZA2N9ImEXPOpOTvnrhd3kj4NPZB2KZACtZAoqpbq6FtN8Lj0YQe5ejnJoV8LQBji6g4svV3tFvOsB3pz03Cd7AhTFMg6oO24FzWmzZBKTZBZAOgqNIZB2cYj7lqJiA1IG3KS8YAmDGmnfeAVUuZAiUuc6ZB3OSo0EjZCsZC6Srxup6F96Hvqy2YXP"
+WHATSAPP_ACCESS_TOKEN = "EACHQN1W8JWkBO8Fe7W3rXYWuUHXurnemr3rzmjToVqV3xXAPLvbTQELhknyUAQdf7V66n2VMYeWLL5GZC4zvcelK8dZCtfceW2grWgdZCxUTzNj2bZCFneAcZCXCUrbbYEmV1LdxGc7RoNth0AvsCwqTZACriZB4LwnHsFZCJuk8f1yAlSmHpAyxSai3U4uZBQMBvBcF0glX3yfIuqbPiIDLu4vS4VYWwl4iL9Qen0alv3gZDZD"
 
 # WhatsApp API Base URL
 WHATSAPP_API_URL = "https://graph.facebook.com/v19.0"

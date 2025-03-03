@@ -229,7 +229,7 @@ def send_message(request):
     """
     Handles sending WhatsApp messages and logs them in the database.
     """
-    setup(1) 
+    # setup(1) 
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -298,10 +298,21 @@ def send_whatsapp_message_on_create(sender, instance, created, **kwargs):
         )
 
 
-def send_whatsapp_message(
-    access_token, recipient, message_type, content=None, caption=None, media_url=None
-):
+import requests
+import logging
+from django.conf import settings
+
+def send_whatsapp_message(org_id, recipient, message_type, content=None, caption=None, media_url=None):
     """Sends a message via the WhatsApp API."""
+    from .utils import get_access_token, refresh_access_token  # Import helper functions
+    
+    org_id = 1  # 🔹 Replace with the actual organization ID
+    
+    access_token = get_access_token(org_id)  # 🔹 Fetch stored token
+    if not access_token:
+        logging.error(f"❌ Failed to retrieve access token for org_id {org_id}.")
+        return {"success": False, "error": "Unable to retrieve access token"}
+
     endpoint_url = f"{settings.WHATSAPP_API_URL}/{settings.WHATSAPP_PHONE_NUMBER_ID}/messages"
     headers = {
         "Authorization": f"Bearer {access_token}",
@@ -324,13 +335,25 @@ def send_whatsapp_message(
 
     try:
         response = requests.post(endpoint_url, json=request_body, headers=headers)
-        response.raise_for_status()
-        logging.info("Message sent successfully.")
-        return {"success": True}
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Error sending message: {e}")
-        return {"success": False}
 
+        # 🔹 If token is expired (401), refresh and retry
+        if response.status_code == 401:
+            logging.warning("🔄 Access token expired. Refreshing...")
+            access_token = refresh_access_token(org_id)
+            if not access_token:
+                return {"success": False, "error": "Failed to refresh access token"}
+            
+            # Retry the request with the new token
+            headers["Authorization"] = f"Bearer {access_token}"
+            response = requests.post(endpoint_url, json=request_body, headers=headers)
+
+        response.raise_for_status()
+        logging.info("✅ Message sent successfully.")
+        return {"success": True, "response": response.json()}
+
+    except requests.exceptions.RequestException as e:
+        logging.error(f"❌ Error sending message: {e}")
+        return {"success": False, "error": str(e)}
 
 # Lists only incoming messages (where recipient is NULL)
 class IncomingMessageList(generics.ListAPIView):
@@ -366,3 +389,81 @@ class ContactList(generics.ListCreateAPIView):
     serializer_class = ContactSerializer
     filter_backends = [filters.DjangoFilterBackend]
     filterset_fields = ["wa_id"]
+
+
+# generate a long lived token and update the credentials in the database
+import requests
+import logging
+from datetime import datetime, timezone, timedelta
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+from django.conf import settings
+from whatsapp.models import WhatsAppCredential, Organization
+
+@csrf_exempt
+def generate_long_lived_token_view(request):
+    """
+    API view to accept a short-lived token, exchange it for a long-lived token,
+    and save it in the WhatsAppCredential model.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method. Use POST."}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        short_lived_token = data.get("short_lived_token")
+        org_id = data.get("org_id")
+
+        if not short_lived_token or not org_id:
+            return JsonResponse({"error": "short_lived_token and org_id are required."}, status=400)
+
+        # Check if the organization exists
+        try:
+            organization = Organization.objects.get(id=org_id)
+        except Organization.DoesNotExist:
+            return JsonResponse({"error": "Organization not found."}, status=404)
+
+        # Exchange short-lived token for long-lived token
+        exchange_url = (
+            f"https://graph.facebook.com/v19.0/oauth/access_token"
+            f"?grant_type=fb_exchange_token"
+            f"&client_id={settings.WHATSAPP_CLIENT_ID}"
+            f"&client_secret={settings.WHATSAPP_CLIENT_SECRET}"
+            f"&fb_exchange_token={short_lived_token}"
+        )
+
+        response = requests.get(exchange_url)
+        response_data = response.json()
+
+        if response.status_code != 200 or "access_token" not in response_data:
+            error_message = response_data.get("error", {}).get("message", "Unknown error")
+            logging.error(f"❌ Failed to generate long-lived token: {error_message}")
+            return JsonResponse({"error": error_message}, status=400)
+
+        # Extract the long-lived token
+        long_lived_token = response_data["access_token"]
+
+        # Save token in database
+        creds, created = WhatsAppCredential.objects.update_or_create(
+            organization=organization,
+            defaults={
+                "access_token": long_lived_token,
+                "token_expiry": datetime.now(timezone.utc) + timedelta(days=60),
+            }
+        )
+
+        logging.info(f"✅ Successfully stored long-lived token for org {org_id}.")
+
+        return JsonResponse({
+            "message": "Long-lived token generated successfully.",
+            "long_lived_token": long_lived_token,
+            "token_expiry": creds.token_expiry.strftime("%Y-%m-%d %H:%M:%S UTC"),
+        }, status=200)
+
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON payload."}, status=400)
+
+    except Exception as e:
+        logging.error(f"❌ Unexpected error: {e}")
+        return JsonResponse({"error": "Internal server error."}, status=500)

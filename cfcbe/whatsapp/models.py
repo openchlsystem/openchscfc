@@ -51,10 +51,7 @@ class WhatsAppMessage(models.Model):
 
     # sender = models.CharField(max_length=12,null=True,blank=False)
     # recipient = models.ForeignKey(Contact, on_delete=models.CASCADE, related_name="received_messages", blank=True, null=True)
-    sender = models.ForeignKey(
-        Contact, on_delete=models.CASCADE, related_name="sent_messages",
-        blank=True, null=True  # ✅ Allows outgoing messages (where sender is NULL)
-    )
+    sender = models.CharField(max_length=255,null=True,blank=True)# ✅ Allows outgoing messages (where sender is NULL)
     recipient = models.ForeignKey(
         Contact, on_delete=models.CASCADE, related_name="received_messages",
         blank=True, null=True  # ✅ Allows incoming messages (where recipient is NULL)
