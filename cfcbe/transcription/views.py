@@ -1,4 +1,5 @@
 import io
+from pathlib import Path
 from rest_framework.response import Response
 from django.db.models import Count, Q
 from rest_framework.decorators import api_view
@@ -23,20 +24,30 @@ from .serializers import CaseRecordSerializer
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
-# Change this to "tiny", "small", "medium", or "large" as needed
-MODEL_SIZE = "tiny"
+# ✅ Set the default Whisper model size
+# Available options: "tiny", "small", "medium", "large"
+DEFAULT_MODEL_SIZE = "tiny"  # Change this to any supported Whisper model
 
-# Manually specify the model path
-CACHE_DIR = os.path.expanduser("~/.cache/whisper/")
-MODEL_PATH = os.path.join(CACHE_DIR, f"{MODEL_SIZE}.pt")
+# ✅ Define the cache directory for storing Whisper models
+CACHE_DIR = Path.home() / ".cache" / "whisper"
 
+<<<<<<< HEAD
 if os.path.exists(os.path.expanduser("~/.cache/whisper/tiny.pt")):
     MODEL_SIZE = "tiny"
+=======
+# ✅ Define the model path dynamically based on the selected Whisper model
+# Developers can override this by setting the MODEL_PATH environment variable
+MODEL_PATH = os.getenv("MODEL_PATH", CACHE_DIR / f"{DEFAULT_MODEL_SIZE}.pt")
+
+# ✅ Check if the selected Whisper model exists in the cache
+if not Path(MODEL_PATH).exists():
+    print(f"🔍 Whisper model not found: {MODEL_PATH}. Downloading {DEFAULT_MODEL_SIZE} model...")
+>>>>>>> 9e1786219a7ff0cdbb060cc9f209aaae519c7772
 
 # ✅ Check if model exists in cache before downloading
 if not os.path.exists(MODEL_PATH):
     print(f"🔍 Model not found in cache: {MODEL_PATH}. Downloading...")
-model = whisper.load_model(MODEL_SIZE, download_root=CACHE_DIR)
+model = whisper.load_model(MODEL_PATH, download_root=CACHE_DIR)
 
 @api_view(["POST"])
 def transcribe_audio(request):
