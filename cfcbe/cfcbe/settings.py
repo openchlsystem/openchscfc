@@ -49,11 +49,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'feedback',
-    'ai',
+    # 'ai',
     'corsheaders',
     'emailfeedback',
     'whatsapp',
-    'transcription',
+    # 'transcription',
     'django_filters',
     'authapp',
 ]
