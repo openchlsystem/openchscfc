@@ -48,14 +48,21 @@ INSTALLED_APPS = [
     # my apps
     'rest_framework',
     'rest_framework_simplejwt',
-    'feedback',
-    'ai',
+    # 'feedback', # webform platform 
+    
     'corsheaders',
-    'emailfeedback',
-    'whatsapp',
-    # 'transcription',
+    # 'emailfeedback', # email platform
+    # 'whatsapp',
     'django_filters',
-    'authapp',
+    # 'authapp',
+
+    # New Gateway Apps
+    'webhook_handler',
+    'platform_adapters',
+    'endpoint_integration',
+    'shared',
+    
+    
 ]
 
 MIDDLEWARE = [
@@ -202,7 +209,15 @@ LOGGING = {
         'level': 'INFO',
     },
 }
-
+PLATFORM_CONFIGS = {
+    'webform': {
+        'api_token': "19021977"
+    },
+    'whatsapp': {
+        'verify_token': 'your-verify-token',
+        'app_secret': 'your-app-secret',
+    }
+}
 
 VERIFICATION_TOKEN = "19021977"
 
@@ -226,3 +241,17 @@ WHATSAPP_API_URL = "https://graph.facebook.com/v22.0"
 
 # Webhook Verification Token (If using webhooks)
 WHATSAPP_WEBHOOK_VERIFY_TOKEN = "19021977"
+
+# Endpoint configuration
+ENDPOINT_CONFIG = {
+    'cases_endpoint': {
+        'url': 'https://demo-openchs.bitz-itc.com/helpline/api/cases/',
+        'auth_token': 'sci9de994iddqlmj8fv7r1js74',
+        'formatter': 'cases'
+    },
+    'messaging_endpoint': {
+        'url': 'https://demo-openchs.bitz-itc.com/helpline/api/msg/',
+        'auth_token': 'your-bearer-token-here',
+        'formatter': 'messaging'
+    }
+}

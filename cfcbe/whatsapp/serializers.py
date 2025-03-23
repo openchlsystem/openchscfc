@@ -15,6 +15,7 @@ class WhatsAppMediaSerializer(serializers.ModelSerializer):
         fields = ['id', 'media_type', 'media_url', 'media_file', 'media_mime_type']
 
 
+
 # WhatsApp Message Serializer
 class WhatsAppMessageSerializer(serializers.ModelSerializer):
     sender = ContactSerializer(read_only=True)  # Nested serialization for sender

@@ -340,7 +340,7 @@ def send_to_main_system(message, encoded_message, mime_type):
     Sends the formatted message to the main system.
     """
     payload = {
-        "channel": "whatsup",
+        "channel": "whatsApp",
         "timestamp": message.timestamp.isoformat(),
         "session_id": message.sender.wa_id if message.sender else None,
         "message_id": str(message.id),
