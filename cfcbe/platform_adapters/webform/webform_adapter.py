@@ -260,7 +260,7 @@ class WebformAdapter(BaseAdapter):
         }
         
         # Determine MIME type based on content
-        content_type = 'text/plain'
+        content_type = 'application/json'
         
         # Get media URL if available
         media_url = None
