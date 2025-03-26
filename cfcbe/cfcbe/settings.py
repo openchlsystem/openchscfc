@@ -48,23 +48,22 @@ INSTALLED_APPS = [
     # my apps
     'rest_framework',
     'rest_framework_simplejwt',
-    # 'feedback', # webform platform 
-    
     'corsheaders',
-    # 'emailfeedback', # email platform
-    # 'whatsapp',
-    'django_filters',
-    # 'authapp',
+    
+    
 
-    # New Gateway Apps
+    
+    # 'emailfeedback',
+    'django_filters',
+
+
+    # New Gateway Apps,
     'webhook_handler',
     'platform_adapters',
     'endpoint_integration',
     'shared',
 
-    # 'platform_adapters.apps.PlatformAdaptersConfig',
-    # 'webhook_handler.apps.WebhookHandlerConfig',
-    # 'shared.apps.SharedConfig',
+
     
     
 ]

@@ -240,12 +240,8 @@ class WhatsAppAdapter(BaseAdapter):
                         defaults={'name': contact_name or 'Unknown'}
                     )
                     
-<<<<<<< HEAD
-                    # Ensure that if the contact was created, it's properly saved (if not already saved)
-=======
                     
                     # Ensure contact is saved, even if it was just created
->>>>>>> 6d6ba658f73f11379300d2f7a66709db69aedc34
                     if created:
                         contact.save()
 
