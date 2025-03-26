@@ -234,25 +234,27 @@ class WhatsAppAdapter(BaseAdapter):
                 contact_name = contact_info.get('name')
                 
                 if sender_wa_id:
-                    contact, _ = Contact.objects.get_or_create(
+                    # First, create or get the contact
+                    contact, created = Contact.objects.get_or_create(
                         wa_id=sender_wa_id,
                         defaults={'name': contact_name or 'Unknown'}
                     )
                     
-                    # Ensure contact is saved, even if it was just created
+                    # Ensure that if the contact was created, it's properly saved (if not already saved)
                     if created:
-                     contact.save()
-                    
-                    # Create WhatsAppMessage record for the incoming message
+                        contact.save()
+
+                    # Now, create the WhatsAppMessage with the valid contact
                     whatsapp_message = WhatsAppMessage.objects.create(
-                        sender=contact,
-                        recipient=None,  # Incoming message has no recipient
+                        sender=contact,  # This ensures the FK is properly addressed
+                        recipient=None,  # No recipient for incoming message
                         message_type=message.get('type', 'text'),
                         content=message.get('text', {}).get('body', '') if message.get('type') == 'text' else '',
                         caption=message.get('caption', ''),
                         media=media_instance,
                         status="received"
                     )
+
                     
                     # Add the newly created message ID to the metadata
                     if 'metadata' not in message:
