@@ -239,6 +239,7 @@ class WhatsAppAdapter(BaseAdapter):
                         defaults={'name': contact_name or 'Unknown'}
                     )
                     
+                    
                     # Ensure contact is saved, even if it was just created
                     if created:
                      contact.save()
