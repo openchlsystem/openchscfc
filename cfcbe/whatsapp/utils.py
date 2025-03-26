@@ -152,39 +152,39 @@ def setup(org_id):
         refresh_access_token(org_id)
 
 
-def send_whatsapp_message(
-    phone_number, message_type, content=None, caption=None, media_url=None
-):
-    """
-    Sends a message to WhatsApp via API.
-    """
-    # url = f"https://graph.facebook.com/v18.0/{settings.WHATSAPP_PHONE_NUMBER_ID}/messages"
-    url = f"{WHATSAPP_API_URL}/{WHATSAPP_PHONE_NUMBER_ID}/messages"
+# def send_whatsapp_message(
+#     phone_number, message_type, content=None, caption=None, media_url=None
+# ):
+#     """
+#     Sends a message to WhatsApp via API.
+#     """
+#     # url = f"https://graph.facebook.com/v18.0/{settings.WHATSAPP_PHONE_NUMBER_ID}/messages"
+#     url = f"{WHATSAPP_API_URL}/{WHATSAPP_PHONE_NUMBER_ID}/messages"
 
-    headers = {
-        "Authorization": f"Bearer {get_access_token(1)}",
-        "Content-Type": "application/json",
-    }
+#     headers = {
+#         "Authorization": f"Bearer {get_access_token(1)}",
+#         "Content-Type": "application/json",
+#     }
 
-    payload = {
-        "messaging_product": "whatsapp",
-        "to": phone_number,
-        "type": message_type,
-    }
-    if message_type == "text":
-        payload["text"] = {"body": content}
-    elif message_type in ["image", "video", "audio", "document"]:
-        payload[message_type] = {"link": media_url}
-        if caption:
-            payload[message_type]["caption"] = caption
+#     payload = {
+#         "messaging_product": "whatsapp",
+#         "to": phone_number,
+#         "type": message_type,
+#     }
+#     if message_type == "text":
+#         payload["text"] = {"body": content}
+#     elif message_type in ["image", "video", "audio", "document"]:
+#         payload[message_type] = {"link": media_url}
+#         if caption:
+#             payload[message_type]["caption"] = caption
 
-    logging.info(f"Sending WhatsApp message: {payload}")
+#     logging.info(f"Sending WhatsApp message: {payload}")
 
-    response = requests.post(url, json=payload, headers=headers)
+#     response = requests.post(url, json=payload, headers=headers)
 
-    logging.info(f"WhatsApp API Response: {response.status_code} {response.text}")
+#     logging.info(f"WhatsApp API Response: {response.status_code} {response.text}")
 
-    return response.json()
+#     return response.json()
 
 
 # def download_media(media_id, access_token):
@@ -340,7 +340,7 @@ def send_to_main_system(message, encoded_message, mime_type):
     Sends the formatted message to the main system.
     """
     payload = {
-        "channel": "whatsup",
+        "channel": "whatsApp",
         "timestamp": message.timestamp.isoformat(),
         "session_id": message.sender.wa_id if message.sender else None,
         "message_id": str(message.id),

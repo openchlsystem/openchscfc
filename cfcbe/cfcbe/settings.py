@@ -48,14 +48,25 @@ INSTALLED_APPS = [
     # my apps
     'rest_framework',
     'rest_framework_simplejwt',
-    'feedback',
-    # 'ai',
+    # 'feedback', # webform platform 
+    
     'corsheaders',
-    'emailfeedback',
-    'whatsapp',
-    # 'transcription',
+    # 'emailfeedback', # email platform
+    # 'whatsapp',
     'django_filters',
-    'authapp',
+    # 'authapp',
+
+    # New Gateway Apps
+    'webhook_handler',
+    'platform_adapters',
+    'endpoint_integration',
+    'shared',
+
+    # 'platform_adapters.apps.PlatformAdaptersConfig',
+    # 'webhook_handler.apps.WebhookHandlerConfig',
+    # 'shared.apps.SharedConfig',
+    
+    
 ]
 
 MIDDLEWARE = [
@@ -202,13 +213,28 @@ LOGGING = {
         'level': 'INFO',
     },
 }
+PLATFORM_CONFIGS = {
+    'webform': {
+        'api_token': "19021977"
+    },
+    'whatsapp': {
+        'verify_token': "19021977",
+        'api_token': 'sci9de994iddqlmj8fv7r1js74',
+        # 'app_secret': 'your-app-secret',
+        # 'api_token': 'your-meta-api-token',
+        'phone_number_id': '555567910973933',
+        'client_id': '9517610311624041',
+        'client_secret': '3bac93f1342c1c0fdbd6d755d515b5ae',
+        'business_id': '101592599705197',
+        'access_token': "EACHQN1W8JWkBO6DYzdQ1vrpTrGYttRX2CHc8tMAHyWz2ZCST4qTN7c5kiHEQ3SVxn2prZBp1XzHBAJZCzVY1fAEwltWl6mwS2XaZBA18VixvNdebJEzzei6AMlpn66YjUAf915ZASXH5h93730vZAR9bBUvs8oLi1ZA18viUqT2G5TAflvZA2NXIWvyAVDxXo5fg1phyCQZDZD"
+    }
+}
+
 
 
 VERIFICATION_TOKEN = "19021977"
 
 BEARER_TOKEN = "sci9de994iddqlmj8fv7r1js74"
-
-
 
 # WhatsApp API Credentials
 WHATSAPP_CLIENT_ID = "9517610311624041"
@@ -216,12 +242,30 @@ WHATSAPP_CLIENT_SECRET = "3bac93f1342c1c0fdbd6d755d515b5ae"
 WHATSAPP_BUSINESS_ID = "101592599705197"
 WHATSAPP_PHONE_NUMBER_ID = "555567910973933"
 
-# Your refreshed long-lived access token
-WHATSAPP_ACCESS_TOKEN = "EACHQN1W8JWkBO8Fe7W3rXYWuUHXurnemr3rzmjToVqV3xXAPLvbTQELhknyUAQdf7V66n2VMYeWLL5GZC4zvcelK8dZCtfceW2grWgdZCxUTzNj2bZCFneAcZCXCUrbbYEmV1LdxGc7RoNth0AvsCwqTZACriZB4LwnHsFZCJuk8f1yAlSmHpAyxSai3U4uZBQMBvBcF0glX3yfIuqbPiIDLu4vS4VYWwl4iL9Qen0alv3gZDZD"
+# Updated long-lived access token
+WHATSAPP_ACCESS_TOKEN = "EACHQN1W8JWkBO6DYzdQ1vrpTrGYttRX2CHc8tMAHyWz2ZCST4qTN7c5kiHEQ3SVxn2prZBp1XzHBAJZCzVY1fAEwltWl6mwS2XaZBA18VixvNdebJEzzei6AMlpn66YjUAf915ZASXH5h93730vZAR9bBUvs8oLi1ZA18viUqT2G5TAflvZA2NXIWvyAVDxXo5fg1phyCQZDZD"
 
 # WhatsApp API Base URL
-WHATSAPP_API_URL = "https://graph.facebook.com/v19.0"
+WHATSAPP_API_URL = "https://graph.facebook.com/v22.0"
+
+# WhatsApp API Base URL
+WHATSAPP_API_URL = "https://graph.facebook.com/v22.0"
+
 
 
 # Webhook Verification Token (If using webhooks)
 WHATSAPP_WEBHOOK_VERIFY_TOKEN = "19021977"
+
+# Endpoint configuration
+ENDPOINT_CONFIG = {
+    'cases_endpoint': {
+        'url': 'https://demo-openchs.bitz-itc.com/helpline/api/cases/',
+        'auth_token': 'sci9de994iddqlmj8fv7r1js74',
+        'formatter': 'cases'
+    },
+    'messaging_endpoint': {
+        'url': 'https://demo-openchs.bitz-itc.com/helpline/api/msg/',
+        'auth_token': 'sci9de994iddqlmj8fv7r1js74',
+        'formatter': 'messaging'
+    }
+}
