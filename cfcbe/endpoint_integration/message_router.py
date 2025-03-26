@@ -96,8 +96,7 @@ class MessageRouter:
             # Default formatter just passes through the message as a dict
             return message.to_dict()
     
-    def _format_cases_endpoint(self, message: StandardMessage, conversation: Any, 
-                              config: Dict[str, Any]) -> Dict[str, Any]:
+    def _format_cases_endpoint(self, message: StandardMessage, conversation: Any, config: Dict[str, Any]) -> Dict[str, Any]:
         """
         Format message for the cases endpoint (used by webform).
         
@@ -119,7 +118,7 @@ class MessageRouter:
         # Use the source_uid from the message or generate one
         source_uid = message.source_uid
         if not source_uid.startswith('walkin-'):
-            source_uid = f"walkin-100-{unix_timestamp.replace('.', '')}"
+            source_uid = f"walkin-100-{int(source_timestamp)}"
         
         # Create a deterministic uid2 based on source_uid
         source_uid2 = f"{source_uid}-2"
@@ -129,10 +128,15 @@ class MessageRouter:
         perpetrator_data = metadata.get('perpetrator', {})
         
         # Prepare client (victim) data
+        # Ensure name is never empty - use "Anonymous" as fallback
+        victim_name = victim_data.get('name', '')
+        if not victim_name or victim_name.strip() == '':
+            victim_name = "Anonymous Victim"
+            
         client_data = {
-            "fname": victim_data.get('name', ''),
+            "fname": victim_name,
             "age_t": "0",
-            "age": str(victim_data.get('age', '')),
+            "age": str(victim_data.get('age', '0')),  # Default to "0" if age is empty
             "dob": "",
             "age_group_id": "361953",
             "location_id": "258783",
@@ -156,10 +160,15 @@ class MessageRouter:
         }
         
         # Prepare perpetrator data
+        # Ensure perpetrator name is never empty - use "Unknown" as fallback
+        perp_name = perpetrator_data.get('name', '')
+        if not perp_name or perp_name.strip() == '':
+            perp_name = "Unknown Perpetrator"
+            
         perp_data = {
-            "fname": perpetrator_data.get('name', ''),
+            "fname": perp_name,
             "age_t": "0",
-            "age": str(perpetrator_data.get('age', '')),
+            "age": str(perpetrator_data.get('age', '0')),  # Default to "0" if age is empty
             "dob": "",
             "age_group_id": "361955",
             "age_group": "31-45",
@@ -185,18 +194,23 @@ class MessageRouter:
             ".id": ""
         }
 
-        # Construct the cases endpoint payload directly mapping StandardMessage fields
+        # Ensure narrative is never empty
+        narrative = message.content
+        if not narrative or narrative.strip() == '':
+            narrative = "No details provided"
+
+        # Construct the cases endpoint payload matching the required format
         cases_payload = {
-            "src": message.source,              # Maps from message.source
-            "src_uid": source_uid,              # Maps from message.source_uid (with prefix)
-            "src_address": message.source_address, # Maps from message.source_address
-            "src_uid2": source_uid2,            # Derived from src_uid
-            "src_usr": "100",                   # Default value
-            "src_vector": "2",                  # Default value
-            "src_callid": message.message_id,   # Maps from message.message_id
-            "src_ts": unix_timestamp,           # Maps from message.source_timestamp
+            "src": "walkin",                     # Fixed source
+            "src_uid": source_uid,               # Maps from message.source_uid (with prefix)
+            "src_address": message.source_address or "0110110110", # Maps from message.source_address
+            "src_uid2": source_uid2,             # Derived from src_uid
+            "src_usr": "100",                    # Default value
+            "src_vector": "2",                   # Default value
+            "src_callid": message.message_id,    # Maps from message.message_id
+            "src_ts": unix_timestamp,            # Maps from message.source_timestamp
             
-            "reporter": client_data,
+            "reporters_a": client_data,          # Using 'reporters_a' instead of 'reporter'
             
             "clients_case": [
                 client_data
@@ -214,7 +228,7 @@ class MessageRouter:
             
             "case_category_id": metadata.get('case_category_id', "362484"),
             
-            "narrative": message.content,  # Maps from message.content
+            "narrative": narrative,              # Maps from message.content with fallback
             
             "plan": "---",
             
@@ -226,7 +240,9 @@ class MessageRouter:
             
             "status": "1",
             
-            "escalated_to_id": "0"
+            "escalated_to_id": "0",
+            
+            "gbv_related": "0"                  # Added this field
         }
         
         return cases_payload

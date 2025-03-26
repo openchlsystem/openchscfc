@@ -218,14 +218,15 @@ PLATFORM_CONFIGS = {
         'api_token': "19021977"
     },
     'whatsapp': {
-        'verify_token': 'your-verify-token',
-        'auth_token': 'sci9de994iddqlmj8fv7r1js74',
+        'verify_token': "19021977",
+        'api_token': 'sci9de994iddqlmj8fv7r1js74',
         # 'app_secret': 'your-app-secret',
         # 'api_token': 'your-meta-api-token',
         'phone_number_id': '555567910973933',
         'client_id': '9517610311624041',
         'client_secret': '3bac93f1342c1c0fdbd6d755d515b5ae',
         'business_id': '101592599705197',
+        'access_token': "EACHQN1W8JWkBO6DYzdQ1vrpTrGYttRX2CHc8tMAHyWz2ZCST4qTN7c5kiHEQ3SVxn2prZBp1XzHBAJZCzVY1fAEwltWl6mwS2XaZBA18VixvNdebJEzzei6AMlpn66YjUAf915ZASXH5h93730vZAR9bBUvs8oLi1ZA18viUqT2G5TAflvZA2NXIWvyAVDxXo5fg1phyCQZDZD"
     }
 }
 

@@ -30,7 +30,6 @@ from .serializers import (
 )
 from .utils import (
     download_media,
-    # get_access_token,
     get_media_url_from_whatsapp,
     setup,
     # refresh_access_token,
