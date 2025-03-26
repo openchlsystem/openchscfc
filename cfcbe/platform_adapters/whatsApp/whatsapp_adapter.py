@@ -187,7 +187,7 @@ class WhatsAppAdapter(BaseAdapter):
                 return []
         else:
             data = request
-        
+
         # Process each entry and change
         for entry in data.get('entry', []):
             for change in entry.get('changes', []):
@@ -207,57 +207,58 @@ class WhatsAppAdapter(BaseAdapter):
                         'wa_id': contact.get('wa_id')
                     }
                 
-                # Process each message
-                for message in messages:
-                    # Handle media if present
-                    if message.get('type') in ['image', 'video', 'audio', 'document']:
-                        media_type = message.get('type')
-                        media_id = message.get(media_type, {}).get('id')
+            # Process each message
+            for message in messages:
+                # Handle media if present
+                media_instance = None
+                if message.get('type') in ['image', 'video', 'audio', 'document']:
+                    # ... existing media handling code ...
+                    # The media handling code that creates the media record
+                    if media_file:
+                        # Create media record
+                        media_instance = WhatsAppMedia.objects.create(
+                            media_type=media_type,
+                            media_url=media_url,
+                            media_mime_type=mime_type
+                        )
+                        media_instance.media_file.save(media_file.name, media_file, save=True)
                         
-                        if media_id:
-                            # Get the media URL
-                            media_url = self.get_media_url_from_whatsapp(media_id)
-                            
-                            if media_url:
-                                # Add the URL to the message data for processing
-                                if media_type not in message:
-                                    message[media_type] = {}
-                                message[media_type]['url'] = media_url
-                                
-                                # Create or get contact
-                                sender_wa_id = message.get('from')
-                                contact_name = contact_info.get('name')
-                                
-                                if sender_wa_id:
-                                    contact, _ = Contact.objects.get_or_create(
-                                        wa_id=sender_wa_id,
-                                        defaults={'name': contact_name or 'Unknown'}
-                                    )
-                                    
-                                    # Process and save the media
-                                    mime_type = message.get(media_type, {}).get('mime_type')
-                                    media_file = self.download_media(media_url, media_type, media_id)
-                                    
-                                    if media_file:
-                                        # Create media record
-                                        media = WhatsAppMedia.objects.create(
-                                            media_type=media_type,
-                                            media_url=media_url,
-                                            media_mime_type=mime_type
-                                        )
-                                        media.media_file.save(media_file.name, media_file, save=True)
-                                        
-                                        # Update message metadata with media information
-                                        if 'metadata' not in message:
-                                            message['metadata'] = {}
-                                        
-                                        message['metadata']['media_file_id'] = media.id
+                        # Update message metadata with media information
+                        if 'metadata' not in message:
+                            message['metadata'] = {}
+                        
+                        message['metadata']['media_file_id'] = media_instance.id
+                
+                # Create or get contact
+                sender_wa_id = message.get('from')
+                contact_name = contact_info.get('name')
+                
+                if sender_wa_id:
+                    contact, _ = Contact.objects.get_or_create(
+                        wa_id=sender_wa_id,
+                        defaults={'name': contact_name or 'Unknown'}
+                    )
                     
-                    # Convert to standard message
-                    standard_message = self._convert_to_standard_message(message, contact_info)
-                    if standard_message:
-                        standard_messages.append(standard_message.to_dict())
-        
+                    # Create WhatsAppMessage record for the incoming message
+                    whatsapp_message = WhatsAppMessage.objects.create(
+                        sender=contact,
+                        recipient=None,  # Incoming message has no recipient
+                        message_type=message.get('type', 'text'),
+                        content=message.get('text', {}).get('body', '') if message.get('type') == 'text' else '',
+                        caption=message.get('caption', ''),
+                        media=media_instance,
+                        status="received"
+                    )
+                    
+                    # Add the newly created message ID to the metadata
+                    if 'metadata' not in message:
+                        message['metadata'] = {}
+                    message['metadata']['whatsapp_message_id'] = whatsapp_message.id
+                
+                # Convert to standard message
+                standard_message = self._convert_to_standard_message(message, contact_info)
+                if standard_message:
+                    standard_messages.append(standard_message.to_dict())
         return standard_messages
     
     def _convert_to_standard_message(self, message: Dict[str, Any], contact_info: Dict[str, Any]) -> Optional[StandardMessage]:
