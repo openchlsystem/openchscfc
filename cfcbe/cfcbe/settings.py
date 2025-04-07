@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-hb(yb)v5&^t3^42-320z=zw_$agrp-4+%ss^90l+y=3ua@k$7$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['backend.bitz-itc.com', 'localhost', '0.0.0.0','127.0.0.1']
+ALLOWED_HOSTS = ['154.72.207.59','backend.bitz-itc.com', 'localhost', '0.0.0.0','127.0.0.1']
 
 MEDIA_URL = '/uploads/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads')
@@ -255,16 +255,31 @@ WHATSAPP_API_URL = "https://graph.facebook.com/v22.0"
 # Webhook Verification Token (If using webhooks)
 WHATSAPP_WEBHOOK_VERIFY_TOKEN = "19021977"
 
-# Endpoint configuration
+# # Endpoint configuration
+# ENDPOINT_CONFIG = {
+#     'cases_endpoint': {
+#         'url': 'https://demo-openchs.bitz-itc.com/helpline/api/cases/',
+#         'auth_token': 'sci9de994iddqlmj8fv7r1js74',
+#         'formatter': 'cases'
+#     },
+#     'messaging_endpoint': {
+#         'url': 'https://demo-openchs.bitz-itc.com/helpline/api/msg/',
+#         'auth_token': 'sci9de994iddqlmj8fv7r1js74',
+#         'formatter': 'messaging'
+#     }
+# }
+
 ENDPOINT_CONFIG = {
     'cases_endpoint': {
-        'url': 'https://demo-openchs.bitz-itc.com/helpline/api/cases/',
+        'url': 'http://154.72.207.59/helpline/api/cases/',
         'auth_token': 'sci9de994iddqlmj8fv7r1js74',
         'formatter': 'cases'
     },
     'messaging_endpoint': {
-        'url': 'https://demo-openchs.bitz-itc.com/helpline/api/msg/',
+        'url': 'http://154.72.207.59//helpline/api/msg/',
         'auth_token': 'sci9de994iddqlmj8fv7r1js74',
         'formatter': 'messaging'
     }
 }
+
+
