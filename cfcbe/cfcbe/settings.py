@@ -271,12 +271,12 @@ WHATSAPP_WEBHOOK_VERIFY_TOKEN = "19021977"
 
 ENDPOINT_CONFIG = {
     'cases_endpoint': {
-        'url': 'http://154.72.207.59/helpline/api/cases/',
+        'url': 'http://127.0.0.1/helpline/api/cases/',
         'auth_token': 'sci9de994iddqlmj8fv7r1js74',
         'formatter': 'cases'
     },
     'messaging_endpoint': {
-        'url': 'http://154.72.207.59//helpline/api/msg/',
+        'url': 'http://127.0.0.1/helpline/api/msg/',
         'auth_token': 'sci9de994iddqlmj8fv7r1js74',
         'formatter': 'messaging'
     }
