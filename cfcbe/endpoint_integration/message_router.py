@@ -51,7 +51,7 @@ class MessageRouter:
         
         # Format the message for the endpoint
         formatted_message = self._format_for_endpoint(message, conversation, config, endpoint)
-        
+        print(f"THIS IS THE PAYLOAD{formatted_message} THIS IS THE CONFIG{config}")
         # Send the formatted message to the endpoint
         response = self._send_to_endpoint(formatted_message, config)
         
@@ -201,16 +201,16 @@ class MessageRouter:
 
         # Construct the cases endpoint payload matching the required format
         cases_payload = {
-            "src": "walkin",                     # Fixed source
+            "src": "webform",                     # Fixed source
             "src_uid": source_uid,               # Maps from message.source_uid (with prefix)
-            "src_address": message.source_address or "0110110110", # Maps from message.source_address
+            "src_address": source_uid2 or "0101010101", # Maps from message.source_address
             "src_uid2": source_uid2,             # Derived from src_uid
             "src_usr": "100",                    # Default value
             "src_vector": "2",                   # Default value
             "src_callid": message.message_id,    # Maps from message.message_id
             "src_ts": unix_timestamp,            # Maps from message.source_timestamp
             
-            "reporters_a": client_data,          # Using 'reporters_a' instead of 'reporter'
+            "reporters_uuid": client_data,          # Using 'reporters_a' instead of 'reporter'
             
             "clients_case": [
                 client_data
