@@ -13,6 +13,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 import warnings
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Suppress FutureWarning from torch.load in Whisper
 warnings.filterwarnings("ignore", category=FutureWarning, module="whisper")
@@ -25,15 +29,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-hb(yb)v5&^t3^42-320z=zw_$agrp-4+%ss^90l+y=3ua@k$7$'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['154.72.207.59','backend.bitz-itc.com', 'localhost', '0.0.0.0','127.0.0.1']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
-MEDIA_URL = '/uploads/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads')
+MEDIA_URL = os.getenv('MEDIA_URL', '/uploads/')
+MEDIA_ROOT = os.path.join(BASE_DIR, os.getenv('MEDIA_ROOT', 'uploads'))
 
 # Application definition
 
@@ -63,9 +67,9 @@ INSTALLED_APPS = [
     'endpoint_integration',
     'shared',
 
-
-    
-    
+    # 'platform_adapters.apps.PlatformAdaptersConfig',
+    # 'webhook_handler.apps.WebhookHandlerConfig',
+    # 'shared.apps.SharedConfig',
 ]
 
 MIDDLEWARE = [
@@ -77,6 +81,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'webhook_handler.middleware.TokenAuthMiddleware',
 ]
 
 ROOT_URLCONF = 'cfcbe.urls'
@@ -87,7 +92,11 @@ REST_FRAMEWORK = {
     ),
 }
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'False') == 'True'
+
+CORS_ALLOW_CREDENTIALS = os.getenv('CORS_ALLOW_CREDENTIALS', 'False') == 'True'
+
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
 
 TEMPLATES = [
     {
@@ -113,8 +122,8 @@ WSGI_APPLICATION = 'cfcbe.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': os.path.join(BASE_DIR, os.getenv('DB_NAME', 'db.sqlite3')),
     }
 }
 
@@ -160,17 +169,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Cors
-CORS_ALLOW_CREDENTIALS = True
-
-# Allow specific enable in production
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080",  # For local development
-    "http://localhost:5173",  # For local development
-    "https://webform.bitz-itc.com",
-]
-
-
+# CORS Headers configuration
 CORS_ALLOW_HEADERS = [
     'content-type',
     'authorization',
@@ -179,7 +178,6 @@ CORS_ALLOW_HEADERS = [
     'origin',
     'user-agent',
 ]
-
 
 CORS_ALLOW_METHODS = [
     'GET',
@@ -190,8 +188,7 @@ CORS_ALLOW_METHODS = [
     'OPTIONS',
 ]
 
-
-
+# Logging configuration
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -209,51 +206,38 @@ LOGGING = {
     },
     'root': {
         'handlers': ['console'],
-        'level': 'INFO',
+        'level': os.getenv('LOG_LEVEL', 'INFO'),
     },
 }
+
+# Platform configurations
 PLATFORM_CONFIGS = {
     'webform': {
-        'api_token': "19021977"
+        'api_token': os.getenv('PLATFORM_WEBFORM_API_TOKEN')
     },
     'whatsapp': {
-        'verify_token': "19021977",
-        'api_token': 'sci9de994iddqlmj8fv7r1js74',
-        # 'app_secret': 'your-app-secret',
-        # 'api_token': 'your-meta-api-token',
-        'phone_number_id': '555567910973933',
-        'client_id': '9517610311624041',
-        'client_secret': '3bac93f1342c1c0fdbd6d755d515b5ae',
-        'business_id': '101592599705197',
-        'access_token': "EACHQN1W8JWkBO6DYzdQ1vrpTrGYttRX2CHc8tMAHyWz2ZCST4qTN7c5kiHEQ3SVxn2prZBp1XzHBAJZCzVY1fAEwltWl6mwS2XaZBA18VixvNdebJEzzei6AMlpn66YjUAf915ZASXH5h93730vZAR9bBUvs8oLi1ZA18viUqT2G5TAflvZA2NXIWvyAVDxXo5fg1phyCQZDZD"
+        'verify_token': os.getenv('WHATSAPP_VERIFY_TOKEN'),
+        'api_token': os.getenv('PLATFORM_WEBFORM_API_TOKEN'),
+        'phone_number_id': os.getenv('WHATSAPP_PHONE_NUMBER_ID'),
+        'client_id': os.getenv('WHATSAPP_CLIENT_ID'),
+        'client_secret': os.getenv('WHATSAPP_CLIENT_SECRET'),
+        'business_id': os.getenv('WHATSAPP_BUSINESS_ID'),
+        'access_token': os.getenv('WHATSAPP_ACCESS_TOKEN')
     }
 }
 
+VERIFICATION_TOKEN = os.getenv('WHATSAPP_VERIFY_TOKEN')
 
-
-VERIFICATION_TOKEN = "19021977"
-
-BEARER_TOKEN = "sci9de994iddqlmj8fv7r1js74"
+BEARER_TOKEN = os.getenv('PLATFORM_WEBFORM_API_TOKEN')
 
 # WhatsApp API Credentials
-WHATSAPP_CLIENT_ID = "9517610311624041"
-WHATSAPP_CLIENT_SECRET = "3bac93f1342c1c0fdbd6d755d515b5ae"
-WHATSAPP_BUSINESS_ID = "101592599705197"
-WHATSAPP_PHONE_NUMBER_ID = "555567910973933"
-
-# Updated long-lived access token
-WHATSAPP_ACCESS_TOKEN = "EACHQN1W8JWkBO6DYzdQ1vrpTrGYttRX2CHc8tMAHyWz2ZCST4qTN7c5kiHEQ3SVxn2prZBp1XzHBAJZCzVY1fAEwltWl6mwS2XaZBA18VixvNdebJEzzei6AMlpn66YjUAf915ZASXH5h93730vZAR9bBUvs8oLi1ZA18viUqT2G5TAflvZA2NXIWvyAVDxXo5fg1phyCQZDZD"
-
-# WhatsApp API Base URL
-WHATSAPP_API_URL = "https://graph.facebook.com/v22.0"
-
-# WhatsApp API Base URL
-WHATSAPP_API_URL = "https://graph.facebook.com/v22.0"
-
-
-
-# Webhook Verification Token (If using webhooks)
-WHATSAPP_WEBHOOK_VERIFY_TOKEN = "19021977"
+WHATSAPP_CLIENT_ID = os.getenv('WHATSAPP_CLIENT_ID')
+WHATSAPP_CLIENT_SECRET = os.getenv('WHATSAPP_CLIENT_SECRET')
+WHATSAPP_BUSINESS_ID = os.getenv('WHATSAPP_BUSINESS_ID')
+WHATSAPP_PHONE_NUMBER_ID = os.getenv('WHATSAPP_PHONE_NUMBER_ID')
+WHATSAPP_ACCESS_TOKEN = os.getenv('WHATSAPP_ACCESS_TOKEN')
+WHATSAPP_API_URL = os.getenv('WHATSAPP_API_URL')
+WHATSAPP_WEBHOOK_VERIFY_TOKEN = os.getenv('WHATSAPP_VERIFY_TOKEN')
 
 # # Endpoint configuration
 # ENDPOINT_CONFIG = {
@@ -271,15 +255,22 @@ WHATSAPP_WEBHOOK_VERIFY_TOKEN = "19021977"
 
 ENDPOINT_CONFIG = {
     'cases_endpoint': {
-        'url': 'http://127.0.0.1/helpline/api/cases/',
-        'auth_token': 'cli04pph08uuv3skdo287604on',
+        'url': os.getenv('ENDPOINT_CASES_URL'),
+        'auth_token': os.getenv('ENDPOINT_AUTH_TOKEN'),
         'formatter': 'cases'
     },
     'messaging_endpoint': {
-        'url': 'http://127.0.0.1/helpline/api/msg/',
-        'auth_token': 'cli04pph08uuv3skdo287604on',
+        'url': os.getenv('ENDPOINT_MESSAGING_URL'),
+        'auth_token': os.getenv('ENDPOINT_AUTH_TOKEN'),
         'formatter': 'messaging'
     }
 }
 
-
+# Email settings for OTP verification
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND')
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')

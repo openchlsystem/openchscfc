@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils import timezone
 import uuid
+import random
+import string
 
 #######################################
 # Core Gateway Models
@@ -36,6 +38,67 @@ class WebhookMessage(models.Model):
         return f"Message from {self.sender_id} on {self.platform}"
 
 #######################################
+# Authentication Models
+#######################################
+
+class Organization(models.Model):
+    """
+    Represents an organization using the Gateway API.
+    
+    Enhanced with authentication capabilities for both WhatsApp and Webform.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=255, unique=True)
+    email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+class EmailVerification(models.Model):
+    """
+    Tracks email verification attempts with OTP.
+    """
+    email = models.EmailField()
+    otp = models.CharField(max_length=6)
+    is_verified = models.BooleanField(default=False)
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    @staticmethod
+    def generate_otp():
+        """Generate a random 6-digit OTP."""
+        return ''.join(random.choices(string.digits, k=6))
+    
+    @classmethod
+    def create_verification(cls, email):
+        """Create a new verification entry with OTP."""
+        # Expire any existing verification for this email
+        cls.objects.filter(email=email).update(is_verified=False)
+        
+        # Create new verification
+        otp = cls.generate_otp()
+        expiration = timezone.now() + timezone.timedelta(minutes=10)  # OTP valid for 10 minutes
+        
+        verification = cls.objects.create(
+            email=email,
+            otp=otp,
+            expires_at=expiration
+        )
+        
+        return verification
+    
+    def is_valid(self):
+        """Check if the OTP is still valid."""
+        return not self.is_verified and timezone.now() < self.expires_at
+    
+    def __str__(self):
+        return f"Verification for {self.email}"
+
+#######################################
 # Webform (Complaint) Models
 #######################################
 
@@ -54,6 +117,7 @@ class Complaint(models.Model):
     complaint_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     session_id = models.UUIDField(default=uuid.uuid4, null=True, blank=True) 
     conversation = models.ForeignKey(Conversation, on_delete=models.SET_NULL, null=True, blank=True, related_name='complaints')
+    organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True, blank=True, related_name='complaints')
     timestamp = models.DateTimeField(auto_now_add=True)
     reporter_nickname = models.CharField(max_length=100, null=True, blank=True)
     case_category = models.CharField(max_length=255, default="Not Specified", null=True, blank=True)
@@ -217,16 +281,6 @@ class WhatsAppResponse(models.Model):
 
     def get_message(self):
         return self.message
-
-class Organization(models.Model):
-    """Represents an organization using the WhatsApp API."""
-    name = models.CharField(max_length=255, unique=True)
-    email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=20, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.name
 
 class WhatsAppCredential(models.Model):
     """Stores WhatsApp API credentials for an organization."""
