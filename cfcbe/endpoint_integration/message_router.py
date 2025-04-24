@@ -54,6 +54,8 @@ class MessageRouter:
         print(f"THIS IS THE PAYLOAD{formatted_message} THIS IS THE CONFIG{config}")
         # Send the formatted message to the endpoint
         response = self._send_to_endpoint(formatted_message, config)
+        print(f"Response from endpoint: {response}")
+        
         
         return response
     

@@ -52,15 +52,16 @@ INSTALLED_APPS = [
     # my apps
     'rest_framework',
     'rest_framework_simplejwt',
-    # 'feedback', # webform platform 
-    
     'corsheaders',
-    # 'emailfeedback', # email platform
-    # 'whatsapp',
-    'django_filters',
-    # 'authapp',
+    
+    
 
-    # New Gateway Apps
+    
+    # 'emailfeedback',
+    'django_filters',
+
+
+    # New Gateway Apps,
     'webhook_handler',
     'platform_adapters',
     'endpoint_integration',
@@ -238,7 +239,20 @@ WHATSAPP_ACCESS_TOKEN = os.getenv('WHATSAPP_ACCESS_TOKEN')
 WHATSAPP_API_URL = os.getenv('WHATSAPP_API_URL')
 WHATSAPP_WEBHOOK_VERIFY_TOKEN = os.getenv('WHATSAPP_VERIFY_TOKEN')
 
-# Endpoint configuration
+# # Endpoint configuration
+# ENDPOINT_CONFIG = {
+#     'cases_endpoint': {
+#         'url': 'https://demo-openchs.bitz-itc.com/helpline/api/cases/',
+#         'auth_token': 'sci9de994iddqlmj8fv7r1js74',
+#         'formatter': 'cases'
+#     },
+#     'messaging_endpoint': {
+#         'url': 'https://demo-openchs.bitz-itc.com/helpline/api/msg/',
+#         'auth_token': 'sci9de994iddqlmj8fv7r1js74',
+#         'formatter': 'messaging'
+#     }
+# }
+
 ENDPOINT_CONFIG = {
     'cases_endpoint': {
         'url': os.getenv('ENDPOINT_CASES_URL'),
