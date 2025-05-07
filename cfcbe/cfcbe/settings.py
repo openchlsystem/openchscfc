@@ -249,12 +249,13 @@ CHATBOT_SETTINGS = {
 }
 
 # Maternal Health Chatbot Configuration
-MISTRAL_API_ENDPOINT = 'http://192.168.8.18:11434/api/generate'
+MISTRAL_API_ENDPOINT = os.getenv('MISTRAL_API_ENDPOINT')
 # Optional additional settings
 CHATBOT_USER_DATA_TTL = 86400  # Session timeout in seconds (24 hours)
 CHATBOT_DEFAULT_LANGUAGE = 'en'  # Default language for new users
 # AI Service Configuration
-AI_ENDPOINT = 'http://localhost:11434/api/generate'  # Update with your actual Mistral endpoint
+  # Update with your actual Mistral endpoint
+AI_ENDPOINT = os.getenv('AI_ENDPOINT') # Update with your actual Mistral endpoint
 AI_MODEL = 'mistral'
 AI_TIMEOUT = 10  # seconds
 
@@ -302,21 +303,6 @@ Chagua lugha:
 }
 
 
-
-
-# # Endpoint configuration
-# ENDPOINT_CONFIG = {
-#     'cases_endpoint': {
-#         'url': 'https://demo-openchs.bitz-itc.com/helpline/api/cases/',
-#         'auth_token': 'sci9de994iddqlmj8fv7r1js74',
-#         'formatter': 'cases'
-#     },
-#     'messaging_endpoint': {
-#         'url': 'https://demo-openchs.bitz-itc.com/helpline/api/msg/',
-#         'auth_token': 'sci9de994iddqlmj8fv7r1js74',
-#         'formatter': 'messaging'
-#     }
-# }
 
 ENDPOINT_CONFIG = {
     'cases_endpoint': {

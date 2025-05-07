@@ -329,11 +329,13 @@ class MessageRouter:
             response = requests.post(
                 url, 
                 headers=headers, 
-                json=formatted_message
+                json=formatted_message,
+                # verify=False
             )
             
             # Log the response for debugging
             logger.info(f"Endpoint response: {response.status_code}, {response.text}")
+            logger.info(f"This is the header: {headers}")
             
             if response.status_code in (200, 201):
                 # Parse response JSON

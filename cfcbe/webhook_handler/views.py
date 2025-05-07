@@ -373,6 +373,10 @@ class UnifiedWebhookView(View):
         Returns:
             HTTP response
         """
+        # For webform, use the payload data directly
+        if platform == 'webform':
+            return self._handle_webform_submission(adapter, payload)
+            
         try:
             # Validate the request
             is_valid = adapter.validate_request(request)
@@ -525,7 +529,7 @@ class UnifiedWebhookView(View):
                 'status': 'error',
                 'error': str(e)
             }, status=500)
-    def _handle_webform_submission(self, adapter, platform, payload, request):
+    def _handle_webform_submission(self, adapter, payload, request=None):
         """
         Handle webform submissions.
         

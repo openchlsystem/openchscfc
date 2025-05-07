@@ -1,4 +1,4 @@
-# webhook_handler/views_ceemis.py
+# webhook_handler/views_eemis.py
 
 import json
 import logging
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class StandardMessage:
     """
-    Standardized message format for CEEMIS communication.
+    Standardized message format for EEMIS communication.
     """
     source: str
     source_uid: str
@@ -52,13 +52,13 @@ class StandardMessage:
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class CEEMISWebhookView(View):
+class EEMISWebhookView(View):
     """
-    View to handle CEEMIS webhook requests.
+    View to handle EEMIS webhook requests.
     
     This view:
     1. Receives requests from helpline with national_id
-    2. Uses the CEEMISAdapter to fetch data from the external API
+    2. Uses the EEMISAdapter to fetch data from the external API
     3. Returns the response to the helpline
     """
     
@@ -73,8 +73,8 @@ class CEEMISWebhookView(View):
             HTTP response containing operation result
         """
         try:
-            # Get the CEEMIS adapter
-            adapter = AdapterFactory.get_adapter('ceemis')
+            # Get the EEMIS adapter
+            adapter = AdapterFactory.get_adapter('eemis')
             
             # Validate the request
             if not adapter.validate_request(request):
@@ -116,7 +116,7 @@ class CEEMISWebhookView(View):
                 message_id=payload.get('src_callid', str(uuid.uuid4())),
                 source_timestamp=float(payload.get('src_ts', time.time())),
                 content=json.dumps(payload),
-                platform='ceemis',
+                platform='eemis',
                 metadata=payload
             )
             
@@ -124,10 +124,10 @@ class CEEMISWebhookView(View):
             try:
                 # Get or create conversation
                 conversation, created = Conversation.objects.get_or_create(
-                    conversation_id=f"ceemis-{src_uid}",
+                    conversation_id=f"eemis-{src_uid}",
                     defaults={
                         'sender_id': src_uid,
-                        'platform': 'ceemis'
+                        'platform': 'eemis'
                     }
                 )
                 
@@ -136,7 +136,7 @@ class CEEMISWebhookView(View):
                     message_id=message.message_id,
                     conversation=conversation,
                     sender_id=src_uid,
-                    platform='ceemis',
+                    platform='eemis',
                     content=message.content,
                     message_type='json',
                     metadata=payload
@@ -145,14 +145,14 @@ class CEEMISWebhookView(View):
                 logger.exception(f"Error storing message: {str(e)}")
                 # Continue processing even if storage fails
             
-            # Send to CEEMIS API
+            # Send to EEMIS API
             response = adapter.send_message('', payload)
             
             # Format and return the response
             return adapter.format_webhook_response([response])
             
         except Exception as e:
-            logger.exception(f"Error processing CEEMIS webhook: {str(e)}")
+            logger.exception(f"Error processing EEMIS webhook: {str(e)}")
             return JsonResponse({
                 'status': 'error',
                 'message': f'An unexpected error occurred: {str(e)}'

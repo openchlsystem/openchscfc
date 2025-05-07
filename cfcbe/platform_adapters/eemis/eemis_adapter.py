@@ -1,4 +1,4 @@
-# platform_adapters/ceemis/ceemis_adapter.py
+# platform_adapters/eemis/eemis_adapter.py
 
 import json
 import requests
@@ -10,22 +10,22 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-class CEEMISAdapter(BaseAdapter):
+class EEMISAdapter(BaseAdapter):
     """
-    Adapter for handling CEEMIS (External Migrant Worker API) integration.
+    Adapter for handling EEMIS (External Migrant Worker API) integration.
     
     This adapter:
     1. Receives helpline data with nationality_id
-    2. Makes requests to the external CEEMIS API
-    3. Returns the CEEMIS data as response
+    2. Makes requests to the external EEMIS API
+    3. Returns the EEMIS data as response
     """
     
-    CEEMIS_API_URL = "https://api.eemis.mglsd.go.ug/api/migrant-wokers/"
+    EEMIS_API_URL = "https://api.eemis.mglsd.go.ug/api/migrant-wokers/"
     
     def handle_verification(self, request):
         """
         Handle verification challenges if any.
-        For CEEMIS, no verification is needed.
+        For EEMIS, no verification is needed.
         """
         return None
     
@@ -47,7 +47,7 @@ class CEEMISAdapter(BaseAdapter):
                 return True
             return False
         except json.JSONDecodeError:
-            logger.error("Invalid JSON in CEEMIS request")
+            logger.error("Invalid JSON in EEMIS request")
             return False
     
     def parse_messages(self, request) -> List[Dict[str, Any]]:
@@ -67,21 +67,21 @@ class CEEMISAdapter(BaseAdapter):
                 return [body]  # Return as a list with single item
             return []
         except Exception as e:
-            logger.error(f"Error parsing CEEMIS request: {str(e)}")
+            logger.error(f"Error parsing EEMIS request: {str(e)}")
             return []
     
     def send_message(self, recipient_id: str, message_content: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Send message to CEEMIS API.
+        Send message to EEMIS API.
         
-        In this case, it makes a request to the CEEMIS API with the nationality_id.
+        In this case, it makes a request to the EEMIS API with the nationality_id.
         
         Args:
             recipient_id: Not used in this context
             message_content: The message content containing nationality_id
             
         Returns:
-            The response from the CEEMIS API
+            The response from the EEMIS API
         """
         try:
             # Extract national_id from the message content
@@ -94,9 +94,9 @@ class CEEMISAdapter(BaseAdapter):
                     'code': 400
                 }
             
-            # Make request to CEEMIS API
+            # Make request to EEMIS API
             response = requests.get(
-                f"{self.CEEMIS_API_URL}{national_id}",
+                f"{self.EEMIS_API_URL}{national_id}",
                 headers={
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
@@ -113,12 +113,12 @@ class CEEMISAdapter(BaseAdapter):
             else:
                 return {
                     'status': 'error',
-                    'message': f'CEEMIS API returned status code {response.status_code}',
+                    'message': f'EEMIS API returned status code {response.status_code}',
                     'code': response.status_code
                 }
                 
         except Exception as e:
-            logger.exception(f"Error sending request to CEEMIS API: {str(e)}")
+            logger.exception(f"Error sending request to EEMIS API: {str(e)}")
             return {
                 'status': 'error',
                 'message': f'Error: {str(e)}',
@@ -137,7 +137,7 @@ class CEEMISAdapter(BaseAdapter):
         """
         if not responses:
             return JsonResponse(
-                {'status': 'error', 'message': 'No valid response from CEEMIS API'},
+                {'status': 'error', 'message': 'No valid response from EEMIS API'},
                 status=500
             )
         
