@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 import uuid
 from django.http import HttpResponse, JsonResponse
 from django.views import View
@@ -21,32 +22,32 @@ from webhook_handler.models import (
     WhatsAppMedia, Conversation, WebhookMessage,
     Organization, WhatsAppCredential, Notification
 )
+# from platform_adapters.whatsApp.chatbot_adapter import WhatsAppChatbotIntegration
+# from platform_adapters.whatsApp.chatbot_adapter import WhatsAppChatbotIntegration
+# With this:
+from platform_adapters.whatsApp.chatbot_adapter import MaternalHealthChatbot
 
 logger = logging.getLogger(__name__)
 router = MessageRouter()
-
 @method_decorator(csrf_exempt, name='dispatch')
 class UnifiedWebhookView(View):
     """
-    Unified view for handling webhooks from all platforms.
+    Central webhook handler for all communication platforms.
     
-    This view processes all communication for all platforms:
-    - Incoming messages (from platforms to the system)
-    - Outgoing messages (from the system to platforms)
-    - Verification challenges
-    - Token management
+    This class processes incoming webhook requests from various platforms,
+    routes them to appropriate handlers, and returns responses.
+    
+    Updated to integrate with the WhatsApp MaternalHealth chatbot based on "HEALTH" keyword.
     """
     
     def get(self, request, platform, *args, **kwargs):
         """
-        Handle GET requests (typically verification challenges).
-        
+        Handles GET requests typically used for platform verification.
         Args:
-            request: The HTTP request
-            platform: Platform identifier from URL
-            
+            request: The HTTP request object
+            platform: The platform identifier from the URL
         Returns:
-            HTTP response
+            HTTP response, typically for verification challenges
         """
         try:
             # Get the appropriate adapter for this platform
@@ -59,31 +60,15 @@ class UnifiedWebhookView(View):
                 
             # If adapter didn't handle it, return a default response
             return HttpResponse("Verification not required or failed.")
-            
-        except ValueError as e:
-            # Unsupported platform
-            logger.error(f"Unsupported platform: {platform}")
-            return HttpResponse(f"Unsupported platform: {platform}", status=404)
-            
         except Exception as e:
             logger.exception(f"Error handling verification: {str(e)}")
             return HttpResponse("Verification failed", status=500)
     
+# Update your UnifiedWebhookView post method
+
     def post(self, request, platform, *args, **kwargs):
         """
-        Handle POST requests (incoming and outgoing messages).
-        
-        This method now handles:
-        1. Incoming messages from platforms
-        2. Outgoing messages to platforms
-        3. Token management operations
-        
-        Args:
-            request: The HTTP request
-            platform: Platform identifier from URL
-            
-        Returns:
-            HTTP response
+        Handles POST requests for message exchange and token operations.
         """
         try:
             # Get the appropriate adapter for this platform
@@ -92,65 +77,298 @@ class UnifiedWebhookView(View):
             # Parse the request body
             try:
                 payload = json.loads(request.body)
+                # Log full raw payload for debugging
+                logger.info(f"THIS IS THE PAYLOAD{payload}")
             except json.JSONDecodeError:
                 # If the body isn't JSON, treat it as form data
                 payload = request.POST.dict()
                 
-            # Determine the direction of the message flow
+            # Special handling for WhatsApp platform
+            if platform == 'whatsapp':
+                sender_id = None
+                message_content = None
+                message_id = None
+                
+                # Extract information from WhatsApp business format
+                if 'entry' in payload and len(payload['entry']) > 0:
+                    for entry in payload['entry']:
+                        if 'changes' in entry and len(entry['changes']) > 0:
+                            for change in entry['changes']:
+                                if 'value' in change and 'messages' in change['value']:
+                                    messages = change['value']['messages']
+                                    if messages and len(messages) > 0:
+                                        message = messages[0]
+                                        
+                                        # Extract sender ID and message ID
+                                        sender_id = message.get('from')
+                                        message_id = message.get('id')
+                                        
+                                        # Check for text message
+                                        if message.get('type') == 'text' and 'text' in message:
+                                            message_content = message['text'].get('body', '')
+                
+                # Or extract from simpler format
+                if not sender_id and 'from' in payload:
+                    sender_id = payload.get('from')
+                    
+                if not message_id and 'message_id' in payload:
+                    message_id = payload.get('message_id')
+                    
+                if not message_content and 'message' in payload:
+                    message_content = payload.get('message')
+                    
+                    # Try to decode base64 encoded message
+                    try:
+                        import base64
+                        # Add padding if needed
+                        padded = message_content + '=' * (4 - len(message_content) % 4) % 4
+                        decoded_bytes = base64.b64decode(padded)
+                        decoded_content = decoded_bytes.decode('utf-8')
+                        logger.info(f"Decoded base64 message: {message_content} -> {decoded_content}")
+                        message_content = decoded_content
+                    except Exception as e:
+                        # Not base64 encoded or other error
+                        logger.debug(f"Message not base64 encoded or error: {str(e)}")
+                
+                # Check if this is HEALTH message or user has active session
+                is_health_message = message_content and message_content.strip().upper() == 'HEALTH'
+                
+                # Import the chatbot to check active sessions
+                from platform_adapters.whatsApp.chatbot_adapter import MaternalHealthChatbot
+                chatbot = MaternalHealthChatbot()
+                
+                has_active_session = sender_id and chatbot.is_active_session(sender_id)
+                
+                # Process with chatbot if HEALTH or active session
+                if is_health_message or has_active_session:
+                    # Activate session if HEALTH message
+                    if is_health_message:
+                        chatbot.activate_session(sender_id)
+                    
+                    logger.info(f"Processing message '{message_content}' from {sender_id} with chatbot")
+                    
+                    # Get or create conversation
+                    conversation = ConversationService().get_or_create_conversation(
+                        sender_id, 'whatsapp'
+                    )
+                    
+                    # Process with chatbot
+                    response_text = chatbot.process_message(sender_id, message_content)
+                    
+                    # Send response back to user
+                    adapter.send_message(sender_id, {
+                        'message_type': 'text',
+                        'content': response_text
+                    })
+                    
+                    # Return success
+                    return HttpResponse(status=200)
+            
+            # Regular webhook flow continues if not handled by chatbot
             direction = payload.get('direction', 'incoming')
             
-            # Handle outgoing messages (system to platform)
             if direction == 'outgoing':
                 return self._handle_outgoing_message(adapter, platform, payload, request)
-                
-            # Handle token operations
             elif direction == 'token':
                 return self._handle_token_operation(adapter, platform, payload, request)
-                
-            # Handle incoming messages (platform to system)
             else:
-                # For webform, use a special handler
-                if platform == 'webform':
-                    return self._handle_webform_submission(adapter, payload, request)
+                return self._handle_incoming_message(adapter, platform, payload, request)
                 
-                # For other platforms, validate the request
-                if not adapter.validate_request(request):
-                    return HttpResponse("Invalid request", status=400)
-                
-                # Parse messages from the request
-                messages = adapter.parse_messages(request)
-                
-                # Process each message
-                responses = []
-                for message_dict in messages:
-                    # Convert to StandardMessage object
-                    std_message = StandardMessage.from_dict(message_dict)
-                    
-                    # Route to endpoint
-                    response = router.route_to_endpoint(std_message)
-                    responses.append(response)
-                
-                # Format the response according to platform requirements
-                return adapter.format_webhook_response(responses)
-                
-        except ValueError as e:
-            # Unsupported platform
-            logger.error(f"Unsupported platform: {platform}")
-            return HttpResponse(f"Unsupported platform: {platform}", status=404)
-            
         except Exception as e:
             logger.exception(f"Error processing webhook: {str(e)}")
             return HttpResponse("Processing failed", status=500)
+    def _check_for_chatbot_keywords(self, payload):
+        """
+        Examine the raw payload for chatbot trigger keywords or check if user is in active session.
+        """
+        try:
+            sender_id = None
+            message_content = None
+            
+            # Check for WhatsApp business format
+            if 'entry' in payload and len(payload['entry']) > 0:
+                for entry in payload['entry']:
+                    if 'changes' in entry and len(entry['changes']) > 0:
+                        for change in entry['changes']:
+                            if 'value' in change and 'messages' in change['value']:
+                                messages = change['value']['messages']
+                                if messages and len(messages) > 0:
+                                    message = messages[0]
+                                    
+                                    # Extract sender ID and message content
+                                    sender_id = message.get('from')
+                                    
+                                    # Check for text message
+                                    if message.get('type') == 'text' and 'text' in message:
+                                        message_content = message['text'].get('body', '')
+                                        
+                                        # Check for HEALTH keyword directly
+                                        if message_content.strip().upper() == 'HEALTH':
+                                            logger.info(f"Found HEALTH keyword in raw payload from {sender_id}")
+                                            return True, sender_id, message_content
+                                            
+                                        # Also check if SEVBTFRI is the encoded form of HEALTH
+                                        if message_content.strip().upper() == 'SEVBTFRI':
+                                            logger.info(f"Found SEVBTFRI (encoded HEALTH) in raw payload from {sender_id}")
+                                            return True, sender_id, 'HEALTH'
+            
+            # Also check simpler format (might be after transformation)
+            if not sender_id and 'from' in payload:
+                sender_id = payload.get('from', '')
+                
+            if not message_content and 'message' in payload:
+                message_content = payload.get('message', '')
+                
+                if message_content.strip().upper() == 'HEALTH':
+                    return True, sender_id, message_content
+                elif message_content.strip().upper() == 'SEVBTFRI':
+                    return True, sender_id, 'HEALTH'
+            
+            # If we have a sender ID but no keyword match yet, check if user is in active session
+            if sender_id:
+                # Import chatbot here to avoid circular imports
+                from platform_adapters.whatsApp.chatbot_adapter import MaternalHealthChatbot
+                chatbot = MaternalHealthChatbot()
+                
+                # Check if user has an active chatbot session
+                if chatbot.is_active_session(sender_id):
+                    logger.info(f"User {sender_id} has active chatbot session")
+                    return True, sender_id, message_content
+            
+            # No match found
+            return False, None, None
+        except Exception as e:
+            logger.exception(f"Error checking for chatbot keywords: {str(e)}")
+            return False, None, None
+        
+    def decode_message_if_needed(self, message: str) -> str:
+        """
+        Attempt to decode a message that might be encoded.
+        
+        Args:
+            message: The message to decode
+            
+        Returns:
+            The decoded message or the original if decoding fails
+        """
+        if not message:
+            return message
+            
+        # Try to decode, handle common encoding methods
+        try:
+            # Check if it's base64 encoded
+            import base64
+            # Some implementations might pad or adjust base64, try a few variations
+            padded_message = message + "=" * ((4 - len(message) % 4) % 4)
+            decoded_bytes = base64.b64decode(padded_message)
+            decoded = decoded_bytes.decode('utf-8')
+            logger.info(f"Successfully decoded message: {message} -> {decoded}")
+            return decoded
+        except Exception:
+            pass
+            
+        # Handle specific known encodings (like the one in your logs)
+        # "SEVBTFRI" should decode to "HEALTH"
+        if message == "SEVBTFRI":
+            logger.info("Detected known encoded message 'SEVBTFRI', treating as 'HEALTH'")
+            return "HEALTH"
+            
+        # Return original if decoding fails
+        return message
+# Then update the _handle_maternal_health_message method:
+    def _handle_maternal_health_message(self, adapter, message_data, payload, request):
+        """
+        Handle message for the maternal health chatbot.
+        
+        Args:
+            adapter: The platform adapter
+            message_data: The parsed message data
+            payload: The full request payload
+            request: The HTTP request
+            
+        Returns:
+            HTTP response
+        """
+        try:
+            # Extract message information
+            sender_id = message_data.get('from')
+            message_id = message_data.get('id') 
+            
+            # Get message content based on message type
+            text_content = ""
+            if message_data.get('type') == 'text':
+                text_content = message_data.get('text', {}).get('body', '')
+            else:
+                # For non-text messages, use caption if available
+                text_content = message_data.get('caption', '')
+            
+            # Get or create conversation
+            conversation = ConversationService().get_or_create_conversation(
+                sender_id, 'whatsapp'
+            )
+            
+            # Create webhook message record
+            webhook_message = WebhookMessage.objects.create(
+                message_id=message_id or str(uuid.uuid4()),
+                conversation=conversation,
+                sender_id=sender_id,
+                platform='whatsapp',
+                content=text_content,
+                message_type='text',
+                timestamp=timezone.now(),
+                metadata={'chatbot_message': True}
+            )
+            
+            # Process with MaternalHealthChatbot
+            chatbot = MaternalHealthChatbot()
+            
+            # If this is a HEALTH message, activate a new session
+            if text_content.strip().upper() == "HEALTH":
+                chatbot.activate_session(sender_id)
+                
+            # Process the message and get response
+            response_text = chatbot.process_message(sender_id, text_content)
+            
+            # Send response back to user
+            response_data = adapter.send_message(sender_id, {
+                'message_type': 'text',
+                'content': response_text
+            })
+            
+            # Record outgoing message
+            if response_data.get('status') == 'success':
+                outgoing_message = WebhookMessage.objects.create(
+                    message_id=response_data.get('message_id', f"response-{message_id}"),
+                    conversation=conversation,
+                    sender_id='system',
+                    platform='whatsapp',
+                    content=response_text,
+                    message_type='text',
+                    timestamp=timezone.now(),
+                    metadata={'chatbot_response': True}
+                )
+            
+            # Format the webhook response
+            return adapter.format_webhook_response([{
+                'status': 'success',
+                'message_id': message_id,
+                'response': response_text
+            }])
+            
+        except Exception as e:
+            logger.exception(f"Error processing maternal health message: {str(e)}")
+            return HttpResponse("Processing failed", status=500)
+
     
     def _handle_incoming_message(self, adapter, platform, payload, request):
         """
-        Process incoming messages from a platform.
+        Process incoming messages from platforms.
         
         Args:
-            adapter: Platform adapter instance
-            platform: Platform identifier
-            payload: Request payload
-            request: HTTP request
+            adapter: The platform adapter
+            platform: The platform identifier
+            payload: The request payload
+            request: The HTTP request
             
         Returns:
             HTTP response
@@ -159,25 +377,51 @@ class UnifiedWebhookView(View):
         if platform == 'webform':
             return self._handle_webform_submission(adapter, payload)
             
-        # For other platforms, validate the request
-        if not adapter.validate_request(request):
-            return HttpResponse("Invalid request", status=400)
-        
-        # Parse messages from the request
-        messages = adapter.parse_messages(request)
-        
-        # Process each message
-        responses = []
-        for message_dict in messages:
-            # Convert to StandardMessage object
-            std_message = StandardMessage.from_dict(message_dict)
+        try:
+            # Validate the request
+            is_valid = adapter.validate_request(request)
+            if not is_valid:
+                return HttpResponse("Validation failed", status=403)
+                
+            # Parse messages from the platform-specific format
+            messages = adapter.parse_messages(payload)
             
-            # Route to endpoint
-            response = router.route_to_endpoint(std_message)
-            responses.append(response)
-        
-        # Format the response according to platform requirements
-        return adapter.format_webhook_response(responses)
+            responses = []
+            for message_data in messages:
+                # Convert to standard message format
+                standard_message = adapter.to_standard_message(message_data)
+                
+                # Create a webhook message record
+                conversation = ConversationService().get_or_create_conversation(
+                    standard_message.source_uid, standard_message.platform
+                )
+                
+                webhook_message = WebhookMessage.objects.create(
+                    message_id=standard_message.message_id,
+                    conversation=conversation,
+                    sender_id=standard_message.source_uid,
+                    platform=standard_message.platform,
+                    content=standard_message.content,
+                    media_url=standard_message.media_url,
+                    message_type=standard_message.content_type,
+                    timestamp=timezone.now(),
+                    metadata=standard_message.metadata
+                )
+                
+                # Route to endpoint
+                endpoint_response = router.route_to_endpoint(standard_message)
+                
+                responses.append({
+                    'webhook_message_id': str(webhook_message.id),
+                    'response': endpoint_response
+                })
+            
+            # Format the webhook response
+            return adapter.format_webhook_response(responses)
+            
+        except Exception as e:
+            logger.exception(f"Error processing incoming message: {str(e)}")
+            return HttpResponse("Processing failed", status=500)
     
     def _handle_outgoing_message(self, adapter, platform, payload, request):
         """
@@ -238,68 +482,63 @@ class UnifiedWebhookView(View):
     
     def _handle_token_operation(self, adapter, platform, payload, request):
         """
-        Process token operations for a platform.
+        Handle token operations for platform authentication.
         
         Args:
-            adapter: Platform adapter instance
-            platform: Platform identifier
-            payload: Request payload
-            request: HTTP request
+            adapter: The platform adapter
+            platform: The platform identifier
+            payload: The request payload
+            request: The HTTP request
             
         Returns:
             HTTP response
         """
-        data = payload.get('data', {})
-        
-        if platform == 'whatsapp':
-            # Required fields
-            short_lived_token = data.get('short_lived_token')
-            org_id = data.get('org_id')
+        try:
+            # Extract operation and parameters
+            operation = payload.get('operation')
             
-            if not short_lived_token:
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'Short-lived token is required'
-                }, status=400)
-            
-            # Generate token
-            if hasattr(adapter, 'generate_token'):
-                response = adapter.generate_token(short_lived_token, org_id)
+            if operation == 'refresh':
+                # Extract token info
+                client_id = payload.get('client_id')
+                client_secret = payload.get('client_secret')
                 
-                # Return response
-                if response.get('status') == 'success':
+                if not client_id or not client_secret:
                     return JsonResponse({
-                        'status': 'success',
-                        'token': response.get('token'),
-                        'expiry': response.get('expiry'),
-                        'organization_id': response.get('organization_id')
-                    })
+                        'status': 'error',
+                        'error': 'Missing required fields: client_id or client_secret'
+                    }, status=400)
+                
+                # Get platform adapter with token refresh support
+                if hasattr(adapter, 'refresh_token'):
+                    response = adapter.refresh_token(client_id, client_secret)
+                    return JsonResponse(response)
                 else:
                     return JsonResponse({
                         'status': 'error',
-                        'message': response.get('error', 'Failed to generate token')
+                        'error': f'Token operations not supported for {platform}'
                     }, status=400)
             else:
                 return JsonResponse({
                     'status': 'error',
-                    'message': f'Token operations not supported for platform: {platform}'
+                    'error': f'Unsupported token operation: {operation}'
                 }, status=400)
-        
-        # Return error for unsupported platforms
-        return JsonResponse({
-            'status': 'error',
-            'message': f'Token operations not supported for platform: {platform}'
-        }, status=400)
-    
+                
+        except Exception as e:
+            logger.exception(f"Error processing token operation: {str(e)}")
+            return JsonResponse({
+                'status': 'error',
+                'error': str(e)
+            }, status=500)
     def _handle_webform_submission(self, adapter, payload, request=None):
         """
-        Process webform submissions.
+        Handle webform submissions.
         
         Args:
-            adapter: Platform adapter instance
-            payload: Request payload
-            request: HTTP request (optional)
-                
+            adapter: The platform adapter
+            platform: The platform identifier
+            payload: The request payload
+            request: The HTTP request
+            
         Returns:
             HTTP response
         """
