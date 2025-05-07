@@ -1,10 +1,3 @@
-# from django.apps import AppConfig
-
-
-# class PlatformAdaptersConfig(AppConfig):
-#     default_auto_field = "django.db.models.BigAutoField"
-#     name = "platform_adapters"
-
 from django.apps import AppConfig
 
 class PlatformAdaptersConfig(AppConfig):
@@ -25,3 +18,11 @@ class PlatformAdaptersConfig(AppConfig):
             
         # Register webform adapter
         AdapterFactory.register_adapter('webform', WebformAdapter)
+        
+        # Register CEEMIS adapter
+        try:
+            from platform_adapters.ceemis.ceemis_adapter import CEEMISAdapter
+            AdapterFactory.register_adapter('ceemis', CEEMISAdapter)
+            print("CEEMIS adapter registered successfully")
+        except ImportError as e:
+            print(f"Could not import CEEMIS adapter: {str(e)}")

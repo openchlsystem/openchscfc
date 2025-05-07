@@ -13,10 +13,11 @@ from platform_adapters.base_adapter import BaseAdapter
 from shared.models.standard_message import StandardMessage
 from webhook_handler.models import (
     Contact, WhatsAppMedia, WhatsAppMessage, WhatsAppResponse,
-    Organization, WhatsAppCredential
+    Organization, WhatsAppCredential, Conversation, WebhookMessage
 )
 from django.conf import settings
 from platform_adapters.whatsApp.token_manager import TokenManager
+from platform_adapters.whatsApp.chatbot_adapter import MaternalHealthChatbot
 
 logger = logging.getLogger(__name__)
 
@@ -25,12 +26,14 @@ class WhatsAppAdapter(BaseAdapter):
     Adapter for handling WhatsApp messages as a platform in the gateway.
     
     This adapter processes WhatsApp webhook data and converts it to
-    the standardized message format used by the gateway.
+    the standardized message format used by the gateway. It also integrates
+    maternal health chatbot functionality for messages containing "HEALTH".
     """
     
     def __init__(self):
         """Initialize the WhatsApp Adapter."""
         self.config = self._get_config()
+        self.chatbot = MaternalHealthChatbot()  # Initialize chatbot
     
     def _get_config(self):
         """Get configuration from settings."""
@@ -207,65 +210,65 @@ class WhatsAppAdapter(BaseAdapter):
                         'wa_id': contact.get('wa_id')
                     }
                 
-            # Process each message
-            for message in messages:
-                # Handle media if present
-                media_instance = None
-                if message.get('type') in ['image', 'video', 'audio', 'document']:
-                    # ... existing media handling code ...
-                    # The media handling code that creates the media record
-                    if media_file:
-                        # Create media record
-                        media_instance = WhatsAppMedia.objects.create(
-                            media_type=media_type,
-                            media_url=media_url,
-                            media_mime_type=mime_type
+                # Process each message
+                for message in messages:
+                    # Check if this is a chatbot message
+                    is_chatbot = False
+                    sender_id = message.get('from')
+                    
+                    # Check if this is a "HEALTH" message or from active session
+                    if message.get('type') == 'text':
+                        text_content = message.get('text', {}).get('body', '')
+                        if text_content.strip().upper() == "HEALTH" or self.chatbot.is_active_session(sender_id):
+                            is_chatbot = True
+                            # Handle via chatbot (will be processed in process_incoming_message)
+                            # Just mark the message so we know to handle it
+                            if 'metadata' not in message:
+                                message['metadata'] = {}
+                            message['metadata']['is_chatbot_message'] = True
+                    
+                    # Handle media if present
+                    media_instance = None
+                    if message.get('type') in ['image', 'video', 'audio', 'document']:
+                        # Media handling code would be here 
+                        # For simplicity, we're skipping the detailed implementation
+                        pass
+                    
+                    # Create or get contact
+                    contact_name = contact_info.get('name')
+                    
+                    if sender_id:
+                        # First, create or get the contact
+                        contact, created = Contact.objects.get_or_create(
+                            wa_id=sender_id,
+                            defaults={'name': contact_name or 'Unknown'}
                         )
-                        media_instance.media_file.save(media_file.name, media_file, save=True)
                         
-                        # Update message metadata with media information
+                        # Ensure contact is saved, even if it was just created
+                        if created:
+                            contact.save()
+
+                        # Create the WhatsAppMessage
+                        whatsapp_message = WhatsAppMessage.objects.create(
+                            sender=contact,
+                            recipient=None,  # No recipient for incoming message
+                            message_type=message.get('type', 'text'),
+                            content=message.get('text', {}).get('body', '') if message.get('type') == 'text' else '',
+                            caption=message.get('caption', ''),
+                            media=media_instance,
+                            status="received"
+                        )
+
+                        # Add the newly created message ID to the metadata
                         if 'metadata' not in message:
                             message['metadata'] = {}
-                        
-                        message['metadata']['media_file_id'] = media_instance.id
-                
-                # Create or get contact
-                sender_wa_id = message.get('from')
-                contact_name = contact_info.get('name')
-                
-                if sender_wa_id:
-                    # First, create or get the contact
-                    contact, created = Contact.objects.get_or_create(
-                        wa_id=sender_wa_id,
-                        defaults={'name': contact_name or 'Unknown'}
-                    )
+                        message['metadata']['whatsapp_message_id'] = whatsapp_message.id
                     
-                    
-                    # Ensure contact is saved, even if it was just created
-                    if created:
-                        contact.save()
-
-                    # Now, create the WhatsAppMessage with the valid contact
-                    whatsapp_message = WhatsAppMessage.objects.create(
-                        sender=contact,  # This ensures the FK is properly addressed
-                        recipient=None,  # No recipient for incoming message
-                        message_type=message.get('type', 'text'),
-                        content=message.get('text', {}).get('body', '') if message.get('type') == 'text' else '',
-                        caption=message.get('caption', ''),
-                        media=media_instance,
-                        status="received"
-                    )
-
-                    
-                    # Add the newly created message ID to the metadata
-                    if 'metadata' not in message:
-                        message['metadata'] = {}
-                    message['metadata']['whatsapp_message_id'] = whatsapp_message.id
-                
-                # Convert to standard message
-                standard_message = self._convert_to_standard_message(message, contact_info)
-                if standard_message:
-                    standard_messages.append(standard_message.to_dict())
+                    # Convert to standard message
+                    standard_message = self._convert_to_standard_message(message, contact_info)
+                    if standard_message:
+                        standard_messages.append(standard_message.to_dict())
+        
         return standard_messages
     
     def _convert_to_standard_message(self, message: Dict[str, Any], contact_info: Dict[str, Any]) -> Optional[StandardMessage]:
@@ -333,6 +336,10 @@ class WhatsAppAdapter(BaseAdapter):
                 if 'metadata' in message and 'media_file_id' in message['metadata']:
                     metadata['media']['file_id'] = message['metadata']['media_file_id']
             
+            # Check if this is a chatbot message
+            if 'metadata' in message and message['metadata'].get('is_chatbot_message'):
+                metadata['is_chatbot_message'] = True
+            
             # Create StandardMessage
             return StandardMessage(
                 source='whatsapp',
@@ -370,6 +377,155 @@ class WhatsAppAdapter(BaseAdapter):
         }
         
         return content_type_map.get(message_type, 'text/plain')
+    
+    def should_handle_with_chatbot(self, message: Dict[str, Any]) -> bool:
+        """
+        Determine if a message should be handled by the chatbot.
+        
+        Args:
+            message: The message to check
+            
+        Returns:
+            True if chatbot should handle, False otherwise
+        """
+        # Get the sender ID and message content
+        sender_id = message.get('from')
+        
+        # Get message content based on message type
+        content = ""
+        if message.get('type') == 'text':
+            content = message.get('text', {}).get('body', '')
+        
+        # Check if message content is exactly "HEALTH"
+        if content.strip().upper() == "HEALTH":
+            self.chatbot.activate_session(sender_id)
+            return True
+        
+        # Check if user is in an active chatbot session
+        if self.chatbot.is_active_session(sender_id):
+            return True
+        
+        return False
+    
+    def process_webhook_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Process a single WhatsApp message and determine routing.
+        
+        Args:
+            message: The message to process
+            
+        Returns:
+            Processing result
+        """
+        try:
+            # Extract message information
+            sender_id = message.get('from')
+            message_id = message.get('id')
+            message_type = message.get('type', 'text')
+            text_content = ""
+            
+            if message_type == 'text':
+                text_content = message.get('text', {}).get('body', '')
+            elif message_type in ['image', 'video', 'audio', 'document']:
+                text_content = message.get('caption', '')
+            
+            # Get or create conversation
+            conversation, created = Conversation.objects.get_or_create(
+                sender_id=sender_id,
+                platform='whatsapp',
+                defaults={
+                    'conversation_id': f"whatsapp-{sender_id}",
+                    'is_active': True
+                }
+            )
+            
+            # Check if this message should be handled by the chatbot
+            if self.should_handle_with_chatbot(message):
+                return self._process_chatbot_message(sender_id, text_content, message_id, conversation)
+            else:
+                # Process with standard flow - convert to StandardMessage and route to endpoints
+                return self._process_standard_message(message, conversation)
+        
+        except Exception as e:
+            logger.exception(f"Error processing webhook message: {str(e)}")
+            return {
+                'status': 'error',
+                'error': str(e)
+            }
+    
+    def _process_chatbot_message(self, sender_id: str, message_text: str, message_id: str, conversation) -> Dict[str, Any]:
+        """
+        Process a message with the maternal health chatbot.
+        
+        Args:
+            sender_id: WhatsApp ID of the sender
+            message_text: Message text
+            message_id: Message ID
+            conversation: Conversation object
+            
+        Returns:
+            Processing result
+        """
+        try:
+            # Get response from chatbot
+            response_text = self.chatbot.process_message(sender_id, message_text)
+            
+            # If message is "EXIT", deactivate the session
+            if message_text.strip().upper() == "EXIT":
+                self.chatbot.deactivate_session(sender_id)
+            
+            # Send response to user
+            response_data = self.send_message(sender_id, {
+                'message_type': 'text',
+                'content': response_text
+            })
+            
+            # Record outgoing message
+            if response_data.get('status') == 'success':
+                # Create webhook message record
+                outgoing_message = WebhookMessage.objects.create(
+                    message_id=response_data.get('message_id', f"response-{message_id}"),
+                    conversation=conversation,
+                    sender_id='system',
+                    platform='whatsapp',
+                    content=response_text,
+                    message_type='text'
+                )
+            
+            return {
+                'status': 'success',
+                'message_id': message_id,
+                'sender_id': sender_id,
+                'response_text': response_text,
+                'chatbot_handled': True
+            }
+        
+        except Exception as e:
+            logger.exception(f"Error processing chatbot message: {str(e)}")
+            return {
+                'status': 'error',
+                'sender_id': sender_id,
+                'error': str(e)
+            }
+    
+    def _process_standard_message(self, message: Dict[str, Any], conversation) -> Dict[str, Any]:
+        """
+        Process a standard (non-chatbot) message.
+        
+        Args:
+            message: Message data
+            conversation: Conversation object
+            
+        Returns:
+            Processing result
+        """
+        # Standard message processing - your existing implementation
+        return {
+            'status': 'success',
+            'message_id': message.get('id'),
+            'sender_id': message.get('from'),
+            'chatbot_handled': False
+        }
     
     def send_message(self, recipient_id: str, message_content: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -516,3 +672,232 @@ class WhatsAppAdapter(BaseAdapter):
             Dictionary with token information
         """
         return TokenManager.refresh_access_token(org_id, short_lived_token)
+        
+    def process_incoming_message(self, request: Any) -> List[Dict[str, Any]]:
+        """
+        Process incoming WhatsApp messages and route appropriately.
+        
+        This method:
+        1. Parses incoming webhook data
+        2. Identifies if messages should be handled by chatbot
+        3. Routes each message to chatbot or standard flow
+        4. Returns processing results
+        
+        Args:
+            request: The incoming webhook request
+            
+        Returns:
+            List of processing results for each message
+        """
+        # Parse the request
+        if isinstance(request, HttpRequest):
+            try:
+                data = json.loads(request.body)
+            except json.JSONDecodeError:
+                logger.error("Failed to parse JSON from WhatsApp webhook")
+                return []
+        else:
+            data = request
+            
+        results = []
+        
+        # Extract messages from webhook data
+        for entry in data.get('entry', []):
+            for change in entry.get('changes', []):
+                value = change.get('value', {})
+                
+                # Process messages
+                messages = value.get('messages', [])
+                contacts = value.get('contacts', [])
+                
+                # Extract contact information
+                contact_info = {}
+                if contacts and len(contacts) > 0:
+                    contact = contacts[0]
+                    profile = contact.get('profile', {})
+                    contact_info = {
+                        'name': profile.get('name'),
+                        'wa_id': contact.get('wa_id')
+                    }
+                
+                # Process each message
+                for message in messages:
+                    sender_id = message.get('from')
+                    
+                    # Get or create conversation
+                    conversation, created = Conversation.objects.get_or_create(
+                        sender_id=sender_id,
+                        platform='whatsapp',
+                        defaults={
+                            'conversation_id': f"whatsapp-{sender_id}",
+                            'is_active': True
+                        }
+                    )
+                    
+                    # Record incoming message
+                    message_type = message.get('type', 'text')
+                    text_content = ""
+                    
+                    if message_type == 'text':
+                        text_content = message.get('text', {}).get('body', '')
+                    
+                    # Create webhook message record for incoming message
+                    webhook_message = WebhookMessage.objects.create(
+                        message_id=message.get('id', str(uuid.uuid4())),
+                        conversation=conversation,
+                        sender_id=sender_id,
+                        platform='whatsapp',
+                        content=text_content,
+                        message_type=message_type
+                    )
+                    
+                    # Check if this message should be handled by the chatbot
+                    if message_type == 'text' and (text_content.strip().upper() == "HEALTH" or self.chatbot.is_active_session(sender_id)):
+                        # Process with chatbot
+                        result = self._process_chatbot_message(sender_id, text_content, message.get('id'), conversation)
+                    else:
+                        # Process with standard flow
+                        standard_message = self._convert_to_standard_message(message, contact_info)
+                        if standard_message:
+                            result = {
+                                'status': 'success',
+                                'message': standard_message.to_dict(),
+                                'chatbot_handled': False
+                            }
+                        else:
+                            result = {
+                                'status': 'error',
+                                'error': 'Failed to convert to standard message',
+                                'chatbot_handled': False
+                            }
+                    
+                    results.append(result)
+        
+        return results
+
+    def to_standard_message(self, message_data: Dict[str, Any]) -> StandardMessage:
+            """
+            Convert WhatsApp message data to StandardMessage format.
+            This method handles both raw WhatsApp message data and data that's already in StandardMessage format.
+            
+            Args:
+                message_data: WhatsApp message data or StandardMessage dict
+                
+            Returns:
+                StandardMessage instance (never returns None)
+            """
+            try:
+                # Check if this looks like a StandardMessage already
+                if all(key in message_data for key in ['source', 'source_uid', 'message_id', 'content', 'platform']):
+                    logger.info("Message appears to be in StandardMessage format already")
+                    
+                    # If it's already a StandardMessage object, return it
+                    if isinstance(message_data, StandardMessage):
+                        return message_data
+                        
+                    # If it's a dict representation of StandardMessage, create a new StandardMessage from it
+                    return StandardMessage(
+                        source=message_data.get('source', 'whatsapp'),
+                        source_uid=message_data.get('source_uid', ''),
+                        source_address=message_data.get('source_address', ''),
+                        message_id=message_data.get('message_id', ''),
+                        source_timestamp=float(message_data.get('source_timestamp', 0)),
+                        content=message_data.get('content', ''),
+                        platform=message_data.get('platform', 'whatsapp'),
+                        content_type=message_data.get('content_type', 'text/plain'),
+                        media_url=message_data.get('media_url'),
+                        metadata=message_data.get('metadata', {})
+                    )
+                    
+                # This appears to be a raw WhatsApp message
+                # Extract information for contact_info
+                contact_info = {}
+                if 'contact_name' in message_data:
+                    contact_info['name'] = message_data['contact_name']
+                    
+                # Try to use the existing conversion method
+                standard_message = self._convert_to_standard_message(message_data, contact_info)
+                if standard_message:
+                    return standard_message
+                    
+                # If conversion failed, create a basic StandardMessage as fallback
+                logger.warning(f"Conversion to StandardMessage failed, creating fallback for message: {message_data}")
+                
+                # Extract basic information, handling common WhatsApp formats
+                message_id = message_data.get('id', str(uuid.uuid4()))
+                
+                # Get sender ID (could be in 'from' for WhatsApp or elsewhere)
+                sender_id = message_data.get('from', message_data.get('sender_id', ''))
+                
+                # Get timestamp, handle different formats
+                timestamp = time.time()  # Default to current time if not found
+                if 'timestamp' in message_data:
+                    try:
+                        timestamp = float(message_data['timestamp'])
+                    except (ValueError, TypeError):
+                        pass
+                    
+                # Get content, handling different message formats
+                content = ''
+                if 'text' in message_data and isinstance(message_data['text'], dict):
+                    content = message_data['text'].get('body', '')
+                elif 'content' in message_data:
+                    content = message_data['content']
+                elif 'body' in message_data:
+                    content = message_data['body']
+                    
+                # Create a minimal but valid StandardMessage
+                return StandardMessage(
+                    source='whatsapp',
+                    source_uid=sender_id,
+                    source_address=sender_id,
+                    message_id=message_id,
+                    source_timestamp=timestamp,
+                    content=content,
+                    platform='whatsapp',
+                    content_type='text/plain',
+                    media_url=None,
+                    metadata={'raw_message': str(message_data)[:500]}  # Store truncated raw message for debugging
+                )
+                
+            except Exception as e:
+                logger.exception(f"Error in to_standard_message: {str(e)}")
+                # Always return a valid StandardMessage, never None
+                return StandardMessage(
+                    source='whatsapp',
+                    source_uid='error',
+                    source_address='error',
+                    message_id=str(uuid.uuid4()),
+                    source_timestamp=time.time(),
+                    content='Error processing message',
+                    platform='whatsapp',
+                    metadata={'error': str(e)}
+                )
+
+        # Additional method to integrate with UnifiedWebhookView
+    def handle_incoming_webhook(self, request: HttpRequest) -> HttpResponse:
+            """
+            Central handler for all incoming WhatsApp webhook requests,
+            integrated with the chatbot functionality.
+            
+            Args:
+                request: HTTP request object
+            
+            Returns:
+                HTTP response to return to WhatsApp
+            """
+            try:
+                # First, validate the request
+                if not self.validate_request(request):
+                    logger.error("Invalid WhatsApp webhook request")
+                    return HttpResponse("Invalid request", status=400)
+                
+                # Process incoming messages
+                results = self.process_incoming_message(request)
+                
+                # Return a 200 OK response (WhatsApp expects this)
+                return HttpResponse(status=200)
+                
+            except Exception as e:
+                logger.exception(f"Error handling WhatsApp webhook: {str(e)}")
+                return HttpResponse("Error processing webhook", status=500)

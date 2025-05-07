@@ -239,6 +239,71 @@ WHATSAPP_ACCESS_TOKEN = os.getenv('WHATSAPP_ACCESS_TOKEN')
 WHATSAPP_API_URL = os.getenv('WHATSAPP_API_URL')
 WHATSAPP_WEBHOOK_VERIFY_TOKEN = os.getenv('WHATSAPP_VERIFY_TOKEN')
 
+# Add to gateway/settings.py
+
+# WhatsApp Chatbot Settings
+CHATBOT_SETTINGS = {
+    'WELCOME_TIMEOUT_DAYS': 2,  # Restart flow if incomplete after this many days
+    'ANALYTICS_ENABLED': True,
+    'LOW_LITERACY_SUPPORT': True,  # Enable voice prompts for users who don't respond to text
+}
+
+# Maternal Health Chatbot Configuration
+MISTRAL_API_ENDPOINT = 'http://192.168.8.18:11434/api/generate'
+# Optional additional settings
+CHATBOT_USER_DATA_TTL = 86400  # Session timeout in seconds (24 hours)
+CHATBOT_DEFAULT_LANGUAGE = 'en'  # Default language for new users
+# AI Service Configuration
+AI_ENDPOINT = 'http://localhost:11434/api/generate'  # Update with your actual Mistral endpoint
+AI_MODEL = 'mistral'
+AI_TIMEOUT = 10  # seconds
+
+# Message Templates
+MESSAGE_TEMPLATES = {
+    'en': {
+        'welcome': """
+👋 *Welcome to MamaCare!*  
+
+We're your free pregnancy & postpartum companion. To get started:  
+
+1. Are you currently pregnant or postpartum?  
+   Reply:  
+   1️⃣ *Pregnant*  
+   2️⃣ *Postpartum*  
+
+2. Choose language:  
+   🌍 *1-English*  |  *2-Swahili*  |  *3-Sheng*  
+
+*Tip:* You can change settings anytime by texting SETTINGS.
+""",
+        'opt_out': "*To stop messages:* Reply STOP\nData privacy: We never share your number."
+    },
+    'sw': {
+        'welcome': """
+👋 *Karibu kwa MamaCare!*  
+
+Tunaweza kukusaidia kwa:
+
+- Ufuatiliaji wa ujauzito  
+- Ukumbusho wa kliniki  
+- Maswali ya afya  
+
+Jibu:  
+1️⃣ *Nina mimba*  
+2️⃣ *Nimeshapata mtoto*  
+
+Chagua lugha:  
+🌍 *1-Kiingereza*  |  *2-Kiswahili*  |  *3-Sheng*  
+
+*Mwongozo:* Unaweza kubadilisha mipangilio kwa kutuma SETTINGS.
+""",
+        'opt_out': "*Kusimamisha ujumbe:* Jibu STOP\nFaragha ya data: Hatushiriki nambari yako kamwe."
+    }
+}
+
+
+
+
 # # Endpoint configuration
 # ENDPOINT_CONFIG = {
 #     'cases_endpoint': {
