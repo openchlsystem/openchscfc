@@ -71,6 +71,8 @@ class UnifiedWebhookView(View):
         Handles POST requests for message exchange and token operations.
         """
         try:
+            if platform == 'helpline' and 'case/ceemis' in request.path:
+                return self._handle_helpline_ceemis_case(request)
             # Get the appropriate adapter for this platform
             adapter = AdapterFactory.get_adapter(platform)
             
@@ -84,85 +86,85 @@ class UnifiedWebhookView(View):
                 payload = request.POST.dict()
                 
             # Special handling for WhatsApp platform
-            if platform == 'whatsapp':
-                sender_id = None
-                message_content = None
-                message_id = None
+            # if platform == 'whatsapp':
+            #     sender_id = None
+            #     message_content = None
+            #     message_id = None
                 
-                # Extract information from WhatsApp business format
-                if 'entry' in payload and len(payload['entry']) > 0:
-                    for entry in payload['entry']:
-                        if 'changes' in entry and len(entry['changes']) > 0:
-                            for change in entry['changes']:
-                                if 'value' in change and 'messages' in change['value']:
-                                    messages = change['value']['messages']
-                                    if messages and len(messages) > 0:
-                                        message = messages[0]
+            #     # Extract information from WhatsApp business format
+            #     if 'entry' in payload and len(payload['entry']) > 0:
+            #         for entry in payload['entry']:
+            #             if 'changes' in entry and len(entry['changes']) > 0:
+            #                 for change in entry['changes']:
+            #                     if 'value' in change and 'messages' in change['value']:
+            #                         messages = change['value']['messages']
+            #                         if messages and len(messages) > 0:
+            #                             message = messages[0]
                                         
-                                        # Extract sender ID and message ID
-                                        sender_id = message.get('from')
-                                        message_id = message.get('id')
+            #                             # Extract sender ID and message ID
+            #                             sender_id = message.get('from')
+            #                             message_id = message.get('id')
                                         
-                                        # Check for text message
-                                        if message.get('type') == 'text' and 'text' in message:
-                                            message_content = message['text'].get('body', '')
+            #                             # Check for text message
+            #                             if message.get('type') == 'text' and 'text' in message:
+            #                                 message_content = message['text'].get('body', '')
                 
-                # Or extract from simpler format
-                if not sender_id and 'from' in payload:
-                    sender_id = payload.get('from')
+            #     # Or extract from simpler format
+            #     if not sender_id and 'from' in payload:
+            #         sender_id = payload.get('from')
                     
-                if not message_id and 'message_id' in payload:
-                    message_id = payload.get('message_id')
+            #     if not message_id and 'message_id' in payload:
+            #         message_id = payload.get('message_id')
                     
-                if not message_content and 'message' in payload:
-                    message_content = payload.get('message')
+            #     if not message_content and 'message' in payload:
+            #         message_content = payload.get('message')
                     
-                    # Try to decode base64 encoded message
-                    try:
-                        import base64
-                        # Add padding if needed
-                        padded = message_content + '=' * (4 - len(message_content) % 4) % 4
-                        decoded_bytes = base64.b64decode(padded)
-                        decoded_content = decoded_bytes.decode('utf-8')
-                        logger.info(f"Decoded base64 message: {message_content} -> {decoded_content}")
-                        message_content = decoded_content
-                    except Exception as e:
-                        # Not base64 encoded or other error
-                        logger.debug(f"Message not base64 encoded or error: {str(e)}")
+            #         # Try to decode base64 encoded message
+            #         try:
+            #             import base64
+            #             # Add padding if needed
+            #             padded = message_content + '=' * (4 - len(message_content) % 4) % 4
+            #             decoded_bytes = base64.b64decode(padded)
+            #             decoded_content = decoded_bytes.decode('utf-8')
+            #             logger.info(f"Decoded base64 message: {message_content} -> {decoded_content}")
+            #             message_content = decoded_content
+            #         except Exception as e:
+            #             # Not base64 encoded or other error
+            #             logger.debug(f"Message not base64 encoded or error: {str(e)}")
                 
-                # Check if this is HEALTH message or user has active session
-                is_health_message = message_content and message_content.strip().upper() == 'HEALTH'
+            #     # Check if this is HEALTH message or user has active session
+            #     is_health_message = message_content and message_content.strip().upper() == 'HEALTH'
                 
-                # Import the chatbot to check active sessions
-                from platform_adapters.whatsApp.chatbot_adapter import MaternalHealthChatbot
-                chatbot = MaternalHealthChatbot()
+            #     # Import the chatbot to check active sessions
+            #     from platform_adapters.whatsApp.chatbot_adapter import MaternalHealthChatbot
+            #     chatbot = MaternalHealthChatbot()
                 
-                has_active_session = sender_id and chatbot.is_active_session(sender_id)
+            #     has_active_session = sender_id and chatbot.is_active_session(sender_id)
                 
-                # Process with chatbot if HEALTH or active session
-                if is_health_message or has_active_session:
-                    # Activate session if HEALTH message
-                    if is_health_message:
-                        chatbot.activate_session(sender_id)
+            #     # Process with chatbot if HEALTH or active session
+            #     if is_health_message or has_active_session:
+            #         # Activate session if HEALTH message
+            #         if is_health_message:
+            #             chatbot.activate_session(sender_id)
                     
-                    logger.info(f"Processing message '{message_content}' from {sender_id} with chatbot")
+            #         logger.info(f"Processing message '{message_content}' from {sender_id} with chatbot")
                     
-                    # Get or create conversation
-                    conversation = ConversationService().get_or_create_conversation(
-                        sender_id, 'whatsapp'
-                    )
+            #         # Get or create conversation
+            #         conversation = ConversationService().get_or_create_conversation(
+            #             sender_id, 'whatsapp'
+            #         )
                     
-                    # Process with chatbot
-                    response_text = chatbot.process_message(sender_id, message_content)
+            #         # Process with chatbot
+            #         response_text = chatbot.process_message(sender_id, message_content)
                     
-                    # Send response back to user
-                    adapter.send_message(sender_id, {
-                        'message_type': 'text',
-                        'content': response_text
-                    })
+            #         # Send response back to user
+            #         adapter.send_message(sender_id, {
+            #             'message_type': 'text',
+            #             'content': response_text
+            #         })
                     
-                    # Return success
-                    return HttpResponse(status=200)
+            #         # Return success
+            #         return HttpResponse(status=200)
             
             # Regular webhook flow continues if not handled by chatbot
             direction = payload.get('direction', 'incoming')
@@ -177,6 +179,68 @@ class UnifiedWebhookView(View):
         except Exception as e:
             logger.exception(f"Error processing webhook: {str(e)}")
             return HttpResponse("Processing failed", status=500)
+    # webhook_handler/views.py (add PUT support to UnifiedWebhookView)
+
+    
+    def _handle_helpline_ceemis_case(self, request):
+        """
+        Handle a case creation from Helpline to be forwarded to CEEMIS.
+        Args:
+            request: The HTTP request object
+        Returns:
+            HTTP response containing operation result
+        """
+        try:
+            # Get the CEEMIS adapter
+            adapter = AdapterFactory.get_adapter('ceemis')
+            
+            # Parse the request body
+            try:
+                payload = json.loads(request.body)
+            except json.JSONDecodeError:
+                return JsonResponse({
+                    "status": "error", 
+                    "message": "Invalid JSON payload"
+                }, status=400)
+            
+            # Validate the request
+            if not adapter.validate_request(payload):
+                return JsonResponse({
+                    "status": "error", 
+                    "message": "Invalid case data"
+                }, status=400)
+            
+            # Parse the message
+            messages = adapter.parse_messages(payload)
+            if not messages:
+                return JsonResponse({
+                    "status": "error", 
+                    "message": "Failed to parse case data"
+                }, status=400)
+            
+            # Process each message (likely just one for a case)
+            responses = []
+            for msg_dict in messages:
+                # Create StandardMessage object
+                message = StandardMessage(**msg_dict)
+                
+                # Save to database if needed
+                # self._save_message(message, request)
+                
+                # Send to CEEMIS
+                response = adapter.send_message("ceemis", message.metadata)
+                responses.append(response)
+            
+            # Format response
+            return adapter.format_webhook_response(responses)
+            
+        except Exception as e:
+            logger.exception(f"Error processing Helpline to CEEMIS case: {str(e)}")
+            return JsonResponse({
+                "status": "error",
+                "message": f"Failed to process case: {str(e)}"
+            }, status=500)
+   
     def _check_for_chatbot_keywords(self, payload):
         """
         Examine the raw payload for chatbot trigger keywords or check if user is in active session.
@@ -318,7 +382,7 @@ class UnifiedWebhookView(View):
                 timestamp=timezone.now(),
                 metadata={'chatbot_message': True}
             )
-            
+
             # Process with MaternalHealthChatbot
             chatbot = MaternalHealthChatbot()
             
@@ -687,119 +751,7 @@ from django.http import JsonResponse
 from django.views import View
 import logging
 
-# Assuming you have a logger set up
-logger = logging.getLogger(__name__)
 
-class LocationExportView(View):
-    """
-    View to export all locations in a hierarchical structure.
-    This endpoint provides a complete export of all locations in the system,
-    organized in their hierarchical structure.
-    
-    Options:
-    - ?format=json (default) - Returns hierarchical JSON data
-    - ?format=csv - Returns flattened CSV data
-    - ?log_level=INFO (default) - Sets logging verbosity (DEBUG, INFO, WARNING, ERROR)
-    """
-
-    def get(self, request, *args, **kwargs):
-        try:
-            # Set logging level based on request parameter
-            log_level = request.GET.get('log_level', 'INFO').upper()
-            valid_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR']
-            
-            if log_level in valid_levels:
-                numeric_level = getattr(logging, log_level)
-                logger.setLevel(numeric_level)
-                logger.info(f"Log level set to {log_level}")
-            else:
-                logger.setLevel(logging.INFO)
-                logger.warning(f"Invalid log level: {log_level}. Using INFO.")
-            
-            # Get the adapter from the factory
-            adapter = AdapterFactory.get_adapter('webform')
-            
-            # Get the format parameter (default to 'json')
-            export_format = request.GET.get('format', 'json').lower()
-            
-            # Log request details
-            logger.info(f"Location export requested with format: {export_format}")
-            
-            # Export all locations
-            response_data = adapter.export_all_locations()
-            
-            # Check if export was successful
-            if response_data.get('status') != 'success':
-                return JsonResponse({
-                    'status': 'error',
-                    'message': response_data.get('error', 'Failed to export locations')
-                }, status=400)
-            
-            # Handle different output formats
-            if export_format == 'csv':
-                # Convert hierarchical data to flat structure for CSV
-                flat_locations = self._flatten_location_hierarchy(response_data['location_hierarchy'])
-                
-                # Create CSV response
-                response = HttpResponse(content_type='text/csv')
-                response['Content-Disposition'] = 'attachment; filename="locations_export.csv"'
-                
-                writer = csv.writer(response)
-                writer.writerow(['id', 'name', 'level', 'parent_id', 'full_path'])
-                
-                for location in flat_locations:
-                    writer.writerow([
-                        location['id'],
-                        location['name'],
-                        location['level'],
-                        location['parent_id'],
-                        location['full_path']
-                    ])
-                
-                return response
-            else:
-                # Default to JSON response
-                return JsonResponse(response_data)
-                
-        except Exception as e:
-            logger.error(f"Error in LocationExportView: {str(e)}")
-            return JsonResponse({
-                'status': 'error',
-                'message': f"Internal server error: {str(e)}"
-            }, status=500)
-    
-    def _flatten_location_hierarchy(self, locations, flat_list=None):
-        """
-        Convert the hierarchical location structure to a flat list.
-        
-        Args:
-            locations: List of location dictionaries with nested children
-            flat_list: List to accumulate flattened locations
-            
-        Returns:
-            list: Flat list of all locations
-        """
-        if flat_list is None:
-            flat_list = []
-        
-        for location in locations:
-            # Create a copy without the children field
-            flat_location = {
-                'id': location['id'],
-                'name': location['name'],
-                'level': location['level'],
-                'parent_id': location['parent_id'],
-                'full_path': location['full_path']
-            }
-            
-            flat_list.append(flat_location)
-            
-            # Process children recursively
-            if 'children' in location and location['children']:
-                self._flatten_location_hierarchy(location['children'], flat_list)
-        
-        return flat_list
-    
 class TokenGenerationView(View):
     """
     View for generating authentication tokens for organizations.
@@ -853,6 +805,251 @@ class TokenGenerationView(View):
                 'message': f'Error generating token: {str(e)}'
             }, status=500)
         
+@method_decorator(csrf_exempt, name='dispatch')
+class HelplineCEEMISView(View):
+    """
+    Dedicated view for handling Helpline to CEEMIS case forwarding.
+    """
+    
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests for Helpline case creation to be forwarded to CEEMIS.
+        """
+        try:
+            # Get the CEEMIS adapter
+            adapter = AdapterFactory.get_adapter('ceemis')
+            
+            # Parse the request body
+            try:
+                payload = json.loads(request.body)
+            except json.JSONDecodeError:
+                return JsonResponse({
+                    "status": "error", 
+                    "message": "Invalid JSON payload"
+                }, status=400)
+            
+            # Validate the request
+            if not adapter.validate_request(payload):
+                return JsonResponse({
+                    "status": "error", 
+                    "message": "Invalid case data"
+                }, status=400)
+
+            # Parse the message
+            messages = adapter.parse_messages(payload)
+            print(f"THIS IS THE MESSAGE {messages}")
+            
+            if not messages:
+                return JsonResponse({
+                    "status": "error", 
+                    "message": "Failed to parse case data"
+                }, status=400)
+            
+            # Process each message (likely just one for a case)
+            responses = []
+
+            for msg_dict in messages:
+                # Create StandardMessage object
+                message = StandardMessage(**msg_dict)
+                print(f"THIS IS THE MESSAGE in the for loop {message.metadata}")
+                # Send to CEEMIS
+                response = adapter.send_message("ceemis", message.metadata)
+                print(f"THIS IS THE RESPONSE {response}")
+                responses.append(response)
+            
+            # Format response
+            return adapter.format_webhook_response(responses)
+            
+        except Exception as e:
+            logger.exception(f"Error processing Helpline to CEEMIS case: {str(e)}")
+            return JsonResponse({
+                "status": "error",
+                "message": f"Failed to process case: {str(e)}"
+            }, status=500)
+        # webhook_handler/views.py
+@method_decorator(csrf_exempt, name='dispatch')
+class HelplineCEEMISUpdateView(View):
+    """
+    Dedicated view for handling Helpline to CEEMIS case updates.
+    Uses the sauti_case_update endpoint.
+    """
+# webhook_handler/views.py (add this PUT method to HelplineCEEMISUpdateView)
+
+    # webhook_handler/views.py
+
+    def put(self, request, *args, **kwargs):
+        """
+        Handle PUT requests for Helpline case updates to be forwarded to CEEMIS.
+        """
+        try:
+            # Get the CEEMIS adapter
+            adapter = AdapterFactory.get_adapter('ceemis')
+            
+            # Parse the request body
+            try:
+                payload = json.loads(request.body)
+            except json.JSONDecodeError:
+                return JsonResponse({
+                    "status": "error", 
+                    "message": "Invalid JSON payload"
+                }, status=400)
+            
+            # Ensure the payload has a ref field for CEEMIS case ID
+            if "ref" not in payload:
+                return JsonResponse({
+                    "status": "error", 
+                    "message": "Missing ref field required for case update"
+                }, status=400)
+            
+            # Validate the request
+            if not adapter.validate_request(payload):
+                return JsonResponse({
+                    "status": "error", 
+                    "message": "Invalid case update data"
+                }, status=400)
+            
+            # Parse the message
+            message_dicts = adapter.parse_messages(payload)
+            if not message_dicts or len(message_dicts) == 0:
+                return JsonResponse({
+                    "status": "error", 
+                    "message": "Failed to parse case update data"
+                }, status=400)
+            
+            # Get the message dictionary (first one)
+            message_dict = message_dicts[0]
+            
+            # Process the update - pass the dictionary directly
+            response = adapter.send_message("ceemis", message_dict)
+            
+            # Log the response for debugging
+            print(f"THIS IS THE RESPONSE {response}")
+            
+            # Format response
+            return adapter.format_webhook_response([response])
+                
+        except Exception as e:
+            logger.exception(f"Error processing Helpline to CEEMIS case update: {str(e)}")
+            return JsonResponse({
+                "status": "error",
+                "message": f"Failed to process case update: {str(e)}"
+            }, status=500)
+
+        
+# Assuming you have a logger set up
+# logger = logging.getLogger(__name__)
+
+# class LocationExportView(View):
+#     """
+#     View to export all locations in a hierarchical structure.
+#     This endpoint provides a complete export of all locations in the system,
+#     organized in their hierarchical structure.
+    
+#     Options:
+#     - ?format=json (default) - Returns hierarchical JSON data
+#     - ?format=csv - Returns flattened CSV data
+#     - ?log_level=INFO (default) - Sets logging verbosity (DEBUG, INFO, WARNING, ERROR)
+#     """
+
+#     def get(self, request, *args, **kwargs):
+#         try:
+#             # Set logging level based on request parameter
+#             log_level = request.GET.get('log_level', 'INFO').upper()
+#             valid_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR']
+            
+#             if log_level in valid_levels:
+#                 numeric_level = getattr(logging, log_level)
+#                 logger.setLevel(numeric_level)
+#                 logger.info(f"Log level set to {log_level}")
+#             else:
+#                 logger.setLevel(logging.INFO)
+#                 logger.warning(f"Invalid log level: {log_level}. Using INFO.")
+            
+#             # Get the adapter from the factory
+#             adapter = AdapterFactory.get_adapter('webform')
+            
+#             # Get the format parameter (default to 'json')
+#             export_format = request.GET.get('format', 'json').lower()
+            
+#             # Log request details
+#             logger.info(f"Location export requested with format: {export_format}")
+            
+#             # Export all locations
+#             response_data = adapter.export_all_locations()
+            
+#             # Check if export was successful
+#             if response_data.get('status') != 'success':
+#                 return JsonResponse({
+#                     'status': 'error',
+#                     'message': response_data.get('error', 'Failed to export locations')
+#                 }, status=400)
+            
+#             # Handle different output formats
+#             if export_format == 'csv':
+#                 # Convert hierarchical data to flat structure for CSV
+#                 flat_locations = self._flatten_location_hierarchy(response_data['location_hierarchy'])
+                
+#                 # Create CSV response
+#                 response = HttpResponse(content_type='text/csv')
+#                 response['Content-Disposition'] = 'attachment; filename="locations_export.csv"'
+                
+#                 writer = csv.writer(response)
+#                 writer.writerow(['id', 'name', 'level', 'parent_id', 'full_path'])
+                
+#                 for location in flat_locations:
+#                     writer.writerow([
+#                         location['id'],
+#                         location['name'],
+#                         location['level'],
+#                         location['parent_id'],
+#                         location['full_path']
+#                     ])
+                
+#                 return response
+#             else:
+#                 # Default to JSON response
+#                 return JsonResponse(response_data)
+                
+#         except Exception as e:
+#             logger.error(f"Error in LocationExportView: {str(e)}")
+#             return JsonResponse({
+#                 'status': 'error',
+#                 'message': f"Internal server error: {str(e)}"
+#             }, status=500)
+    
+#     def _flatten_location_hierarchy(self, locations, flat_list=None):
+#         """
+#         Convert the hierarchical location structure to a flat list.
+        
+#         Args:
+#             locations: List of location dictionaries with nested children
+#             flat_list: List to accumulate flattened locations
+            
+#         Returns:
+#             list: Flat list of all locations
+#         """
+#         if flat_list is None:
+#             flat_list = []
+        
+#         for location in locations:
+#             # Create a copy without the children field
+#             flat_location = {
+#                 'id': location['id'],
+#                 'name': location['name'],
+#                 'level': location['level'],
+#                 'parent_id': location['parent_id'],
+#                 'full_path': location['full_path']
+#             }
+            
+#             flat_list.append(flat_location)
+            
+#             # Process children recursively
+#             if 'children' in location and location['children']:
+#                 self._flatten_location_hierarchy(location['children'], flat_list)
+        
+#         return flat_list
+    
+
 
 # POST {{base_url}}/api/webhook/webform/auth/token/
 # Content-Type: application/json
@@ -881,114 +1078,116 @@ class TokenGenerationView(View):
 #   ...
 # }
 
-class CaseCategoryExportView(View):
-    """
-    View to export all case categories in a hierarchical structure.
-    This endpoint provides a complete export of all case categories in the system,
-    organized in their hierarchical structure.
+# class CaseCategoryExportView(View):
+#     """
+#     View to export all case categories in a hierarchical structure.
+#     This endpoint provides a complete export of all case categories in the system,
+#     organized in their hierarchical structure.
     
-    Options:
-    - ?format=json (default) - Returns hierarchical JSON data
-    - ?format=csv - Returns flattened CSV data
-    - ?log_level=INFO (default) - Sets logging verbosity (DEBUG, INFO, WARNING, ERROR)
-    """
+#     Options:
+#     - ?format=json (default) - Returns hierarchical JSON data
+#     - ?format=csv - Returns flattened CSV data
+#     - ?log_level=INFO (default) - Sets logging verbosity (DEBUG, INFO, WARNING, ERROR)
+#     """
 
-    def get(self, request, *args, **kwargs):
-        try:
-            # Set logging level based on request parameter
-            log_level = request.GET.get('log_level', 'INFO').upper()
-            valid_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR']
+#     def get(self, request, *args, **kwargs):
+#         try:
+#             # Set logging level based on request parameter
+#             log_level = request.GET.get('log_level', 'INFO').upper()
+#             valid_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR']
             
-            if log_level in valid_levels:
-                numeric_level = getattr(logging, log_level)
-                logger.setLevel(numeric_level)
-                logger.info(f"Log level set to {log_level}")
-            else:
-                logger.setLevel(logging.INFO)
-                logger.warning(f"Invalid log level: {log_level}. Using INFO.")
+#             if log_level in valid_levels:
+#                 numeric_level = getattr(logging, log_level)
+#                 logger.setLevel(numeric_level)
+#                 logger.info(f"Log level set to {log_level}")
+#             else:
+#                 logger.setLevel(logging.INFO)
+#                 logger.warning(f"Invalid log level: {log_level}. Using INFO.")
             
-            # Get the adapter from the factory
-            adapter = AdapterFactory.get_adapter('webform')
+#             # Get the adapter from the factory
+#             adapter = AdapterFactory.get_adapter('webform')
             
-            # Get the format parameter (default to 'json')
-            export_format = request.GET.get('format', 'json').lower()
+#             # Get the format parameter (default to 'json')
+#             export_format = request.GET.get('format', 'json').lower()
             
-            # Log request details
-            logger.info(f"Case category export requested with format: {export_format}")
+#             # Log request details
+#             logger.info(f"Case category export requested with format: {export_format}")
             
-            # Export all case categories
-            response_data = adapter.export_case_categories()
+#             # Export all case categories
+#             response_data = adapter.export_case_categories()
             
-            # Check if export was successful
-            if response_data.get('status') != 'success':
-                return JsonResponse({
-                    'status': 'error',
-                    'message': response_data.get('error', 'Failed to export case categories')
-                }, status=400)
+#             # Check if export was successful
+#             if response_data.get('status') != 'success':
+#                 return JsonResponse({
+#                     'status': 'error',
+#                     'message': response_data.get('error', 'Failed to export case categories')
+#                 }, status=400)
             
-            # Handle different output formats
-            if export_format == 'csv':
-                # Convert hierarchical data to flat structure for CSV
-                flat_categories = self._flatten_category_hierarchy(response_data['category_hierarchy'])
+#             # Handle different output formats
+#             if export_format == 'csv':
+#                 # Convert hierarchical data to flat structure for CSV
+#                 flat_categories = self._flatten_category_hierarchy(response_data['category_hierarchy'])
                 
-                # Create CSV response
-                response = HttpResponse(content_type='text/csv')
-                response['Content-Disposition'] = 'attachment; filename="case_categories_export.csv"'
+#                 # Create CSV response
+#                 response = HttpResponse(content_type='text/csv')
+#                 response['Content-Disposition'] = 'attachment; filename="case_categories_export.csv"'
                 
-                writer = csv.writer(response)
-                writer.writerow(['id', 'name', 'level', 'parent_id', 'full_path'])
+#                 writer = csv.writer(response)
+#                 writer.writerow(['id', 'name', 'level', 'parent_id', 'full_path'])
                 
-                for category in flat_categories:
-                    writer.writerow([
-                        category['id'],
-                        category['name'],
-                        category['level'],
-                        category['parent_id'],
-                        category['full_path']
-                    ])
+#                 for category in flat_categories:
+#                     writer.writerow([
+#                         category['id'],
+#                         category['name'],
+#                         category['level'],
+#                         category['parent_id'],
+#                         category['full_path']
+#                     ])
                 
-                return response
-            else:
-                # Default to JSON response
-                return JsonResponse(response_data)
+#                 return response
+#             else:
+#                 # Default to JSON response
+#                 return JsonResponse(response_data)
                 
-        except Exception as e:
-            logger.error(f"Error in CaseCategoryExportView: {str(e)}")
-            return JsonResponse({
-                'status': 'error',
-                'message': f"Internal server error: {str(e)}"
-            }, status=500)
+#         except Exception as e:
+#             logger.error(f"Error in CaseCategoryExportView: {str(e)}")
+#             return JsonResponse({
+#                 'status': 'error',
+#                 'message': f"Internal server error: {str(e)}"
+#             }, status=500)
     
-    def _flatten_category_hierarchy(self, categories, flat_list=None):
-        """
-        Convert the hierarchical category structure to a flat list.
+#     def _flatten_category_hierarchy(self, categories, flat_list=None):
+#         """
+#         Convert the hierarchical category structure to a flat list.
         
-        Args:
-            categories: List of category dictionaries with nested children
-            flat_list: List to accumulate flattened categories
+#         Args:
+#             categories: List of category dictionaries with nested children
+#             flat_list: List to accumulate flattened categories
             
-        Returns:
-            list: Flat list of all categories
-        """
-        if flat_list is None:
-            flat_list = []
+#         Returns:
+#             list: Flat list of all categories
+#         """
+#         if flat_list is None:
+#             flat_list = []
         
-        for category in categories:
-            # Create a copy without the children field
-            flat_category = {
-                'id': category['id'],
-                'name': category['name'],
-                'level': category['level'],
-                'parent_id': category['parent_id'],
-                'full_path': category['full_path']
-            }
+#         for category in categories:
+#             # Create a copy without the children field
+#             flat_category = {
+#                 'id': category['id'],
+#                 'name': category['name'],
+#                 'level': category['level'],
+#                 'parent_id': category['parent_id'],
+#                 'full_path': category['full_path']
+#             }
             
-            flat_list.append(flat_category)
+#             flat_list.append(flat_category)
             
-            # Process children recursively
-            if 'children' in category and category['children']:
-                self._flatten_category_hierarchy(category['children'], flat_list)
+#             # Process children recursively
+#             if 'children' in category and category['children']:
+#                 self._flatten_category_hierarchy(category['children'], flat_list)
         
-        return flat_list
+#         return flat_list
 
 # Add this to your urls.py
+
+
