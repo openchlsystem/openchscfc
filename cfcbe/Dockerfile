@@ -4,6 +4,9 @@ FROM python:3.12-slim
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_DEFAULT_TIMEOUT=100
 
 # Set work directory
 WORKDIR /app
@@ -14,18 +17,42 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install
+# Install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Copy project
+# Copy project (ensure this includes manage.py)
 COPY . .
 
-# Collect static files (if needed)
-RUN python manage.py collectstatic --noinput
+# Verify Django installation
+RUN python -c "import django; print(django.__version__)"
 
-# Expose the port the app runs on
+# Create entrypoint script
+RUN echo '#!/bin/sh\n\
+set -e\n\
+\n\
+# Wait for database if needed\n\
+if [ -n "$DB_HOST" ]; then\n\
+    echo "Waiting for database..."\n\
+    while ! nc -z $DB_HOST $DB_PORT; do\n\
+      sleep 0.1\n\
+    done\n\
+    echo "Database available"\n\
+fi\n\
+\n\
+# Run migrations\n\
+python manage.py migrate --noinput\n\
+\n\
+# Collect static files\n\
+python manage.py collectstatic --noinput\n\
+\n\
+exec "$@"' > /entrypoint.sh && \
+    chmod +x /entrypoint.sh
+
+# Expose the port
 EXPOSE 8006
 
-# Command to run the application
+# Set entrypoint and default command
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["gunicorn", "--bind", "0.0.0.0:8006", "cfcbe.wsgi"]
