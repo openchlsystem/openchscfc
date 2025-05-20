@@ -23,8 +23,8 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=cfcbe.settings
       - DEBUG=0
-      - ALLOWED_HOSTS=backend.bitz-itc.com
-      - CSRF_TRUSTED_ORIGINS=https://opencfc.bitz-itc.com
+      - ALLOWED_HOSTS=backend.bitz-itc.com,localhost,127.0.0.1,backend,0.0.0.0
+      - CSRF_TRUSTED_ORIGINS=https://opencfc.bitz-itc.com,http://localhost,http://127.0.0.1
     command: >
       sh -c "python manage.py migrate &&
              gunicorn --bind 0.0.0.0:8006 cfcbe.wsgi"
