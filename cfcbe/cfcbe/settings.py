@@ -314,6 +314,16 @@ ENDPOINT_CONFIG = {
         'url': os.getenv('ENDPOINT_MESSAGING_URL'),
         'auth_token': os.getenv('ENDPOINT_AUTH_TOKEN'),
         'formatter': 'messaging'
+    },
+        'ceemis': {
+        'url': os.getenv('ENDPOINT_CEEMIS_URL'),
+        'format': 'form',  # CEEMIS expects form data
+        'auth_type': 'none',  # No authentication for this endpoint
+    },
+        'ceemis_update': {
+        'url': os.getenv('ENDPOINT_CEEMIS_UPDATE_URL'),
+        'format': 'form',  # CEEMIS expects form data
+        'auth_type': 'none',  # No authentication for this endpoint
     }
 }
 

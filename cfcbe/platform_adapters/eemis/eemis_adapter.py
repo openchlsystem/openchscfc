@@ -9,7 +9,7 @@ from typing import Dict, Any, List, Optional
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
-
+    
 class EEMISAdapter(BaseAdapter):
     """
     Adapter for handling EEMIS (External Migrant Worker API) integration.
@@ -20,7 +20,7 @@ class EEMISAdapter(BaseAdapter):
     3. Returns the EEMIS data as response
     """
     
-    EEMIS_API_URL = "https://api.eemis.mglsd.go.ug/api/migrant-wokers/"
+    EEMIS_API_URL = "https://api.eemis.mglsd.go.ug/api/migrant-wokers/passports/"
     
     def handle_verification(self, request):
         """

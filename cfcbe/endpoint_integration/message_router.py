@@ -72,7 +72,9 @@ class MessageRouter:
         # For webform, use the cases endpoint
         if message.platform == 'webform':
             return 'cases_endpoint'
-        
+            # Add specific routing for CEEMIS cases
+        if message.platform == 'ceemis' and message.content_type == 'case/ceemis':
+            return 'ceemis'
         # For all other platforms (WhatsApp, Messenger, etc.), use messaging endpoint
         return 'messaging_endpoint'
     
