@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./cfcbe
+    volumes:
+      - ./cfcbe:/app
+      - static_volume:/app/staticfiles
+    ports:
+      - "8006:8006"
+    environment:
+      - DJANGO_SETTINGS_MODULE=cfcbe.settings
+      - DEBUG=0
+    command: >
+      sh -c "python manage.py migrate &&
+             gunicorn --bind 0.0.0.0:8006 cfcbe.wsgi"
+    restart: unless-stopped
+
+  frontend:
+    build: ./cfc
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  static_volume:
