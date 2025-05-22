@@ -33,7 +33,7 @@ class WebhookMessage(models.Model):
     message_type = models.CharField(max_length=50, default='text')
     timestamp = models.DateTimeField(default=timezone.now)
     metadata = models.JSONField(default=dict, blank=True)
-    
+      
     def __str__(self):
         return f"Message from {self.sender_id} on {self.platform}"
 
