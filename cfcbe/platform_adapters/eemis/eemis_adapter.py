@@ -61,15 +61,21 @@ class EEMISAdapter(BaseAdapter):
             List of parsed messages as dictionaries
         """
         try:
-            if request.method == 'POST':
+            # If request is already a dict, just return it as a list
+            if isinstance(request, dict):
+                return [request]
+            
+            # Otherwise, assume it's a Django request object
+            if hasattr(request, 'method') and request.method == 'POST':
                 # Parse the JSON body
                 body = json.loads(request.body)
                 return [body]  # Return as a list with single item
+            
             return []
         except Exception as e:
             logger.error(f"Error parsing EEMIS request: {str(e)}")
             return []
-    
+        
     def send_message(self, recipient_id: str, message_content: Dict[str, Any]) -> Dict[str, Any]:
         """
         Send message to EEMIS API.
