@@ -1,32 +1,21 @@
 <template>
-    <nav class="nav-bar">
-        <!-- Back Button -->
-
-        <div>
-            <button class="back-btn" @click="navigateBack"><i class="bi bi-arrow-left"></i> Back</button>
-        </div>
-        <!-- Home Icon -->
-        <div class="home-icon" @click="navigateHome">
-            <span>🏠</span>
-        </div>
-
-        <div>
-
-            <!-- Menu Toggle for Mobile -->
-            <button class="menu-toggle" @click="toggleMenu">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-            </button>
+    <nav >            
             <!-- Navigation Links -->
-            <ul :class="{ 'nav-links': true, 'nav-active': isMenuOpen }">
-                <li><a href="#features">Features</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-        </div>
-
-
+            <div class="flex justify-between" >
+                 <!-- Home Icon -->
+                <div>
+                    <button  @click="navigateBack"><i class="bi bi-arrow-left"></i> Back</button>
+                </div>
+                <ul class="flex justify-between gap-4 items-center px-4 capitalize">
+                    <li>home page</li>
+                    <li ><a class="" href="#features">feelings hub</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Contact us</a></li>
+                    <li><a href="#support">leaderboard</a></li>
+                    <button class="border p-2 capitalize">send</button>
+                    <button class="border p-2 capitalize bg-black text-white">submit</button>
+                </ul>
+            </div> 
     </nav>
 
 </template>

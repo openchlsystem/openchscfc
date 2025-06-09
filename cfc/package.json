@@ -13,10 +13,12 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.1.8",
     "axios": "^1.7.9",
     "bootstrap-icons": "^1.11.3",
     "node": "^23.5.0",
     "pinia": "^2.2.6",
+    "tailwindcss": "^4.1.8",
     "vue": "^3.5.13",
     "vue-router": "^4.4.5"
   },
