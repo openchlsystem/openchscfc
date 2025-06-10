@@ -1,12 +1,12 @@
 <template>
-    <div class="landing-page">
+    <div>
         <!-- Header Section -->
-        <header class="header">
+        <header >
             <NavBar />
         </header>
 
         <!-- Hero Section -->
-        <section v-if="currentRoute === '/'" class="hero-section">
+        <section >
             <HeroPage   />
         </section>
 
