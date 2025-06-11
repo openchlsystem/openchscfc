@@ -6,7 +6,7 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 
-import "@/assets/tailwind.css"
+import "@/assets/tailwind.css" 
 // Import Bootstrap Icons
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
