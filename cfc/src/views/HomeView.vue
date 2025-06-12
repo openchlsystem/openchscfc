@@ -1,31 +1,37 @@
 <template>
-  <div class="flex flex-col gap-12 justify-center items-center">
-    <div class="flex flex-col gap-8 justify-center items-center">
-      <p class="font-bold font-header text-2xl">explore</p>
-      <h2 class="font-extrabold font-header text-5xl">navigate your feelings with ease</h2>
+  <div class="flex flex-col gap-20 mb-28 justify-center items-center">
+    <div class="flex flex-col gap-4 justify-center items-center">
+      <p class="font-semibold font-header ">Explore</p>
+      <h2 class="font-extrabold font-header text-3xl">Navigate Your Feelings with Ease</h2>
       <p>
-        our platform offers qiuck access to essential features.dive into the Feelings Hud or reach
-        out through Contact Us
+        Our platform offers quick access to essential features. Dive into the Feelings Hub or reach out through Contact Us.  
       </p>
     </div>
 
-    <div class="flex gap-8">
-      <div
-        v-for="feature in features"
-        :key="feature.title"
-        class="flex flex-col justify-center items-center border rounded-lg px-4 py-12 w-1/3 h-60"
-      >
-        <h2 class="font-bold font-header text-3xl">{{ feature.title }}</h2>
-        <p class="text-center max-w-xs mt-2">{{ feature.description }}</p>
-        <button class="border rounded-lg px-4 py-2 mt-4" @click="feature.action">
-          {{ feature.buttonText }}
-        </button>
-      </div>
-    </div>
+    <div class="flex gap-12 ">
+  <div
+    v-for="(feature, index) in features"
+    :key="feature.title"
+    :class="[
+      'flex flex-col justify-center items-center  rounded-lg px-4 py-12 w-1/3 h-60',
+      index % 2 === 0 ? 'bg-white' : 'bg-slate-300'
+    ]"
+  >
+    <h2 class="font-bold font-header text-3xl">{{ feature.title }}</h2>
+    <p class="text-center max-w-xs mt-2">{{ feature.description }}</p>
+    <button class=" rounded-lg px-4 py-2 mt-4 bg-white":class="index % 2 === 0 ? 'border' : 'border-none'" @click="feature.action">
+      {{ feature.buttonText }}
+    </button>
+  </div>
+</div>
+
 
     <div class="flex gap-4">
       <button class="border px-4 py-2">draw</button>
-      <button>chat</button>
+      <div class="flex justify-center items-center gap-4">
+        <button>chat</button>
+        <i-mdi-chevron-right class="w-6 h-6 text-black" />
+      </div>
     </div>
   </div>
 

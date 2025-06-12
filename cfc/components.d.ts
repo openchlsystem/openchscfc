@@ -18,6 +18,7 @@ declare module 'vue' {
     IconSupport: typeof import('./src/components/icons/IconSupport.vue')['default']
     IconTooling: typeof import('./src/components/icons/IconTooling.vue')['default']
     IMdiChevronDown: typeof import('~icons/mdi/chevron-down')['default']
+    IMdiChevronRight: typeof import('~icons/mdi/chevron-right')['default']
     IMdiControllerClassic: typeof import('~icons/mdi/controller-classic')['default']
     IMdiFace: typeof import('~icons/mdi/face')['default']
     IMdiFacebooj: typeof import('~icons/mdi/facebooj')['default']
