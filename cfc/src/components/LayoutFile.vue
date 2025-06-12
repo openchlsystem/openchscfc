@@ -6,7 +6,7 @@
     </header>
 
     <!-- Hero Section -->
-    <section>
+    <section v-if="currentRoute === '/'">
       <HeroPage />
     </section>
 
@@ -16,11 +16,9 @@
     </section>
 
     <!-- Footer Section -->
-    <footer class="flex flex-col gap-20" >
+    <footer class="flex flex-col gap-20">
       <div class="flex justify-around gap-32">
-        
-        <div class="flex  items-start justify-between gap-32">
-
+        <div class="flex items-start justify-between gap-32">
           <div @click="navigateHome" class="w-1/4">
             <i-mdi-controller-classic class="w-20 h-16 text-black" />
           </div>
@@ -57,23 +55,24 @@
               <li>Event Alerts</li>
             </ul>
           </div>
-
         </div>
 
         <div class="flex flex-col gap-6 w-[400px]">
-          <h2 class="font-semibold font-header text-xl capitalize ">Subscribe</h2>
+          <h2 class="font-semibold font-header text-xl capitalize">Subscribe</h2>
           <p>Join our newsletter to stay updated on features and releases.</p>
           <div class="flex gap-4">
-            <input type="text" class="border p-4 placeholder:font-semibold w-2/3" placeholder="enter your email"/>
+            <input
+              type="text"
+              class="border p-4 placeholder:font-semibold w-2/3"
+              placeholder="enter your email"
+            />
             <button class="border capitalize p-4 text-center w-1/3">Subscribe</button>
           </div>
           <p>By subscribing, you agree to our Privacy Policy and consent to receive updates.</p>
         </div>
-        
       </div>
 
       <div class="border-t flex justify-between items-center px-16 py-4">
-
         <div class="flex gap-4">
           <p>© 2024 CHS. All rights reserved.</p>
           <p class="underline">Privacy Policy</p>
@@ -92,13 +91,14 @@
     </footer>
 
     <!-- Thank You Badge Modal -->
-    <div v-if="showBadge" class="thank-you-modal">
+    <!-- <div v-if="showBadge" class="thank-you-modal">
       <div class="modal-content">
         <h2>Thank You!</h2>
         <p>You've made a difference today!</p>
         <button @click="closeBadge">Close</button>
       </div>
     </div>
+     -->
   </div>
 </template>
 

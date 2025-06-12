@@ -1,8 +1,10 @@
 <template>
   <div class="py-20 px-16 flex flex-col gap-20">
-    <div class="flex justify-between items-start ">
-      <h1 class="font-extrabold font-header text-5xl w-3/7">Welcome to Your Safe Space for Feelings</h1>
-      <div class="flex flex-col gap-8 w-3/7 ">
+    <div class="flex justify-between items-start">
+      <h1 class="font-extrabold font-header text-5xl w-3/7">
+        Welcome to Your Safe Space for Feelings
+      </h1>
+      <div class="flex flex-col gap-8 w-3/7">
         <p class="text-lg">
           Here, children can explore their emotions in a fun and engaging way. Our vibrant interface
           and friendly design make it easy to express feelings and connect with others.
