@@ -1,9 +1,9 @@
 <template>
-  <div class="px-16">
+  <div class="px-20">
     <!-- Header Section -->
-    <header class="flex gap-20 items-start py-28">
-      <h1 class="text-[60px] font-bold font-header w-1/2">Welcome to Feelings Hub</h1>
-      <p class="w-1/2 text-xl mt-4">
+    <header class="flex gap-20 items-start py-16">
+      <h1 class="text-5xl font-extrabold font-header w-1/2">Welcome to Feelings Hub</h1>
+      <p class="w-1/2 text-lg">
         Here in the Feelings Hub, we understand that it's okay to have different emotions. Let's
         explore how you're feeling together in a safe and friendly space!.
       </p>
@@ -18,73 +18,99 @@
       </div>
     </section> -->
 
-    <div class="flex">
-       <!-- Mood Selector -->
-       <section class="py-10 px-6">
-  <h3 class="font-header font-bold text-lg">Feelings</h3>
-  <h2 class="font-header font-bold text-5xl mt-2 mb-4">Express Your Emotions with Fun Emojis</h2>
-  <p class="mb-8 text-lg text-gray-600 max-w-xl">
-    Discover a world of feelings through our interactive emoji selection. Choose the emoji that
-    best represents your emotions and share your thoughts.
-  </p>
+    <div class="flex gap-20 py-24">
+      <!-- Mood Selector -->
+      <section class="w-1/2 flex flex-col gap-4">
+        <h3 class="font-header font-bold">Feelings</h3>
 
-  <h3 class="font-header font-bold text-xl mb-2">Choose Emotion</h3>
-  <p class="mb-6 text-gray-700">Select an emoji to express how you feel today!</p>
+        <h2 class="font-header font-bold text-5xl">Express Your Emotions with Fun Emojis</h2>
 
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-    <button
-      v-for="mood in moods"
-      :key="mood.name"
-      :class="[
-        'flex flex-col items-center justify-center p-4 rounded-xl transition-all duration-200 shadow hover:shadow-lg hover:bg-slate-100',
-        mood.name === selectedMood ? 'bg-slate-200 font-semibold' : 'bg-white'
-      ]"
-      @click="selectMood(mood.name)"
-    >
-      <img :src="mood.icon" :alt="mood.name" class="w-12 h-12 mb-2" />
-      <span class="text-base">{{ mood.name }}</span>
-    </button>
-  </div>
-</section>
+        <p class="text-lg max-w-xl">
+          Discover a world of feelings through our interactive emoji selection. Choose the emoji
+          that best represents your emotions and share your thoughts.
+        </p>
 
-   
-       <!-- Story Prompt Section -->
-       <section class="flex flex-col gap-2 justify-center ">
-         <h2 class="font-header font-bold text-xl">{{ moodBasedTitle }}</h2>
-         <p class="text-gray-600">{{ moodBasedPrompt }}</p>
-         <textarea
-           v-model="story"
-           placeholder="Type your story here..."
-           class="border p-4 rounded-lg"
-         ></textarea>
-         <button class="bg-black text-white rounded-lg p-4" @click="shareStory" v-if="story.trim() !== ''">Share Now</button>
-       </section>
+        <div class="flex flex-col gap-2">
+          <h3 class="font-header font-bold text-xl">Choose Emotion</h3>
+          <p>Select an emoji to express how you feel today!</p>
+        </div>
 
-     </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <button
+            v-for="mood in moods"
+            :key="mood.name"
+            :class="[
+              'flex flex-col items-center justify-center p-4 rounded-xl transition-all duration-200 shadow hover:shadow-lg hover:bg-slate-100',
+              mood.name === selectedMood ? 'bg-slate-200 font-semibold' : 'bg-white',
+            ]"
+            @click="selectMood(mood.name)"
+          >
+            <img :src="mood.icon" :alt="mood.name" class="w-12 h-12 mb-2" />
+            <span class="text-base">{{ mood.name }}</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Story Prompt Section -->
+      <section class="flex flex-col gap-2 justify-center w-1/2">
+        <h2 class="font-header font-bold text-xl">{{ moodBasedTitle }}</h2>
+        <p class="text-gray-600">{{ moodBasedPrompt }}</p>
+        <textarea
+          v-model="story"
+          placeholder="Type your story here..."
+          class="border p-4 rounded-lg"
+        ></textarea>
+        <button
+          class="bg-black text-white rounded-lg p-4"
+          @click="shareStory"
+          v-if="story.trim() !== ''"
+        >
+          Share Now
+        </button>
+      </section>
+    </div>
 
     <!-- Drawing Board -->
-    <section class="drawing-board">
-      <h2>Draw Your Feelings</h2>
-      <canvas ref="drawingCanvas" class="canvas">
-        <DrawingBoard />
-      </canvas>
-      <button class="clear-drawing" @click="clearCanvas">Clear Drawing</button>
-    </section>
+    <div class="flex gap-20 py-24">
+      <section class="w-1/2 flex flex-col gap-4">
+       
+          <DrawingBoard />
+      
+      </section>
+
+      <section class="w-1/2 flex flex-col gap-4">
+        <h3 class="font-header font-bold">Draw Hub</h3>
+
+        <h2 class="font-header font-bold text-5xl">
+          Express your feedback differently ,draw your feelings.
+        </h2>
+
+        <p class="text-lg max-w-xl">
+          Discover a world of feelings through our interactive section.Draw oout the best drawing
+          that describes your feeling :)
+        </p>
+
+        <div class="flex flex-col gap-2">
+          <h3 class="font-header font-bold text-xl">Draw your Emotion</h3>
+          <p>Draw how you feel today!</p>
+        </div>
+      </section>
+    </div>
 
     <!-- Play Games Section -->
-    <section class="play-games" v-if="activateGames">
+    <!-- <section class="play-games" v-if="activateGames">
       <h2>Play Games</h2>
       <div class="games-container">
         <InteractiveGames />
       </div>
-    </section>
+    </section> -->
 
     <!-- Support Section -->
-    <section class="support">
+    <!-- <section class="support">
       <h2>Need Help?</h2>
       <p>We’re here for you anytime. Reach out to us below:</p>
       <button class="contact-button" @click="navigateToChildHelp">Chat with Us</button>
-    </section>
+    </section> -->
   </div>
 </template>
 

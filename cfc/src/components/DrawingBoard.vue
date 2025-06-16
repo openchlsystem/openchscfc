@@ -1,11 +1,11 @@
 <template>
-    <div class="drawing-board">
-        <h2>Draw Your Feelings</h2>
-        <canvas ref="drawingCanvas" class="canvas" @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing"
+    <div class="flex flex-col gap-4 justify-center items-center">
+        <h2 class="font-header font-bold text-xl">Draw Your Feelings</h2>
+        <canvas ref="drawingCanvas" class="border rounded-lg" @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing"
             @mouseleave="stopDrawing" @touchstart="startDrawing" @touchmove="draw" @touchend="stopDrawing"></canvas>
-        <div class="controls">
-            <button class="clear-drawing" @click="clearCanvas">Clear Drawing</button>
-            <button class="save-drawing" @click="saveDrawing">Save Drawing</button>
+        <div class=" flex gap-4 justify-center items-center">
+            <button class="bg-black text-white p-2 rounded-lg" @click="clearCanvas">Clear Drawing</button>
+            <button class="border border-black p-2 rounded-lg" @click="saveDrawing">Save Drawing</button>
         </div>
     </div>
 </template>

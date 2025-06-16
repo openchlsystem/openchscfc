@@ -60,7 +60,7 @@
         <div class="flex flex-col gap-6 w-[400px]">
           <h2 class="font-semibold font-header text-xl capitalize">Subscribe</h2>
           <p>Join our newsletter to stay updated on features and releases.</p>
-          <div class="flex gap-4">
+          <div class="flex gap-4 pr-4">
             <input
               type="text"
               class="border p-4 placeholder:font-semibold w-2/3"

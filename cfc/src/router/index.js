@@ -38,8 +38,8 @@ const router = createRouter({
       component: () => import('../views/SafeStoryShare.vue'),
     },
     {
-      path:'/memory-match',
-      name:'memory-match',
+      path:'/games/memory-match',
+      name:'/games/memory-match',
       component: () => import('../views/MemoryMatch.vue')
     },
     {

@@ -2,8 +2,8 @@
   <div class="flex flex-col gap-20 mb-28 justify-center items-center">
     <div class="flex flex-col gap-4 justify-center items-center">
       <p class="font-semibold font-header">Explore</p>
-      <h2 class="font-extrabold font-header text-3xl">Navigate Your Feelings with Ease</h2>
-      <p class="text-center text-gray-700">
+      <h2 class="font-bold font-header text-5xl">Navigate Your Feelings with Ease</h2>
+      <p class="text-center text-gray-700 text-lg">
         Our platform offers quick access to essential features. Dive into the Feelings Hub or reach
         out through Contact Us.
       </p>
