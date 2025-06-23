@@ -34,6 +34,7 @@ declare module 'vue' {
     IMdiMa: typeof import('~icons/mdi/ma')['default']
     'IMdiMap-': typeof import('~icons/mdi/map-')['default']
     IMdiMapMarker: typeof import('~icons/mdi/map-marker')['default']
+    IMdiMenu: typeof import('~icons/mdi/menu')['default']
     IMdiPhone: typeof import('~icons/mdi/phone')['default']
     IMdiTw: typeof import('~icons/mdi/tw')['default']
     IMdiTwitter: typeof import('~icons/mdi/twitter')['default']
