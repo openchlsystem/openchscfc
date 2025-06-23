@@ -1,31 +1,25 @@
 <template>
-  <div class="px-20">
+  <div class="py-16 px-4 sm:px-6 md:px-10 lg:px-20 flex flex-col gap-20">
     <!-- Header Section -->
-    <header class="flex gap-20 items-start py-16">
-      <h1 class="text-5xl font-extrabold font-header w-1/2">Welcome to Feelings Hub</h1>
-      <p class="w-1/2 text-lg">
+    <header class="flex flex-col lg:flex-row gap-8 lg:gap-20 items-start">
+      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-header lg:w-1/2">
+        Welcome to Feelings Hub
+      </h1>
+      <p class="text-base sm:text-lg lg:w-1/2">
         Here in the Feelings Hub, we understand that it's okay to have different emotions. Let's
-        explore how you're feeling together in a safe and friendly space!.
+        explore how you're feeling together in a safe and friendly space!
       </p>
     </header>
 
-    <!-- Features Section -->
-    <!-- <section class="features">
-      <div class="feature-card" v-for="feature in features" :key="feature.title">
-        <img :src="feature.icon" :alt="feature.title" class="feature-icon" />
-        <h3>{{ feature.title }}</h3>
-        <p>{{ feature.description }}</p>
-      </div>
-    </section> -->
-
-    <div class="flex gap-20 py-24">
+    <!-- Mood Selector and Story Prompt Section -->
+    <div class="flex flex-col lg:flex-row gap-12 lg:gap-20 py-10">
       <!-- Mood Selector -->
-      <section class="w-1/2 flex flex-col gap-4">
+      <section class="flex flex-col gap-4 lg:w-1/2">
         <h3 class="font-header font-bold">Feelings</h3>
-
-        <h2 class="font-header font-bold text-5xl">Express Your Emotions with Fun Emojis</h2>
-
-        <p class="text-lg max-w-xl">
+        <h2 class="font-header font-bold text-3xl sm:text-4xl lg:text-5xl">
+          Express Your Emotions with Fun Emojis
+        </h2>
+        <p class="text-base sm:text-lg max-w-xl">
           Discover a world of feelings through our interactive emoji selection. Choose the emoji
           that best represents your emotions and share your thoughts.
         </p>
@@ -35,7 +29,7 @@
           <p>Select an emoji to express how you feel today!</p>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           <button
             v-for="mood in moods"
             :key="mood.name"
@@ -45,23 +39,23 @@
             ]"
             @click="selectMood(mood.name)"
           >
-            <img :src="mood.icon" :alt="mood.name" class="w-12 h-12 mb-2" />
-            <span class="text-base">{{ mood.name }}</span>
+            <img :src="mood.icon" :alt="mood.name" class="w-10 h-10 mb-2" />
+            <span class="text-sm">{{ mood.name }}</span>
           </button>
         </div>
       </section>
 
-      <!-- Story Prompt Section -->
-      <section class="flex flex-col gap-2 justify-center w-1/2">
+      <!-- Story Prompt -->
+      <section class="flex flex-col gap-4 lg:w-1/2">
         <h2 class="font-header font-bold text-xl">{{ moodBasedTitle }}</h2>
         <p class="text-gray-600">{{ moodBasedPrompt }}</p>
         <textarea
           v-model="story"
           placeholder="Type your story here..."
-          class="border p-4 rounded-lg"
+          class="border p-4 rounded-lg min-h-[150px]"
         ></textarea>
         <button
-          class="bg-black text-white rounded-lg p-4"
+          class="bg-black text-white rounded-lg p-4 w-full sm:w-fit"
           @click="shareStory"
           v-if="story.trim() !== ''"
         >
@@ -70,47 +64,29 @@
       </section>
     </div>
 
-    <!-- Drawing Board -->
-    <div id="draw-section"  class="flex gap-20 py-24">
-      <section class="w-1/2 flex flex-col gap-4">
-       
-          <DrawingBoard />
-      
+    <!-- Drawing Board Section -->
+    <div id="draw-section" class="flex flex-col lg:flex-row gap-12 lg:gap-20 py-10">
+      <!-- Drawing Board -->
+      <section class="w-full lg:w-1/2 flex flex-col gap-4">
+        <DrawingBoard />
       </section>
 
-      <section class="w-1/2 flex flex-col gap-4">
+      <!-- Drawing Info -->
+      <section class="w-full lg:w-1/2 flex flex-col gap-4">
         <h3 class="font-header font-bold">Draw Hub</h3>
-
-        <h2 class="font-header font-bold text-5xl">
-          Express your feedback differently ,draw your feelings.
+        <h2 class="font-header font-bold text-3xl sm:text-4xl lg:text-5xl">
+          Express your feedback differently, draw your feelings.
         </h2>
-
-        <p class="text-lg max-w-xl">
-          Discover a world of feelings through our interactive section.Draw oout the best drawing
+        <p class="text-base sm:text-lg max-w-xl">
+          Discover a world of feelings through our interactive section. Draw out the best drawing
           that describes your feeling :)
         </p>
-
         <div class="flex flex-col gap-2">
           <h3 class="font-header font-bold text-xl">Draw your Emotion</h3>
           <p>Draw how you feel today!</p>
         </div>
       </section>
     </div>
-
-    <!-- Play Games Section -->
-    <!-- <section class="play-games" v-if="activateGames">
-      <h2>Play Games</h2>
-      <div class="games-container">
-        <InteractiveGames />
-      </div>
-    </section> -->
-
-    <!-- Support Section -->
-    <!-- <section class="support">
-      <h2>Need Help?</h2>
-      <p>We’re here for you anytime. Reach out to us below:</p>
-      <button class="contact-button" @click="navigateToChildHelp">Chat with Us</button>
-    </section> -->
   </div>
 </template>
 
