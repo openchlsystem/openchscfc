@@ -15,7 +15,7 @@
         </p>
         <div class="flex flex-col sm:flex-row sm:justify-center lg:justify-start items-center gap-4">
           <button class="capitalize px-6 py-2 bg-black text-white w-full sm:w-auto">talk to us</button>
-          <button class="capitalize px-6 py-2 border w-full sm:w-auto">learn more</button>
+          <!-- <button class="capitalize px-6 py-2 border w-full sm:w-auto">learn more</button> -->
         </div>
       </div>
     </div>

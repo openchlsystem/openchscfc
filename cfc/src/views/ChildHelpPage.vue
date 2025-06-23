@@ -1,10 +1,12 @@
 <template>
   <div class="px-20">
-    <header class="flex gap-20 items-start py-16">
+    <header class="flex flex-col gap-8 items-start py-16">
+      <h3 class="font-header font-bold">Hello</h3>
       <h2 class="text-5xl font-extrabold font-header w-1/2">We're Here to Help</h2>
       <p class="w-1/2 text-lg">
         If you have questions or need support, please don’t hesitate to reach out to us!
       </p>
+      <button class="bg-black text-white  p-4 w-fit">Talk to us</button>
     </header>
 
     <div class="flex flex-col gap-20 py-24">
@@ -54,7 +56,7 @@
      
     </div>
 
-    <div class="chat-container flex flex-col max-w-xl w-full mx-auto bg-white rounded-lg shadow-md border p-4">
+    <div class="chat-container flex flex-col max-w-xl w-full mx-auto my-20 bg-white rounded-lg shadow-md  p-4">
   <!-- Chat Messages Window -->
   <div class="chat-window flex flex-col gap-3 overflow-y-auto h-96 p-2 border rounded bg-gray-50">
     <div
@@ -72,7 +74,7 @@
   </div>
 
   <!-- Chat Input -->
-  <form @submit.prevent="sendMessage" id="chat-section" class="chat-input mt-4 flex gap-2">
+  <form @submit.prevent="sendMessage" id="chat-section" class=" mt-4 flex gap-2">
     <input
       v-model="userInput"
       type="text"

@@ -46,7 +46,7 @@
       </section>
 
       <!-- Story Prompt -->
-      <section class="flex flex-col gap-4 w-full lg:w-1/2">
+      <section class="flex flex-col gap-4 w-full md:justify-center lg:w-1/2">
         <h2 class="font-header font-bold text-xl">{{ moodBasedTitle }}</h2>
         <p class="text-gray-600">{{ moodBasedPrompt }}</p>
         <textarea
@@ -55,7 +55,7 @@
           class="border p-4 rounded-lg min-h-[150px]"
         ></textarea>
         <button
-          class="bg-black text-white rounded-lg p-4 w-full sm:w-fit"
+          class="bg-black text-white  p-4 w-full sm:w-fit"
           @click="shareStory"
           v-if="story.trim() !== ''"
         >
@@ -68,6 +68,7 @@
     <div id="draw-section" class="flex flex-col lg:flex-row gap-12 lg:gap-20 py-10">
       <!-- Drawing Board -->
       <section class="w-full lg:w-1/2 flex flex-col gap-4">
+        <!-- Drawing Board component handles the logic internally -->
         <DrawingBoard />
       </section>
 
@@ -91,42 +92,19 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import angryIcon from '@/assets/Icons/angry_11732053.png'
 import sadIcon from '@/assets/Icons/sad-face_11068997.png'
 import confuseIcon from '@/assets/Icons/confused_4818761.png'
 import happyIcon from '@/assets/Icons/winking-face_10963369.png'
-import confidential from '@/assets/Icons/confidential_16659660.png'
-import interactive from '@/assets/Icons/interaction_11296524.png'
-import supportive from '@/assets/Icons/supportive_16137493.png'
 import DrawingBoard from '@/components/DrawingBoard.vue'
-import InteractiveGames from './InteractiveGames.vue'
 
 export default {
   components: {
     DrawingBoard,
-    InteractiveGames,
   },
   setup() {
-    const features = ref([
-      {
-        icon: confidential,
-        title: 'Confidentiality Guarantee',
-        description: 'Your stories are private and protected.',
-      },
-      {
-        icon: interactive,
-        title: 'Interactive Sharing',
-        description: 'Express yourself with text, voice, or emojis.',
-      },
-      {
-        icon: supportive,
-        title: 'Supportive Responses',
-        description: 'Receive kind replies from our trained helpers.',
-      },
-    ])
-
     const moods = ref([
       { name: 'Happy', icon: happyIcon },
       { name: 'Sad', icon: sadIcon },
@@ -153,27 +131,23 @@ export default {
       },
     }
 
-    const router = useRouter()
-
     const selectedMood = ref(null)
     const story = ref('')
+    const activateGames = ref(false)
+    const feedback = ref([])
 
     const moodBasedTitle = computed(() =>
-      selectedMood.value ? moodPrompts[selectedMood.value].title : 'Share Your Story',
+      selectedMood.value ? moodPrompts[selectedMood.value].title : 'Share Your Story'
     )
 
     const moodBasedPrompt = computed(() =>
-      selectedMood.value
-        ? moodPrompts[selectedMood.value].prompt
-        : 'How are you feeling today? Let us know.',
+      selectedMood.value ? moodPrompts[selectedMood.value].prompt : 'How are you feeling today? Let us know.'
     )
-
-    const feedback = ref([])
 
     const selectMood = (moodName) => {
       selectedMood.value = moodName
-      story.value = '' // Clear the story when changing moods
-      feedback.value = '' // Clear the feedback when changing moods
+      story.value = ''
+      feedback.value = []
     }
 
     const shareStory = () => {
@@ -183,74 +157,31 @@ export default {
         console.log('Story:', trimmedStory)
         activateGames.value = true
         alert('Your story has been shared!')
-        story.value = ''
         feedback.value.push({
           mood: selectedMood.value,
           story: trimmedStory,
         })
+        story.value = ''
       } else {
         alert('Please write something before sharing.')
       }
     }
 
-    const drawingCanvas = ref(null)
-    const activateGames = ref(false)
-
-    const clearCanvas = () => {
-      const canvas = drawingCanvas.value
-      const context = canvas.getContext('2d')
-      context.clearRect(0, 0, canvas.width, canvas.height)
-    }
-
-    const navigateToChildHelp = () => {
-      // Implement navigation logic here
-      router.push('/child-help')
-    }
-
-    onMounted(() => {
-      const canvas = drawingCanvas.value
-      const context = canvas.getContext('2d')
-
-      canvas.width = 300
-      canvas.height = 300
-
-      canvas.addEventListener('mousedown', (e) => {
-        context.beginPath()
-        context.moveTo(e.offsetX, e.offsetY)
-        canvas.addEventListener('mousemove', draw)
-      })
-
-      canvas.addEventListener('mouseup', () => {
-        canvas.removeEventListener('mousemove', draw)
-      })
-
-      const draw = (e) => {
-        context.lineTo(e.offsetX, e.offsetY)
-        context.strokeStyle = 'black'
-        context.lineWidth = 2
-        context.stroke()
-      }
-    })
-
     return {
-      features,
       moods,
       selectedMood,
+      story,
       moodBasedTitle,
       moodBasedPrompt,
-      story,
       selectMood,
       shareStory,
-      clearCanvas,
-      drawingCanvas,
       activateGames,
       feedback,
-      navigateToChildHelp,
     }
   },
 }
 </script>
 
 <style scoped>
-/* Add your styles here */
+/* Add custom styles if needed */
 </style>
