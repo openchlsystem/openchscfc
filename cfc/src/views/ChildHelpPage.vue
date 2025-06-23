@@ -72,7 +72,7 @@
   </div>
 
   <!-- Chat Input -->
-  <form @submit.prevent="sendMessage" class="chat-input mt-4 flex gap-2">
+  <form @submit.prevent="sendMessage" id="chat-section" class="chat-input mt-4 flex gap-2">
     <input
       v-model="userInput"
       type="text"

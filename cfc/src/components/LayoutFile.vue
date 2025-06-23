@@ -20,7 +20,7 @@
   <!-- Top Content Section -->
   <div class="flex flex-col lg:flex-row flex-wrap gap-12 justify-between">
     <!-- Link Columns -->
-    <div class="flex flex-col md:flex-row gap-12 flex-1 flex-wrap">
+    <div class="flex flex-col md:flex-row md:justify-between gap-12 flex-1 flex-wrap">
       <!-- Logo -->
       <div @click="navigateHome" class="w-full md:w-auto flex justify-center md:justify-start">
         <i-mdi-controller-classic class="w-16 h-12 text-black" />

@@ -72,7 +72,7 @@
 
     <!-- Drawing Board -->
     <div class="flex gap-20 py-24">
-      <section class="w-1/2 flex flex-col gap-4">
+      <section id="draw-section" class="w-1/2 flex flex-col gap-4">
        
           <DrawingBoard />
       
