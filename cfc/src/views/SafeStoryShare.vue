@@ -55,7 +55,7 @@
           class="border p-4 rounded-lg min-h-[150px]"
         ></textarea>
         <button
-          class="bg-black text-white  p-4 w-full sm:w-fit"
+          class="bg-black text-white rounded-lg p-4 w-full sm:w-fit"
           @click="shareStory"
           v-if="story.trim() !== ''"
         >

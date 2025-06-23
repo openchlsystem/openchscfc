@@ -4,8 +4,8 @@
         <canvas ref="drawingCanvas" class="border rounded-lg" @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing"
             @mouseleave="stopDrawing" @touchstart="startDrawing" @touchmove="draw" @touchend="stopDrawing"></canvas>
         <div class=" flex gap-4 justify-center items-center">
-            <button class="bg-black text-white p-2 " @click="clearCanvas">Clear Drawing</button>
-            <button class="border border-black p-2 " @click="saveDrawing">Save Drawing</button>
+            <button class="bg-black rounded-lg text-white p-2 " @click="clearCanvas">Clear Drawing</button>
+            <button class="border rounded-lg border-black p-2 " @click="saveDrawing">Save Drawing</button>
         </div>
     </div>
 </template>
