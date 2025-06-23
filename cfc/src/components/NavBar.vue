@@ -34,18 +34,6 @@
   </nav>
 </template>
 
-<script setup>
-import { ref } from 'vue'
-
-const isMenuOpen = ref(false)
-
-const navigateHome = () => {
-  // handle home navigation logic if needed
-}
-</script>
-
-
-
 <script>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
