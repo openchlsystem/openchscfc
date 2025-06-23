@@ -9,7 +9,7 @@
       <p class="text-base sm:text-lg max-w-2xl">
         If you have questions or need support, please don’t hesitate to reach out to us!
       </p>
-      <button @click="scrollToChat" class="bg-black text-white px-6 py-3 rounded-md w-fit">Talk to us</button>
+      
     </header>
 
     <!-- Contact Info and Image -->
@@ -49,9 +49,7 @@
     <div class="flex flex-col lg:flex-row gap-8 py-12 bg-white">
       <!-- Left Text -->
       <div class="flex flex-col gap-4 w-full lg:w-1/2">
-        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-header">
-          Talk to us
-        </h2>
+        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-header">Talk to us</h2>
         <p class="text-base sm:text-lg">We’re here to listen and help you.</p>
       </div>
 
@@ -60,7 +58,8 @@
         <!-- Chat Messages -->
         <div
           ref="chatContainer"
-          class="flex flex-col gap-3 overflow-y-auto h-96 p-3 rounded bg-gray-200 "
+          id="chat-section"
+          class="flex flex-col gap-3 overflow-y-auto h-96 p-3 rounded bg-gray-200"
         >
           <div
             v-for="(message, index) in messages"
@@ -69,7 +68,7 @@
               'p-3 max-w-[75%] rounded-lg text-sm break-words',
               message.type === 'user'
                 ? 'self-end bg-black text-white'
-                : 'self-start bg-white text-black'
+                : 'self-start bg-white text-black',
             ]"
           >
             <p>{{ message.text }}</p>
@@ -235,25 +234,7 @@ export default {
         })
       }
     },
-    
-  scrollToBottom() {
-    const container = this.$refs.chatContainer
-    if (container) {
-      container.scrollTo({
-        top: container.scrollHeight,
-        behavior: 'smooth',
-      })
-    }
-  },
-  scrollToChat() {
-    const section = this.$refs.chatSection
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth' })
-    }
-  },
 
   },
 }
 </script>
-
-

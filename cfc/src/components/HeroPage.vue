@@ -13,8 +13,15 @@
           Here, children can explore their emotions in a fun and engaging way. Our vibrant interface
           and friendly design make it easy to express feelings and connect with others.
         </p>
-        <div class="flex flex-col sm:flex-row sm:justify-center lg:justify-start items-center gap-4">
-          <button class="capitalize px-6 py-2 bg-black text-white w-full rounded-lg sm:w-auto">talk to us</button>
+        <div
+          class="flex flex-col sm:flex-row sm:justify-center lg:justify-start items-center gap-4"
+        >
+          <router-link
+            to="/child-help#chat-section"
+            class="capitalize px-6 py-2 bg-black text-white w-full rounded-lg sm:w-auto text-center"
+          >
+            Talk to us
+          </router-link>
           <!-- <button class="capitalize px-6 py-2 border w-full sm:w-auto">learn more</button> -->
         </div>
       </div>
@@ -30,7 +37,6 @@
     </div>
   </div>
 </template>
-
 
 <script>
 import { useRouter } from 'vue-router'

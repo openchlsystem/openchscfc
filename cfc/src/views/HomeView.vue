@@ -50,7 +50,6 @@
   </div>
 </template>
 
-
 <script>
 // import ChildFriendlyCard from "@/components/ChildFriendlyCard.vue";
 

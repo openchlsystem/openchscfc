@@ -137,11 +137,13 @@ export default {
     const feedback = ref([])
 
     const moodBasedTitle = computed(() =>
-      selectedMood.value ? moodPrompts[selectedMood.value].title : 'Share Your Story'
+      selectedMood.value ? moodPrompts[selectedMood.value].title : 'Share Your Story',
     )
 
     const moodBasedPrompt = computed(() =>
-      selectedMood.value ? moodPrompts[selectedMood.value].prompt : 'How are you feeling today? Let us know.'
+      selectedMood.value
+        ? moodPrompts[selectedMood.value].prompt
+        : 'How are you feeling today? Let us know.',
     )
 
     const selectMood = (moodName) => {
