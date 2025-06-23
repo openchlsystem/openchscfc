@@ -2,10 +2,10 @@
   <div class="py-16 px-4 sm:px-6 md:px-10 lg:px-20 flex flex-col gap-20">
     <!-- Header Section -->
     <header class="flex flex-col lg:flex-row gap-8 lg:gap-20 items-start">
-      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-header lg:w-1/2">
+      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-header w-full lg:w-1/2">
         Welcome to Feelings Hub
       </h1>
-      <p class="text-base sm:text-lg lg:w-1/2">
+      <p class="text-base sm:text-lg w-full lg:w-1/2">
         Here in the Feelings Hub, we understand that it's okay to have different emotions. Let's
         explore how you're feeling together in a safe and friendly space!
       </p>
@@ -14,7 +14,7 @@
     <!-- Mood Selector and Story Prompt Section -->
     <div class="flex flex-col lg:flex-row gap-12 lg:gap-20 py-10">
       <!-- Mood Selector -->
-      <section class="flex flex-col gap-4 lg:w-1/2">
+      <section class="flex flex-col gap-4 w-full lg:w-1/2">
         <h3 class="font-header font-bold">Feelings</h3>
         <h2 class="font-header font-bold text-3xl sm:text-4xl lg:text-5xl">
           Express Your Emotions with Fun Emojis
@@ -46,7 +46,7 @@
       </section>
 
       <!-- Story Prompt -->
-      <section class="flex flex-col gap-4 lg:w-1/2">
+      <section class="flex flex-col gap-4 w-full lg:w-1/2">
         <h2 class="font-header font-bold text-xl">{{ moodBasedTitle }}</h2>
         <p class="text-gray-600">{{ moodBasedPrompt }}</p>
         <textarea
