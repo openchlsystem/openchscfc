@@ -1,5 +1,5 @@
 <template>
-  <nav>
+  <nav class="fixed top-4 left-4 right-4 z-50 bg-white shadow-lg rounded-3xl">
     <div class="flex justify-between items-center px-6 py-4 md:px-16">
       <!-- Home Icon -->
       <div @click="navigateHome" class="cursor-pointer">
@@ -17,8 +17,8 @@
         <router-link to="/safe-sharing" class="p-2">feelings hub</router-link>
         <router-link to="/child-help" class="p-2">contact us</router-link>
         <router-link to="/interactive-games" class="p-2">games</router-link>
-        <button class="border py-2 px-4 capitalize">send</button>
-        <button class="border py-2 px-4 capitalize bg-black text-white">submit</button>
+        <button class="py-2 px-4 capitalize font-header bg-button rounded-2xl text-white">send</button>
+        <button class="py-2 px-4 capitalize font-header bg-button rounded-2xl text-white">submit</button>
       </div>
     </div>
 

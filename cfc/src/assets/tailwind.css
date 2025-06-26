@@ -3,6 +3,11 @@
 @import "tailwindcss";
 
 @theme {
-  --font-header: Roboto, "sans-serif";
+  --font-header: 'Fredoka', Roboto, 'sans-serif';
+  --font-text: 'Open Sans', 'sans-serif';
+
+    --color-subtitle:  #4C1D95;
+    --color-button:  #ff8a80;
+    --color-coral: #ff8a80;
   
 }
