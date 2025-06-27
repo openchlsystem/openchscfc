@@ -24,14 +24,14 @@
           class="flex flex-col md:flex-row md:justify-between flex-nowrap gap-12 flex-grow overflow-x-auto"
         >
           <!-- Logo -->
-          <div @click="navigateHome" class="w-full md:w-auto flex justify-start">
-            <i-mdi-controller-classic class="w-16 h-12 text-black" />
+          <div @click="navigateHome" class="w-full md:w-auto flex justify-start cursor-pointer">
+            <img :src="logo" alt="CHS Logo" class="w-28 h-auto object-contain" />
           </div>
 
           <!-- Column 1 -->
           <div class="flex flex-col gap-4 min-w-[150px]">
             <h2 class="font-bold font-header text-lg capitalize">Helpful Links</h2>
-            <ul class="flex flex-col gap-2 text-sm">
+            <ul class="flex flex-col gap-2 text-sm font-text">
               <li>Home Page</li>
               <li>Feelings Hub</li>
               <li>Contact Us</li>
@@ -43,7 +43,7 @@
           <!-- Column 2 -->
           <div class="flex flex-col gap-4 min-w-[150px]">
             <h2 class="font-bold font-header text-lg capitalize">Stay Connected</h2>
-            <ul class="flex flex-col gap-2 text-sm">
+            <ul class="flex flex-col gap-2 text-sm font-text">
               <li>Social Media</li>
               <li>Email Updates</li>
               <li>Community Blog</li>
@@ -55,7 +55,7 @@
           <!-- Column 3 -->
           <div class="flex flex-col gap-4 min-w-[150px]">
             <h2 class="font-bold font-header text-lg capitalize">Newsletter Signup</h2>
-            <ul class="flex flex-col gap-2 text-sm">
+            <ul class="flex flex-col gap-2 text-sm font-text">
               <li>Join Now</li>
               <li>Get Updates</li>
               <li>Latest News</li>
@@ -66,21 +66,7 @@
         </div>
 
         <!-- Subscribe Form (stacks below on smaller screens) -->
-        <div class="flex flex-col gap-4 w-full lg:w-[400px]">
-          <h2 class="font-semibold font-header text-lg capitalize">Subscribe</h2>
-          <p class="text-sm">Join our newsletter to stay updated on features and releases.</p>
-          <div class="flex flex-col sm:flex-row gap-4">
-            <input
-              type="email"
-              class="border p-3 rounded w-full sm:w-2/3 placeholder:font-semibold text-sm"
-              placeholder="Enter your email"
-            />
-            <button class="border p-3 bg-black text-white w-full sm:w-1/3">Subscribe</button>
-          </div>
-          <p class="text-xs text-gray-500">
-            By subscribing, you agree to our Privacy Policy and consent to receive updates.
-          </p>
-        </div>
+        
       </div>
 
       <!-- Bottom Bar -->
@@ -121,6 +107,7 @@ import { useRouter, useRoute } from 'vue-router'
 import ChildFriendlyCard from '@/components/ChildFriendlyCard.vue'
 import NavBar from './NavBar.vue'
 import HeroPage from './HeroPage.vue'
+import logo from '@/assets/Icons/logo-1.png'
 
 export default {
   components: {
@@ -145,6 +132,7 @@ export default {
       showBadge,
       closeBadge,
       currentRoute,
+      logo,
     }
   },
 }
