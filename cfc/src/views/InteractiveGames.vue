@@ -1,25 +1,26 @@
 <template>
-  <div class="bg-background min-h-screen pt-44 sm:pt-60 p-4 sm:p-6 md:p-10 lg:p-20">
+  <div class="bg-background min-h-screen pt-32">
     <h1 class="text-3xl font-header sm:text-4xl lg:text-5xl font-bold  mb-10 text-center">
       Interactive Games
     </h1>
 
-    <div class="grid gap-4 md:gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 justify-center items-center">
-      <ChildFriendlyCard v-for="game in games" :key="game.title">
-        <template #header>
-          <h2 class="text-xl font-semibold font-header text-purple-900">{{ game.title }}</h2>
-        </template>
-        <p class=" font-text">{{ game.description }}</p>
-        <template #footer>
-          <button
-            @click="goToGame(game.link)"
-            class="bg-button hover:text-purple-900 text-white font-header  px-4 py-2 rounded-md hover:bg-purple-100 transition"
-          >
-            Play Now
-          </button>
-        </template>
-      </ChildFriendlyCard>
-    </div>
+    <div class="flex flex-wrap justify-center items-start gap-4 md:gap-8 p-4">
+  <ChildFriendlyCard v-for="game in games" :key="game.title">
+    <template #header>
+      <h2 class="text-xl font-semibold font-header text-purple-900">{{ game.title }}</h2>
+    </template>
+    <p class="font-text">{{ game.description }}</p>
+    <template #footer>
+      <button
+        @click="goToGame(game.link)"
+        class="bg-button hover:text-purple-900 text-white font-header px-4 py-2 rounded-md hover:bg-purple-100 transition"
+      >
+        Play Now
+      </button>
+    </template>
+  </ChildFriendlyCard>
+</div>
+
   </div>
 </template>
 
