@@ -1,5 +1,5 @@
 <template>
-  <div class="py-20 px-6 sm:px-10 md:px-16 flex flex-col gap-20">
+  <div class="pb-20 pt-44 px-6 sm:px-10 md:px-16 flex flex-col gap-20">
     <!-- Header Section -->
     <div class="flex flex-col lg:flex-row gap-8 lg:justify-between lg:items-start">
       <!-- Heading -->
@@ -18,7 +18,7 @@
         >
           <router-link
             to="/child-help#chat-section"
-            class="capitalize px-6 py-2 bg-black text-white w-full rounded-lg sm:w-auto text-center"
+            class="capitalize px-6 py-2 bg-coral font-header text-white w-full rounded-lg sm:w-auto text-center"
           >
             Talk to us
           </router-link>
