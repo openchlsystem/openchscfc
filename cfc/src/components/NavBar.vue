@@ -24,12 +24,12 @@
 
     <!-- Mobile Menu (Dropdown) -->
     <div v-if="isMenuOpen" class="flex flex-col gap-4 px-6 pb-4 md:hidden">
-      <router-link to="/" class="p-2 border-b border-black rounded-none"> home page </router-link>
-      <router-link to="/safe-sharing" class="p-2 border-b border-black rounded-none">feelings hub</router-link>
-      <router-link to="/child-help" class="p-2 border-b border-black rounded-none">contact us</router-link>
-      <router-link to="/interactive-games" class="p-2 border-b border-black rounded-none">games</router-link>
-      <button class="border py-2 px-4 capitalize">send</button>
-      <button class="border py-2 px-4 capitalize bg-black text-white">submit</button>
+      <router-link to="/" class="p-2 border-b border-black rounded-none font-text"> home page </router-link>
+      <router-link to="/safe-sharing" class="p-2 border-b border-black rounded-none font-text">feelings hub</router-link>
+      <router-link to="/child-help" class="p-2 border-b border-black rounded-none font-text">contact us</router-link>
+      <router-link to="/interactive-games" class="p-2 border-b border-black rounded-none font-text">games</router-link>
+      <button class="border py-2 px-4 capitalize bg-button rounded-2xl text-white hover:text-purple-900 hover:bg-purple-100 transition">send</button>
+      <button class="border py-2 px-4 capitalize bg-button rounded-2xl text-white hover:text-purple-900 hover:bg-purple-100 transition">submit</button>
     </div>
   </nav>
 </template>

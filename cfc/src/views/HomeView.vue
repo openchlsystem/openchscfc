@@ -36,7 +36,7 @@
     <div class="flex flex-col sm:flex-row gap-4 mt-4">
       <!-- Draw Button -->
       <router-link to="/safe-sharing#draw-section">
-        <button class="border px-6 py-2 w-full sm:w-auto">Draw</button>
+        <button class="px-6 py-2 w-full sm:w-auto bg-button rounded-xl text-white font-header">Draw</button>
       </router-link>
 
       <!-- Chat Button -->
