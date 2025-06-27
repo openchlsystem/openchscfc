@@ -1,20 +1,33 @@
 <template>
-    <div class="game-container">
-        <h1>Math Puzzle Game</h1>
-        <p class="instruction">Solve the math puzzle! Good luck!</p>
+  <div class="min-h-screen flex flex-col justify-center items-center bg-[#fff59d] p-6">
+    <h1 class="text-4xl font-header font-bold text-darktext mb-2">Math Puzzle Game</h1>
+    <p class="text-md text-darktext mb-4 font-text">Can you solve this one?</p>
 
-        <div class="problem-container">
-            <p class="problem">{{ currentProblem }}</p>
-            <input v-model="userAnswer" type="number" class="answer-input" placeholder="Your answer"
-                @change="checkAnswer" :disabled="isDisabled" />
-        </div>
-
-        <button @click="generateProblem" class="generate-button" :disabled="isDisabled">Next Puzzle</button>
-
-        <p v-if="resultMessage" class="result-message">{{ resultMessage }}</p>
-        <p class="score">Score: {{ score }}</p>
+    <div class="bg-white shadow-md rounded-xl p-6 w-full max-w-lg flex flex-col items-center gap-4">
+      <p class="text-2xl text-black font-semibold">{{ currentProblem }}</p>
+      <input
+        v-model="userAnswer"
+        type="number"
+        class="w-full p-3 border border-gray-400 rounded-lg text-center"
+        placeholder="Your answer"
+        @change="checkAnswer"
+        :disabled="isDisabled"
+      />
+      <button
+        @click="generateProblem"
+        class="bg-button text-white font-header px-4 py-2 rounded-md hover:text-purple-900 hover:bg-purple-100 transition w-full"
+        :disabled="isDisabled"
+      >
+        Next Puzzle
+      </button>
+      <p v-if="resultMessage" class="text-green-600 font-medium">{{ resultMessage }}</p>
+      <p class="text-sm font-text">Score: {{ score }}</p>
     </div>
+  </div>
 </template>
+
+
+
 
 <script>
     import { ref } from "vue";
