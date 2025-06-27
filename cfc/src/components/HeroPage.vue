@@ -18,7 +18,7 @@
         >
           <router-link
             to="/child-help#chat-section"
-            class="capitalize px-6 py-2 bg-button font-header text-white w-full rounded-lg sm:w-auto text-center"
+            class="capitalize px-6 py-2 bg-button font-header text-white w-full rounded-lg sm:w-auto text-center hover:text-purple-900 hover:bg-purple-100 transition"
           >
             Talk to us
           </router-link>
@@ -32,7 +32,7 @@
       <img
         src="../assets/images/hero.jpeg"
         alt="Happy children illustration"
-        class="w-full h-auto max-h-[500px] rounded-3xl object-cover"
+        class="w-full h-auto max-h-[500px] rounded-3xl object-cover shadow-2xl"
       />
     </div>
   </div>

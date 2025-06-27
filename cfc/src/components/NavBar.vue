@@ -17,8 +17,8 @@
         <router-link to="/safe-sharing" class="p-2 font-text">feelings hub</router-link>
         <router-link to="/child-help" class="p-2 font-text">contact us</router-link>
         <router-link to="/interactive-games" class="p-2 font-text">games</router-link>
-        <button class="py-2 px-4 capitalize font-header bg-button rounded-2xl text-white hover:text-purple-900 hover:bg-purple-100 transition">draw</button>
-        <button class="py-2 px-4 capitalize font-header bg-button rounded-2xl text-white hover:text-purple-900 hover:bg-purple-100 transition">chat</button>
+        <router-link to="/safe-sharing#draw-section" class="py-2 px-4 capitalize font-header bg-button rounded-2xl text-white hover:text-purple-900 hover:bg-purple-100 transition">draw</router-link>
+        <router-link to="/child-help#chat-section" class="py-2 px-4 capitalize font-header bg-button rounded-2xl text-white hover:text-purple-900 hover:bg-purple-100 transition">chat</router-link>
       </div>
     </div>
 
