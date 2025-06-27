@@ -1,74 +1,75 @@
 <template>
-  <div class="px-4 sm:px-6 md:px-10 lg:px-20">
+  <div class="bg-background pb-20 px-4 pt-24 sm:px-6 md:px-10 lg:px-20 flex flex-col gap-20">
     <!-- Header -->
-    <header class="flex flex-col gap-4 py-12">
+    <header class="flex flex-col gap-4 py-12 text-center lg:text-left">
       <h3 class="font-header font-bold">Hello</h3>
       <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-header">
         We're Here to Help
       </h2>
-      <p class="text-base sm:text-lg max-w-2xl">
+      <p class="text-base sm:text-lg max-w-2xl font-text mx-auto lg:mx-0">
         If you have questions or need support, please don’t hesitate to reach out to us!
       </p>
-      
     </header>
 
     <!-- Contact Info and Image -->
-    <div class="flex flex-col lg:flex-row gap-12 py-12">
+    <div class="flex flex-col lg:flex-row gap-12 py-12 px-6 sm:px-8 bg-component1 rounded-2xl shadow-lg">
       <!-- Contact Info -->
       <div class="flex flex-col gap-10 w-full lg:w-1/2">
         <div class="flex flex-col gap-4">
           <i-mdi-email class="w-6 h-6 text-black" />
           <h2 class="font-bold text-xl font-header">Email</h2>
-          <p>support@childhelpsystem.com</p>
-          <p class="underline">hello@CHSystem.io</p>
+          <p class="font-text break-words">support@childhelpsystem.com</p>
+          <p class="underline font-text break-words">hello@CHSystem.io</p>
         </div>
+
         <div class="flex flex-col gap-4">
           <i-mdi-phone class="w-6 h-6 text-black" />
           <h2 class="font-bold text-xl font-header">Phone</h2>
-          <p>Call us anytime!</p>
-          <p class="underline">+1 (555) 000-0000</p>
+          <p class="font-text">Call us anytime!</p>
+          <p class="underline font-text">+1 (555) 000-0000</p>
         </div>
+
         <div class="flex flex-col gap-4">
           <i-mdi-map-marker class="w-6 h-6 text-black" />
           <h2 class="font-bold text-xl font-header">Office</h2>
-          <p>123 Sample St, Sydney NSW 2000 AU</p>
+          <p class="font-text">123 Sample St, Sydney NSW 2000 AU</p>
         </div>
       </div>
 
       <!-- Image -->
-      <div class="w-full lg:w-1/2">
+      <div class="w-full lg:w-1/2 flex justify-center">
         <img
-          src="https://imgs.search.brave.com/a4ZTHrZwdH2-zrSmfFM1xODUI-_3QOACAWowJLbsExo/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvOTUw/NjA1MDQ2L3Bob3Rv/L211bHRpZXRobmlj/LWNoaWxkcmVuLWlu/LWEtY2lyY2xlLmpw/Zz9zPTYxMng2MTIm/dz0wJms9MjAmYz1I/YXd6V0g4ZkJ6c0pT/dXp2aXV1UzNpUmhS/UEF3RVcyUE9RVExR/M0x6VWZZPQ"
+          src="../assets/images/kids.jpeg"
           alt="Happy children illustration"
-          class="w-full max-w-md lg:max-w-xl rounded-xl object-cover"
+          class="w-full max-w-md sm:max-w-lg lg:max-w-xl rounded-xl object-cover"
         />
       </div>
     </div>
 
     <!-- Chat Section -->
-    <div class="flex flex-col lg:flex-row gap-8 py-12 bg-white">
+    <div class="flex flex-col lg:flex-row gap-8 py-12 px-6 sm:px-8 bg-component2 rounded-2xl shadow-lg">
       <!-- Left Text -->
-      <div class="flex flex-col gap-4 w-full lg:w-1/2">
+      <div class="flex flex-col gap-4 w-full lg:w-1/2 text-center lg:text-left">
         <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-header">Talk to us</h2>
-        <p class="text-base sm:text-lg">We’re here to listen and help you.</p>
+        <p class="text-base sm:text-lg font-text">We’re here to listen and help you.</p>
       </div>
 
       <!-- Chat Box -->
-      <section class="flex flex-col w-full lg:w-1/2 bg-white rounded-lg shadow-md p-4">
+      <section class="flex flex-col w-full lg:w-1/2 bg-white shadow-xl rounded-lg p-4">
         <!-- Chat Messages -->
         <div
           ref="chatContainer"
           id="chat-section"
-          class="flex flex-col gap-3 overflow-y-auto h-96 p-3 rounded bg-gray-200"
+          class="flex flex-col gap-3 overflow-y-auto h-96 p-3 rounded bg-blue-50"
         >
           <div
             v-for="(message, index) in messages"
             :key="index"
-            :class="[
-              'p-3 max-w-[75%] rounded-lg text-sm break-words',
+            :class="[ 
+              'p-3 max-w-[85%] rounded-lg text-sm break-words',
               message.type === 'user'
-                ? 'self-end bg-black text-white'
-                : 'self-start bg-white text-black',
+                ? 'self-end font-header bg-button text-black'
+                : 'self-start font-header bg-component1 text-black'
             ]"
           >
             <p>{{ message.text }}</p>
@@ -87,7 +88,7 @@
           <button
             type="submit"
             :disabled="isSubmitting"
-            class="px-4 py-3 bg-black text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400"
+            class="px-4 py-3 bg-button text-white rounded-xl hover:bg-component1 disabled:bg-gray-400 disabled:text-red-500"
           >
             Send
           </button>
@@ -96,6 +97,7 @@
     </div>
   </div>
 </template>
+
 
 <script>
 export default {

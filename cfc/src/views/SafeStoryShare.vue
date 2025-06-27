@@ -12,7 +12,7 @@
     </header>
 
     <!-- Mood Selector and Story Prompt Section -->
-    <div class="flex flex-col lg:flex-row gap-12 lg:gap-20 py-10 px-4 rounded-3xl shadow-lg bg-component2">
+    <div class="flex flex-col lg:flex-row gap-12 lg:gap-20 py-10 px-8 rounded-3xl shadow-lg bg-component2">
       <!-- Mood Selector -->
       <section class="flex flex-col gap-4 w-full lg:w-1/2">
         <h3 class="font-header font-bold ">Feelings</h3>
@@ -40,7 +40,7 @@
             @click="selectMood(mood.name)"
           >
             <img :src="mood.icon" :alt="mood.name" class="w-10 h-10 mb-2" />
-            <span class="text-sm text-black font-header">{{ mood.name }}</span>
+            <span class="text-sm text-black  font-header">{{ mood.name }}</span>
           </button>
         </div>
       </section>
@@ -55,7 +55,7 @@
           class="p-4 bg-white rounded-lg min-h-[150px]"
         ></textarea>
         <button
-          class="bg-coral text-white rounded-2xl font-text p-4 w-full sm:w-fit"
+          class="bg-button text-white rounded-2xl font-header p-4 w-full sm:w-fit"
           @click="shareStory"
           v-if="story.trim() !== ''"
         >
@@ -65,7 +65,7 @@
     </div>
 
     <!-- Drawing Board Section -->
-    <div id="draw-section" class="flex flex-col lg:flex-row gap-12 lg:gap-20 py-10 px-4 rounded-3xl shadow-lg bg-component1">
+    <div id="draw-section" class="flex flex-col lg:flex-row gap-12 lg:gap-20 py-10 px-8 rounded-3xl shadow-lg bg-component1">
       <!-- Drawing Board -->
       <section class=" lg:w-1/2 flex flex-col gap-4">
         <DrawingBoard />
