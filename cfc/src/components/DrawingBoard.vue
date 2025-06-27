@@ -1,26 +1,35 @@
 <template>
-  <div class="flex flex-col gap-4 justify-center items-center">
+  <div class="flex flex-col gap-4 justify-center items-center w-full">
     <h2 class="font-header font-bold text-subtitle text-xl">Draw Your Feelings</h2>
-    <canvas
-      ref="drawingCanvas"
-      class="border rounded-lg bg-white"
-      @mousedown="startDrawing"
-      @mousemove="draw"
-      @mouseup="stopDrawing"
-      @mouseleave="stopDrawing"
-      @touchstart="startDrawing"
-      @touchmove="draw"
-      @touchend="stopDrawing"
-    ></canvas>
-    <div class="flex gap-4 justify-center items-center">
-      <button class="bg-coral rounded-lg text-white font-header p-2" @click="clearCanvas">Clear Drawing</button>
-      <button class="bg-coral rounded-lg text-white font-header p-2" @click="saveDrawing">Save Drawing</button>
+
+    <!-- Smaller, fixed-size responsive wrapper -->
+    <div class="w-full max-w-[400px] aspect-[4/3] bg-white rounded-lg shadow-inner relative">
+      <canvas
+        ref="drawingCanvas"
+        class="absolute top-0 left-0 w-full h-full rounded-lg"
+        @mousedown="startDrawing"
+        @mousemove="draw"
+        @mouseup="stopDrawing"
+        @mouseleave="stopDrawing"
+        @touchstart="startDrawing"
+        @touchmove="draw"
+        @touchend="stopDrawing"
+      ></canvas>
+    </div>
+
+    <div class="flex gap-4 justify-center items-center flex-wrap">
+      <button class="bg-button rounded-lg text-white font-header px-4 py-2" @click="clearCanvas">
+        Clear Drawing
+      </button>
+      <button class="bg-button rounded-lg text-white font-header px-4 py-2" @click="saveDrawing">
+        Save Drawing
+      </button>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 
 export default {
   name: 'DrawingBoard',
@@ -29,17 +38,24 @@ export default {
     const isDrawing = ref(false)
     let ctx = null
 
-    const canvasWidth = 400
-    const canvasHeight = 300
-
-    onMounted(() => {
+    const resizeCanvas = () => {
       const canvas = drawingCanvas.value
-      canvas.width = canvasWidth
-      canvas.height = canvasHeight
+      const container = canvas.parentElement
+
+      canvas.width = container.offsetWidth
+      canvas.height = container.offsetHeight
+
       ctx = canvas.getContext('2d')
       ctx.lineWidth = 2
       ctx.lineCap = 'round'
       ctx.strokeStyle = '#000'
+    }
+
+    onMounted(() => {
+      nextTick(() => {
+        resizeCanvas()
+        window.addEventListener('resize', resizeCanvas)
+      })
     })
 
     const startDrawing = (event) => {
@@ -76,16 +92,17 @@ export default {
     }
 
     const getEventCoordinates = (event) => {
+      const canvas = drawingCanvas.value
+      const rect = canvas.getBoundingClientRect()
       if (event.touches && event.touches[0]) {
-        const rect = drawingCanvas.value.getBoundingClientRect()
         return {
           offsetX: event.touches[0].clientX - rect.left,
           offsetY: event.touches[0].clientY - rect.top,
         }
       }
       return {
-        offsetX: event.offsetX,
-        offsetY: event.offsetY,
+        offsetX: event.clientX - rect.left,
+        offsetY: event.clientY - rect.top,
       }
     }
 
@@ -102,42 +119,7 @@ export default {
 </script>
 
 <style scoped>
-.drawing-board {
-  text-align: center;
-  margin: 20px;
-}
-
-.canvas {
-  border: 1px solid #ccc;
-  display: block;
-  margin: 0 auto 20px;
+canvas {
   touch-action: none;
-  /* Prevent touch scrolling while drawing */
-}
-
-.controls {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-}
-
-.clear-drawing,
-.save-drawing {
-  padding: 10px 20px;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 1rem;
-  transition: background-color 0.2s;
-}
-
-.clear-drawing:hover {
-  background-color: #f44336;
-}
-
-.save-drawing:hover {
-  background-color: #45a049;
 }
 </style>

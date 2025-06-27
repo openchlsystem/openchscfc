@@ -6,9 +6,9 @@
   --font-header: 'Fredoka', Roboto, 'sans-serif';
   --font-text: 'Open Sans', 'sans-serif';
 
-    --color-subtitle:  #4C1D95;
-    --color-button:  #ff8a80;
-    --color-coral: #ff8a80;
-    --color-cream: #fffde7;
+  --color-component1:  #D8B4FE;
+  --color-component2: #fff59d;
+  --color-button:  #ff8a80;
+  --color-background: #fffde7;
   
 }
