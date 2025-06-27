@@ -16,11 +16,13 @@
         v-for="(feature, index) in features"
         :key="feature.title"
         :class="[
-          'flex flex-col justify-center items-center rounded-lg px-4 py-8 w-full md:w-1/3 h-60 text-center shadow-lg',
-          index % 2 === 0 ? 'bg-component2' : 'bg-component1',
+          'flex flex-col justify-center items-center rounded-2xl px-6 py-8 w-full bg-white md:w-1/3  text-center shadow-lg transition-transform duration-300 hover:scale-105 hover:shadow-xl'
+          
         ]"
       >
-        <h2 class="font-bold font-header text-2xl md:text-3xl">{{ feature.title }}</h2>
+       <h2 class="w-full text-center font-bold font-header text-purple-900 text-2xl md:text-3xl bg-cardhead rounded-t-2xl py-4 px-2">
+  {{ feature.title }}
+</h2>
         <p class="font-text max-w-xs mt-2 ">{{ feature.description }}</p>
         <button
           class="rounded-lg px-4 py-2 mt-4 bg-button text-white font-header  hover:text-purple-900 hover:bg-purple-100 transition"

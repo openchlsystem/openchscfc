@@ -1,85 +1,46 @@
 <template>
-    <div class="games-page">
-        <h1 class="page-title">Interactive Games</h1>
-        <div class="cards-container">
-            <ChildFriendlyCard>
-                <template #header>
-                    <h2>Memory Match</h2>
-                </template>
-                <p>Test your memory with this fun matching game!</p>
-                <template #footer>
-                    <button @click="goToGame('/games/memory-match')">Play Now</button>
-                </template>
-            </ChildFriendlyCard>
+  <div class="bg-background min-h-screen pt-44 sm:pt-60 p-4 sm:p-6 md:p-10 lg:p-20">
+    <h1 class="text-3xl font-header sm:text-4xl lg:text-5xl font-bold  mb-10 text-center">
+      Interactive Games
+    </h1>
 
-            <ChildFriendlyCard>
-                <template #header>
-                    <h2>Math Puzzle</h2>
-                </template>
-                <p>Sharpen your math skills with exciting puzzles!</p>
-                <template #footer>
-                    <button @click="goToGame('/games/math-puzzle')">Play Now</button>
-                </template>
-            </ChildFriendlyCard>
-
-            <ChildFriendlyCard>
-                <template #header>
-                    <h2>Word Scramble</h2>
-                </template>
-                <p>Unscramble the letters to form meaningful words.</p>
-                <template #footer>
-                    <button @click="goToGame('/games/word-scramble')">Play Now</button>
-                </template>
-            </ChildFriendlyCard>
-
-            <ChildFriendlyCard>
-                <template #header>
-                    <h2>Coloring Fun</h2>
-                </template>
-                <p>Unleash your creativity with virtual coloring!</p>
-                <template #footer>
-                    <button @click="goToGame('/games/coloring-fun')">Play Now</button>
-                </template>
-            </ChildFriendlyCard>
-        </div>
+    <div class="grid gap-4 md:gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 justify-center items-center">
+      <ChildFriendlyCard v-for="game in games" :key="game.title">
+        <template #header>
+          <h2 class="text-xl font-semibold font-header text-purple-900">{{ game.title }}</h2>
+        </template>
+        <p class=" font-text">{{ game.description }}</p>
+        <template #footer>
+          <button
+            @click="goToGame(game.link)"
+            class="bg-button hover:text-purple-900 text-white font-header  px-4 py-2 rounded-md hover:bg-purple-100 transition"
+          >
+            Play Now
+          </button>
+        </template>
+      </ChildFriendlyCard>
     </div>
+  </div>
 </template>
 
 <script>
-    import ChildFriendlyCard from "../components/ChildFriendlyCard.vue";
-
-    export default {
-        name: "GamesPage",
-        components: {
-            ChildFriendlyCard,
-        },
-        methods: {
-            goToGame(route) {
-                this.$router.push(route);
-            },
-        },
-    };
+export default {
+  methods: {
+    goToGame(link) {
+      this.$router.push(link)
+    },
+  },
+  data() {
+    return {
+      games: [
+        { title: 'Memory Match', description: 'Test your memory with this fun matching game!', link: '/games/memory-match' },
+        { title: 'Math Puzzle', description: 'Sharpen your math skills with exciting puzzles!', link: '/games/math-puzzle' },
+        { title: 'Word Scramble', description: 'Unscramble the letters to form meaningful words.', link: '/games/word-scramble' },
+        { title: 'Coloring Fun', description: 'Unleash your creativity with virtual coloring!', link: '/games/coloring-fun' },
+      ],
+    }
+  },
+}
 </script>
 
-<style scoped>
-    .games-page {
-        padding: 2rem;
-        text-align: center;
-        background-color: #f0f8ff;
-        min-height: 100vh;
-    }
 
-    .page-title {
-        font-size: 2.5rem;
-        color: #333;
-        margin-bottom: 1.5rem;
-        font-family: "Comic Sans MS", sans-serif;
-    }
-
-    .cards-container {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 1rem;
-    }
-</style>
