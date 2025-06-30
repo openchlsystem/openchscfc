@@ -19,15 +19,15 @@
             v-if="card.flipped || card.matched"
             :src="card.image"
             alt="Card front"
-            class="w-full h-full object-cover rounded-lg"
+            class="w-full h-full object-contain rounded-lg"
           />
           <!-- Show Back if Not Flipped -->
-          <img
+          <div
             v-else
-            src="https://via.placeholder.com/100x100.png?text=?"
-            alt="Card back"
-            class="w-full h-full object-cover rounded-lg"
-          />
+            class="w-full h-full bg-button rounded-lg flex items-center justify-center text-white text-4xl font-header"
+          >
+            ?
+          </div>
         </div>
       </div>
     </div>
@@ -48,91 +48,93 @@
   </div>
 </template>
 
+<script setup>
+import { ref, computed } from 'vue'
 
+// ✅ Import local fruit images
+import apple from '../assets/images/apple.jpeg'
+import banana from '../assets/images/banana.jpeg'
+import grapes from '../assets/images/grapes.jpeg'
+import orange from '../assets/images/orange.jpeg'
+import pineapple from '../assets/images/pineapple.jpeg'
+import strawberry from '../assets/images/strawberry.jpeg'
 
-<script>
-    import { ref, computed } from "vue";
+// 🃏 Original card deck (2 of each)
+const originalCards = [
+  { image: apple, flipped: false, matched: false },
+  { image: apple, flipped: false, matched: false },
+  { image: banana, flipped: false, matched: false },
+  { image: banana, flipped: false, matched: false },
+  { image: grapes, flipped: false, matched: false },
+  { image: grapes, flipped: false, matched: false },
+  { image: orange, flipped: false, matched: false },
+  { image: orange, flipped: false, matched: false },
+  { image: pineapple, flipped: false, matched: false },
+  { image: pineapple, flipped: false, matched: false },
+  { image: strawberry, flipped: false, matched: false },
+  { image: strawberry, flipped: false, matched: false },
+]
 
-    export default {
-        setup() {
-            const cards = ref([
-                { image: 'https://via.placeholder.com/100x100.png?text=🍎', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍎', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍌', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍌', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍉', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍉', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍇', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍇', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍒', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍒', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍍', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍍', flipped: false, matched: false },
-            ]);
-            const flippedCards = ref([]);
-            const gameWon = ref(false);
-            const gameStarted = ref(false);
+const cards = ref([])
+const flippedCards = ref([])
+const gameWon = ref(false)
+const gameStarted = ref(false)
 
-            const shuffledCards = computed(() => {
-                return [...cards.value].sort(() => Math.random() - 0.5);
-            });
+// 🃏 Shuffle the cards each game
+const shuffledCards = computed(() => {
+  return [...cards.value].sort(() => Math.random() - 0.5)
+})
 
-            const flipCard = (card, index) => {
-                if (flippedCards.value.length < 2 && !card.flipped && !card.matched) {
-                    card.flipped = true;
-                    flippedCards.value.push({ card, index });
+const startGame = () => {
+  cards.value = originalCards.map(card => ({ ...card }))
+  gameStarted.value = true
+}
 
-                    if (flippedCards.value.length === 2) {
-                        checkMatch();
-                    }
-                }
-            };
+const resetGame = () => {
+  cards.value = originalCards.map(card => ({
+    ...card,
+    flipped: false,
+    matched: false
+  }))
+  flippedCards.value = []
+  gameWon.value = false
+  gameStarted.value = false
+}
 
-            const checkMatch = () => {
-                const [firstCard, secondCard] = flippedCards.value;
+const checkGameWon = () => {
+  gameWon.value = cards.value.every(card => card.matched)
+}
 
-                if (firstCard.card.image === secondCard.card.image) {
-                    firstCard.card.matched = true;
-                    secondCard.card.matched = true;
-                } else {
-                    setTimeout(() => {
-                        firstCard.card.flipped = false;
-                        secondCard.card.flipped = false;
-                    }, 1000);
-                }
+const flipCard = (card, index) => {
+  if (!gameStarted.value) startGame()
 
-                flippedCards.value = [];
-                checkGameWon();
-            };
+  if (flippedCards.value.length < 2 && !card.flipped && !card.matched) {
+    card.flipped = true
+    flippedCards.value.push({ card, index })
 
-            const checkGameWon = () => {
-                gameWon.value = cards.value.every(card => card.matched);
-            };
+    if (flippedCards.value.length === 2) {
+      checkMatch()
+    }
+  }
+}
 
-            const resetGame = () => {
-                cards.value.forEach(card => {
-                    card.flipped = false;
-                    card.matched = false;
-                });
-                flippedCards.value = [];
-                gameWon.value = false;
-                gameStarted.value = false;
-            };
+const checkMatch = () => {
+  const [first, second] = flippedCards.value
 
-            const startGame = () => {
-                gameStarted.value = true;
-            };
+  if (first.card.image === second.card.image) {
+    first.card.matched = true
+    second.card.matched = true
+  } else {
+    setTimeout(() => {
+      first.card.flipped = false
+      second.card.flipped = false
+    }, 800)
+  }
 
-            return {
-                shuffledCards,
-                gameWon,
-                gameStarted,
-                flipCard,
-                resetGame,
-                startGame,
-            };
-        },
-    };
+  flippedCards.value = []
+  checkGameWon()
+}
+
+// ⏯ Start game on component mount
+resetGame()
 </script>
-
-
