@@ -28,8 +28,8 @@
       <router-link to="/safe-sharing" class="p-2 border-b border-black rounded-none font-text">feelings hub</router-link>
       <router-link to="/child-help" class="p-2 border-b border-black rounded-none font-text">contact us</router-link>
       <router-link to="/interactive-games" class="p-2 border-b border-black rounded-none font-text">games</router-link>
-      <button class="border py-2 px-4 capitalize bg-button rounded-2xl text-white hover:text-purple-900 hover:bg-purple-100 transition">send</button>
-      <button class="border py-2 px-4 capitalize bg-button rounded-2xl text-white hover:text-purple-900 hover:bg-purple-100 transition">submit</button>
+      <router-link to="/safe-sharing#draw-section" class="border py-2 px-4 capitalize bg-button rounded-2xl text-white hover:text-purple-900 hover:bg-purple-100 transition text-center">draw</router-link>
+      <router-link to="/child-help#chat-section" class="border py-2 px-4 capitalize bg-button rounded-2xl text-white hover:text-purple-900 hover:bg-purple-100 transition text-center">chat</router-link>
     </div>
   </nav>
 </template>
