@@ -1,17 +1,34 @@
 <template>
-    <div class="game-container">
-        <h1>Word Scramble</h1>
-        <p class="instruction">Unscramble the letters to form the word!</p>
-        <div class="word-container">
-            <p class="scrambled-word">{{ scrambledWord }}</p>
-        </div>
-        <input v-model="userGuess" class="answer-input" type="text" placeholder="Enter your guess"
-            @change="checkGuess" />
-        <button class="generate-button" @click="scrambleWord">Next Word</button>
-        <p v-if="resultMessage" class="result-message">{{ resultMessage }}</p>
-        <p class="score">Score: {{ score }}</p>
+  <div class="min-h-screen flex flex-col justify-center items-center bg-[#fff59d] p-6">
+    <h1 class="text-4xl font-header font-bold text-black mb-2">Word Scramble</h1>
+    <p class="text-md text-darktext mb-4 font-text text-center">
+      Unscramble the letters to form the word!
+    </p>
+
+    <div class="bg-white shadow-md rounded-xl p-6 w-full max-w-lg flex flex-col items-center gap-4">
+      <p class="text-2xl text-black font-semibold font-header tracking-widest">{{ scrambledWord }}</p>
+
+      <input
+        v-model="userGuess"
+        class="w-full p-3 border border-gray-400 rounded-lg text-center"
+        type="text"
+        placeholder="Enter your guess"
+        @change="checkGuess"
+      />
+
+      <button
+        class="bg-button text-white font-header px-4 py-2 rounded-md hover:text-purple-900 hover:bg-purple-100 transition w-full"
+        @click="scrambleWord"
+      >
+        Next Word
+      </button>
+
+      <p v-if="resultMessage" class="text-green-600 font-medium">{{ resultMessage }}</p>
+      <p class="text-sm font-text">Score: {{ score }}</p>
     </div>
+  </div>
 </template>
+
 
 <script>
     import { ref } from 'vue';
@@ -62,125 +79,4 @@
     };
 </script>
 
-<style scoped>
-    .game-container {
-        text-align: center;
-        padding: 20px;
-        background-color: #e1f5fe;
-        font-family: 'Comic Sans MS', sans-serif;
-    }
 
-    h1 {
-        color: #ff7043;
-        font-size: 36px;
-        margin-bottom: 20px;
-        font-weight: bold;
-    }
-
-    .instruction {
-        font-size: 18px;
-        margin-top: 10px;
-        color: #6c757d;
-        font-weight: bold;
-    }
-
-    .word-container {
-        margin-top: 30px;
-    }
-
-    .scrambled-word {
-        font-size: 32px;
-        font-weight: bold;
-        color: #ff5722;
-        margin-bottom: 20px;
-    }
-
-    .answer-input {
-        font-size: 28px;
-        padding: 15px;
-        margin-top: 10px;
-        width: 250px;
-        text-align: center;
-        border-radius: 12px;
-        border: 2px solid #ff5722;
-        background-color: #ffffff;
-    }
-
-    .generate-button {
-        padding: 16px 32px;
-        background-color: #ff7043;
-        border: none;
-        color: white;
-        cursor: pointer;
-        border-radius: 20px;
-        font-size: 22px;
-        margin-top: 30px;
-        transition: background-color 0.3s ease;
-    }
-
-    .generate-button:hover {
-        background-color: #f4511e;
-    }
-
-    .result-message {
-        font-size: 22px;
-        font-weight: bold;
-        margin-top: 20px;
-        color: #388e3c;
-    }
-
-    .score {
-        font-size: 28px;
-        font-weight: bold;
-        margin-top: 30px;
-        color: #ff5722;
-    }
-
-    @media (max-width: 768px) {
-        h1 {
-            font-size: 28px;
-        }
-
-        .scrambled-word {
-            font-size: 24px;
-        }
-
-        .answer-input {
-            font-size: 24px;
-            width: 200px;
-        }
-
-        .generate-button {
-            font-size: 20px;
-            padding: 14px 28px;
-        }
-
-        .score {
-            font-size: 24px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        h1 {
-            font-size: 24px;
-        }
-
-        .scrambled-word {
-            font-size: 20px;
-        }
-
-        .answer-input {
-            font-size: 22px;
-            width: 180px;
-        }
-
-        .generate-button {
-            font-size: 18px;
-            padding: 12px 24px;
-        }
-
-        .score {
-            font-size: 22px;
-        }
-    }
-</style>

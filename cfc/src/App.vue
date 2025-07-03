@@ -14,7 +14,7 @@ export default {
 </script>
 
 <template>
-  
+           
   <LayoutFile />
 </template>
 

@@ -18,6 +18,8 @@ services:
     volumes:
       - ./cfcbe:/app
       - ./staticfiles:/app/staticfiles
+    ports:
+      - "8006:8006"
     expose:
       - "8006"
     environment:

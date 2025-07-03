@@ -1,0 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --font-header: 'Fredoka', Roboto, 'sans-serif';
+  --font-text: 'Open Sans', 'sans-serif';
+
+  --color-component1:  #D8B4FE;
+  --color-component2: #fff59d;
+  --color-button:  #ff8a80;
+  --color-background: #fffde7;
+  --color-cardhead: #ffe4b5;
+  
+}

@@ -1,276 +1,140 @@
 <template>
-    <div class="game-container">
-        <h1>Memory Match Game</h1>
-        <p v-if="!gameStarted" class="instruction">Tap a card to start the game!</p>
-        <div class="card-container">
-            <div v-for="(card, index) in shuffledCards" :key="index" class="card"
-                :class="{ 'flipped': card.flipped || card.matched }" @click="flipCard(card, index)">
-                <div class="card-inner">
-                    <div class="card-front">
-                        <img v-if="card.image" :src="card.image" alt="Card front" />
-                    </div>
-                    <div class="card-back">
-                        <img src="https://via.placeholder.com/100x100.png?text=?" alt="Card back" />
-                    </div>
-                </div>
-            </div>
+  <div class="min-h-screen flex flex-col justify-center items-center bg-[#fff59d] p-6 pt-40">
+    <h1 class="text-4xl font-header font-bold text-darktext mb-2">Memory Match Game</h1>
+    <p v-if="!gameStarted" class="text-md text-darktext mb-4 font-text text-center">
+      Tap a card to start the game!
+    </p>
+
+    <!-- Grid Layout for Cards -->
+    <div class="grid grid-cols-3 sm:grid-cols-4 gap-4 w-full max-w-lg bg-white p-6 rounded-xl shadow-md">
+      <div
+        v-for="(card, index) in shuffledCards"
+        :key="index"
+        class="relative w-full aspect-square cursor-pointer bg-button rounded-lg shadow-md"
+        @click="flipCard(card, index)"
+      >
+        <div class="absolute inset-0 flex items-center justify-center">
+          <!-- Show Front if Flipped or Matched -->
+          <img
+            v-if="card.flipped || card.matched"
+            :src="card.image"
+            alt="Card front"
+            class="w-full h-full object-contain rounded-lg"
+          />
+          <!-- Show Back if Not Flipped -->
+          <div
+            v-else
+            class="w-full h-full bg-button rounded-lg flex items-center justify-center text-white text-4xl font-header"
+          >
+            ?
+          </div>
         </div>
-        <div v-if="gameWon" class="win-message">
-            <h2>Yay! You Won!</h2>
-            <button @click="resetGame">Play Again</button>
-        </div>
+      </div>
     </div>
+
+    <!-- Win Message -->
+    <div
+      v-if="gameWon"
+      class="mt-6 bg-white p-4 rounded-xl shadow-md flex flex-col items-center gap-4 w-full max-w-lg"
+    >
+      <h2 class="text-2xl font-header font-bold text-green-700">Yay! You Won!</h2>
+      <button
+        @click="resetGame"
+        class="bg-button text-white font-header px-4 py-2 rounded-md hover:text-purple-900 hover:bg-purple-100 transition w-full"
+      >
+        Play Again
+      </button>
+    </div>
+  </div>
 </template>
 
-<script>
-    import { ref, computed } from "vue";
+<script setup>
+import { ref, computed } from 'vue'
 
-    export default {
-        setup() {
-            const cards = ref([
-                { image: 'https://via.placeholder.com/100x100.png?text=🍎', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍎', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍌', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍌', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍉', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍉', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍇', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍇', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍒', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍒', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍍', flipped: false, matched: false },
-                { image: 'https://via.placeholder.com/100x100.png?text=🍍', flipped: false, matched: false },
-            ]);
-            const flippedCards = ref([]);
-            const gameWon = ref(false);
-            const gameStarted = ref(false);
+// ✅ Import local fruit images
+import apple from '../assets/images/apple.jpeg'
+import banana from '../assets/images/banana.jpeg'
+import grapes from '../assets/images/grapes.jpeg'
+import orange from '../assets/images/orange.jpeg'
+import pineapple from '../assets/images/pineapple.jpeg'
+import strawberry from '../assets/images/strawberry.jpeg'
 
-            const shuffledCards = computed(() => {
-                return [...cards.value].sort(() => Math.random() - 0.5);
-            });
+// 🃏 Original card deck (2 of each)
+const originalCards = [
+  { image: apple, flipped: false, matched: false },
+  { image: apple, flipped: false, matched: false },
+  { image: banana, flipped: false, matched: false },
+  { image: banana, flipped: false, matched: false },
+  { image: grapes, flipped: false, matched: false },
+  { image: grapes, flipped: false, matched: false },
+  { image: orange, flipped: false, matched: false },
+  { image: orange, flipped: false, matched: false },
+  { image: pineapple, flipped: false, matched: false },
+  { image: pineapple, flipped: false, matched: false },
+  { image: strawberry, flipped: false, matched: false },
+  { image: strawberry, flipped: false, matched: false },
+]
 
-            const flipCard = (card, index) => {
-                if (flippedCards.value.length < 2 && !card.flipped && !card.matched) {
-                    card.flipped = true;
-                    flippedCards.value.push({ card, index });
+const cards = ref([])
+const flippedCards = ref([])
+const gameWon = ref(false)
+const gameStarted = ref(false)
 
-                    if (flippedCards.value.length === 2) {
-                        checkMatch();
-                    }
-                }
-            };
+// 🃏 Shuffle the cards each game
+const shuffledCards = computed(() => {
+  return [...cards.value].sort(() => Math.random() - 0.5)
+})
 
-            const checkMatch = () => {
-                const [firstCard, secondCard] = flippedCards.value;
+const startGame = () => {
+  cards.value = originalCards.map(card => ({ ...card }))
+  gameStarted.value = true
+}
 
-                if (firstCard.card.image === secondCard.card.image) {
-                    firstCard.card.matched = true;
-                    secondCard.card.matched = true;
-                } else {
-                    setTimeout(() => {
-                        firstCard.card.flipped = false;
-                        secondCard.card.flipped = false;
-                    }, 1000);
-                }
+const resetGame = () => {
+  cards.value = originalCards.map(card => ({
+    ...card,
+    flipped: false,
+    matched: false
+  }))
+  flippedCards.value = []
+  gameWon.value = false
+  gameStarted.value = false
+}
 
-                flippedCards.value = [];
-                checkGameWon();
-            };
+const checkGameWon = () => {
+  gameWon.value = cards.value.every(card => card.matched)
+}
 
-            const checkGameWon = () => {
-                gameWon.value = cards.value.every(card => card.matched);
-            };
+const flipCard = (card, index) => {
+  if (!gameStarted.value) startGame()
 
-            const resetGame = () => {
-                cards.value.forEach(card => {
-                    card.flipped = false;
-                    card.matched = false;
-                });
-                flippedCards.value = [];
-                gameWon.value = false;
-                gameStarted.value = false;
-            };
+  if (flippedCards.value.length < 2 && !card.flipped && !card.matched) {
+    card.flipped = true
+    flippedCards.value.push({ card, index })
 
-            const startGame = () => {
-                gameStarted.value = true;
-            };
+    if (flippedCards.value.length === 2) {
+      checkMatch()
+    }
+  }
+}
 
-            return {
-                shuffledCards,
-                gameWon,
-                gameStarted,
-                flipCard,
-                resetGame,
-                startGame,
-            };
-        },
-    };
+const checkMatch = () => {
+  const [first, second] = flippedCards.value
+
+  if (first.card.image === second.card.image) {
+    first.card.matched = true
+    second.card.matched = true
+  } else {
+    setTimeout(() => {
+      first.card.flipped = false
+      second.card.flipped = false
+    }, 800)
+  }
+
+  flippedCards.value = []
+  checkGameWon()
+}
+
+// ⏯ Start game on component mount
+resetGame()
 </script>
-
-<style scoped>
-    .game-container {
-        text-align: center;
-        padding: 20px;
-        background-color: #e3f2fd;
-        /* Soft light blue background */
-        font-family: 'Comic Sans MS', sans-serif;
-        /* Playful, child-friendly font */
-    }
-
-    h1 {
-        color: #ff9800;
-        /* Bright orange for the title */
-        font-size: 32px;
-        text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-        /* Light shadow for emphasis */
-    }
-
-    .instruction {
-        font-size: 18px;
-        margin-top: 10px;
-        color: #6c757d;
-        /* Neutral gray for text */
-        font-weight: bold;
-    }
-
-    .card-container {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-        margin-top: 20px;
-    }
-
-    .card {
-        width: 100px;
-        height: 100px;
-        background-color: #ffcc80;
-        /* Soft peach color */
-        border-radius: 12px;
-        cursor: pointer;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
-        transition: transform 0.3s ease-in-out;
-    }
-
-    .card-inner {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        transform-style: preserve-3d;
-        transition: transform 0.5s;
-    }
-
-    .card.flipped .card-inner {
-        transform: rotateY(180deg);
-    }
-
-    .card-front,
-    .card-back {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        backface-visibility: hidden;
-    }
-
-    .card-front img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-    }
-
-    .card-back {
-        background-color: #ff4081;
-        /* Bright pink for the back of the card */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        /* White text for clarity */
-        font-size: 16px;
-        font-weight: bold;
-        border-radius: 12px;
-    }
-
-    .win-message {
-        margin-top: 20px;
-        font-size: 20px;
-        color: #43a047;
-        /* Green color for positive messages */
-    }
-
-    button {
-        padding: 12px 24px;
-        font-size: 18px;
-        background-color: #ff4081;
-        /* Bright pink button */
-        border: none;
-        color: white;
-        cursor: pointer;
-        border-radius: 15px;
-        /* Rounded button corners */
-        transition: background-color 0.3s;
-    }
-
-    button:hover {
-        background-color: #f50057;
-        /* Darker pink when hovered */
-    }
-
-    button:focus {
-        outline: none;
-    }
-
-    @media screen and (max-width: 600px) {
-        h1 {
-            font-size: 28px;
-            /* Slightly smaller title */
-        }
-
-        .card-container {
-            grid-template-columns: repeat(3, 1fr);
-        }
-
-        .card {
-            width: 90px;
-            /* Slightly smaller cards */
-            height: 90px;
-        }
-
-        button {
-            font-size: 16px;
-        }
-
-        .instruction {
-            font-size: 16px;
-        }
-    }
-
-    @media screen and (max-width: 400px) {
-        h1 {
-            font-size: 24px;
-            /* Even smaller title */
-        }
-
-        .card-container {
-            grid-template-columns: repeat(4, 1fr);
-            /* Adjust for smaller screens */
-        }
-
-        .card {
-            width: 70px;
-            /* Smaller cards for compact screens */
-            height: 70px;
-        }
-
-        button {
-            font-size: 14px;
-            padding: 10px 20px;
-        }
-
-        .instruction {
-            font-size: 14px;
-        }
-    }
-
-</style>
