@@ -131,6 +131,56 @@ class EEMISAdapter(BaseAdapter):
                 'code': 500
             }
     
+    def _transform_response_data(self, response_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Transform the EEMIS API response to the required format.
+        
+        Args:
+            response_data: The raw response from EEMIS API
+            
+        Returns:
+            Transformed response data
+        """
+        try:
+            # Extract the nested data
+            if response_data.get('status') == 'success' and 'data' in response_data:
+                nested_data = response_data['data'].get('data', {})
+                
+                # Map gender to sex_id (assuming M=121, F=120)
+                gender = nested_data.get('gender', '')
+                sex_id = "121" if gender == "M" else "120" if gender == "F" else ""
+                
+                # Transform to required format
+                transformed_data = {
+                    "fname": nested_data.get('first_name', ''),
+                    "lname": nested_data.get('surname', ''),
+                    "age_group_id": "",
+                    "location_id": "",
+                    "sex_id": sex_id,
+                    "landmark": "",
+                    "nationality_id": nested_data.get('nationality', ''),
+                    "national_id_type_id": "",
+                    "national_id": nested_data.get('passport_no', ''),
+                    "lang_id": "",
+                    "tribe_id": "",
+                    "phone": nested_data.get('phone', ''),
+                    "phone2": nested_data.get('home_phone', ''),
+                    "email": nested_data.get('email', ''),
+                }
+                
+                return transformed_data
+            else:
+                # Return error response as is
+                return response_data
+                
+        except Exception as e:
+            logger.exception(f"Error transforming EEMIS response: {str(e)}")
+            return {
+                'status': 'error',
+                'message': f'Error transforming response: {str(e)}',
+                'code': 500
+            }
+    
     def format_webhook_response(self, responses: List[Dict[str, Any]]) -> HttpResponse:
         """
         Format response to return to the caller.
@@ -149,8 +199,13 @@ class EEMISAdapter(BaseAdapter):
         
         response = responses[0]  # Get the first response
         
-        # Return the appropriate status code
-        status_code = response.get('code', 200)
+        # Transform the response data if successful
+        if response.get('status') == 'success':
+            transformed_data = self._transform_response_data(response)
+            status_code = 200
+        else:
+            transformed_data = response
+            status_code = response.get('code', 500)
         
         # Return the response data
-        return JsonResponse(response, status=status_code)
+        return JsonResponse(transformed_data, status=status_code)

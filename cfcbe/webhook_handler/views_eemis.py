@@ -59,7 +59,7 @@ class EEMISWebhookView(View):
     This view:
     1. Receives requests from helpline with national_id
     2. Uses the EEMISAdapter to fetch data from the external API
-    3. Returns the response to the helpline
+    3. Returns the transformed response to the helpline
     """
     
     def post(self, request, *args, **kwargs):
@@ -70,7 +70,7 @@ class EEMISWebhookView(View):
             request: The HTTP request object
             
         Returns:
-            HTTP response containing operation result
+            HTTP response containing transformed operation result
         """
         try:
             # Get the EEMIS adapter
@@ -148,7 +148,7 @@ class EEMISWebhookView(View):
             # Send to EEMIS API
             response = adapter.send_message('', payload)
             
-            # Format and return the response
+            # Format and return the transformed response
             return adapter.format_webhook_response([response])
             
         except Exception as e:
