@@ -36,7 +36,7 @@ class WebhookMessage(models.Model):
       
     def __str__(self):
         return f"Message from {self.sender_id} on {self.platform}"
-
+    
 #######################################
 # Authentication Models
 #######################################
