@@ -11,7 +11,6 @@ services:
       - ./frontend/dist:/usr/share/nginx/html
     depends_on:
       - backend
-      - frontend
 
   backend:
     build: ./cfcbe
@@ -20,8 +19,6 @@ services:
     volumes:
       - ./cfcbe:/app
       - ./staticfiles:/app/staticfiles
-    ports:
-      - "8006:8006"
     expose:
       - "8006"
     environment:
@@ -34,17 +31,7 @@ services:
              gunicorn --bind 0.0.0.0:8006 cfcbe.wsgi"
     restart: unless-stopped
 
-  frontend:
-    build:
-      context: ./cfc
-      target: build-stage
-    volumes:
-      - ./cfc:/app
-    environment:
-      - VITE_API_BASE_URL=https://backend.bitz-itc.com
-    depends_on:
-      - backend
-    restart: unless-stopped
+  
 
 volumes:
   static_volume:
