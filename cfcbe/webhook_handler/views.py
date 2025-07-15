@@ -867,6 +867,63 @@ class HelplineCEEMISView(View):
                 "message": f"Failed to process case: {str(e)}"
             }, status=500)
         # webhook_handler/views.py
+
+class CEEMISHelplineView(View):
+    """
+    Dedicated view for handling CEEMIS case creation to be forwarded to Helpline.
+    Receives form data from CEEMIS and converts it to Helpline format.
+    """
+    
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests from CEEMIS for case creation to be forwarded to Helpline.
+        Expects multipart/form-data from CEEMIS.
+        """
+        try:
+            # Get the CEEMIS adapter
+            adapter = AdapterFactory.get_adapter('ceemis')
+            
+            # Parse the form data from CEEMIS
+            ceemis_payload = {}
+            
+            # Extract form data
+            for key, value in request.POST.items():
+                ceemis_payload[key] = value
+            
+            logger.info(f"Received CEEMIS payload: {ceemis_payload}")
+            
+            # Validate the CEEMIS request
+            if not adapter.validate_ceemis_request(ceemis_payload):
+                return JsonResponse({
+                    "status": "error", 
+                    "message": "Invalid CEEMIS case data"
+                }, status=400)
+
+            # Convert CEEMIS data to Helpline format and send
+            response = adapter.send_to_helpline(ceemis_payload)
+            
+            logger.info(f"Helpline response: {response}")
+            
+            # Return response to CEEMIS
+            if response.get("status") == "success":
+                return JsonResponse({
+                    "status": "success",
+                    "message": "Case successfully forwarded to Helpline",
+                    "helpline_response": response
+                })
+            else:
+                return JsonResponse({
+                    "status": "error",
+                    "message": "Failed to forward case to Helpline",
+                    "details": response
+                }, status=500)
+            
+        except Exception as e:
+            logger.exception(f"Error processing CEEMIS to Helpline case: {str(e)}")
+            return JsonResponse({
+                "status": "error",
+                "message": f"Failed to process case: {str(e)}"
+            }, status=500)
 @method_decorator(csrf_exempt, name='dispatch')
 class HelplineCEEMISUpdateView(View):
     """

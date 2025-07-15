@@ -2,7 +2,7 @@ from django.urls import path
 
 from webhook_handler import auth_views
 from webhook_handler.views_eemis import EEMISWebhookView
-from .views import HelplineCEEMISUpdateView, HelplineCEEMISView, UnifiedWebhookView 
+from .views import HelplineCEEMISUpdateView, HelplineCEEMISView, UnifiedWebhookView, CEEMISHelplineView 
 # from .views import CaseCategoryExportView, HelplineCEEMISView, LocationExportView, TokenGenerationView, UnifiedWebhookView, WebformCategoriesView
 
 urlpatterns = [
@@ -15,5 +15,9 @@ urlpatterns = [
     path('webhook/webform/auth/verify-otp/', auth_views.verify_otp_and_issue_token, name='verify_otp'),
     path('webhook/eemis', EEMISWebhookView.as_view(), name='eemis_webhook'),
     path('webhook/helpline/case/ceemis/', HelplineCEEMISView.as_view(), name='helpline_ceemis_case'),
-    path('webhook/helpline/case/ceemis/update/', HelplineCEEMISUpdateView.as_view(), name='helpline_ceemis_case_update')
+    path('webhook/helpline/case/ceemis/update/', HelplineCEEMISUpdateView.as_view(), name='helpline_ceemis_case_update'),
+    path('webhook/ceemis/create/', CEEMISHelplineView.as_view(), name='ceemis-helpline')
 ]
+
+
+
