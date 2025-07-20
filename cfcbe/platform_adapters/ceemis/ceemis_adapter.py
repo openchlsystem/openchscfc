@@ -5,6 +5,9 @@ import logging
 import requests
 from typing import Any, Dict, List, Optional
 from django.http import HttpRequest, HttpResponse, JsonResponse
+import uuid
+from datetime import datetime
+from django.conf import settings
 
 from platform_adapters.base_adapter import BaseAdapter
 
@@ -458,7 +461,8 @@ class CEEMISAdapter(BaseAdapter):
             helpline_payload = self._map_ceemis_to_helpline_format(ceemis_data)
             
             # Get auth token from config
-            auth_token = getattr(settings, 'HELPLINE_AUTH_TOKEN', '')
+            auth_token = getattr(settings, 'ENDPOINT_AUTH_TOKEN', '')
+            print(f"Helpline auth token: {auth_token}")
             if not auth_token:
                 logger.error("Helpline auth token not configured")
                 return {
@@ -602,8 +606,10 @@ class CEEMISAdapter(BaseAdapter):
         helpline_payload = {
             "src": "ceemis",
             "src_uid": src_uid,
+            # "src_uid": "walkin-100-1743763537",
             "src_address": ceemis_data.get("mw_phone", ""),
-            "src_uid2": f"{src_uid}-2",
+            # "src_address": "010101010",
+            "src_uid2": "walkin-100-1743763537",
             "src_usr": "ceemis",
             "src_vector": "2",
             "src_callid": src_callid,

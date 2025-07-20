@@ -303,7 +303,7 @@ Chagua lugha:
 }
 
 
-
+ENDPOINT_AUTH_TOKEN = os.getenv('ENDPOINT_AUTH_TOKEN')
 
 
 ENDPOINT_CONFIG = {
