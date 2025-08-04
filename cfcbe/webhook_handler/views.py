@@ -898,9 +898,8 @@ class CEEMISHelplineView(View):
                     "status": "error", 
                     "message": "Invalid CEEMIS case data"
                 }, status=400)
-
+            # print(f"Validated CEEMIS payload: {ceemis_payload}")
             response = adapter.send_to_helpline(ceemis_payload)
-
             if response.get("status") == "success":
                 return JsonResponse({
                     "status": "success",

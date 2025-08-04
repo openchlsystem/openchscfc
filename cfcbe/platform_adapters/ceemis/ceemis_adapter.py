@@ -26,8 +26,8 @@ class CEEMISAdapter(BaseAdapter):
     """
     
     def __init__(self):
-        self.ceemis_create_endpoint = "http://ceemis.mglsd.go.ug:8080/api.ceemis/service/create/sauti_case"
-        self.ceemis_update_endpoint = "http://ceemis.mglsd.go.ug:8080/api.ceemis/service/update/sauti_case_update"
+        self.ceemis_create_endpoint = "https://ceemis.mglsd.go.ug:8080/api.ceemis/service/create/sauti_case"
+        self.ceemis_update_endpoint = "https://ceemis.mglsd.go.ug:8080/api.ceemis/service/update/sauti_case_update"
     
     def handle_verification(self, request: HttpRequest) -> Optional[HttpResponse]:
         """
@@ -481,7 +481,7 @@ class CEEMISAdapter(BaseAdapter):
             
             logger.debug(f"Sending to Helpline: {helpline_endpoint}")
             logger.debug(f"Payload: {json.dumps(helpline_payload, indent=2)}")
-            
+            print(f"Payload: {json.dumps(helpline_payload, indent=2)}")
             # Send to Helpline API
             response = requests.post(
                 helpline_endpoint,
