@@ -5,6 +5,9 @@ import logging
 import requests
 from typing import Any, Dict, List, Optional
 from django.http import HttpRequest, HttpResponse, JsonResponse
+import uuid
+from datetime import datetime
+from django.conf import settings
 
 from platform_adapters.base_adapter import BaseAdapter
 
@@ -23,8 +26,8 @@ class CEEMISAdapter(BaseAdapter):
     """
     
     def __init__(self):
-        self.ceemis_create_endpoint = "http://ceemis.mglsd.go.ug:8080/api.ceemis/service/create/sauti_case"
-        self.ceemis_update_endpoint = "http://ceemis.mglsd.go.ug:8080/api.ceemis/service/update/sauti_case_update"
+        self.ceemis_create_endpoint = "https://ceemis.mglsd.go.ug:8080/api.ceemis/service/create/sauti_case"
+        self.ceemis_update_endpoint = "https://ceemis.mglsd.go.ug:8080/api.ceemis/service/update/sauti_case_update"
     
     def handle_verification(self, request: HttpRequest) -> Optional[HttpResponse]:
         """
@@ -415,3 +418,295 @@ class CEEMISAdapter(BaseAdapter):
         logger.info(f"Update payload for CEEMIS with caseid: {ceemis_data['caseid']}")
         
         return ceemis_data
+    
+    def validate_ceemis_request(self, payload: Dict[str, Any]) -> bool:
+        """
+        Validate incoming CEEMIS form data.
+        
+        Args:
+            payload: The CEEMIS form data to validate
+            
+        Returns:
+            True if the request is valid, False otherwise
+        """
+        try:
+            # Required fields for CEEMIS case creation
+            required_fields = ["mw_name", "mw_phone", "comp_category", "mw_narative"]
+            
+            # Validate required fields
+            for field in required_fields:
+                if field not in payload or not payload[field].strip():
+                    logger.error(f"Missing or empty required field from CEEMIS: {field}")
+                    return False
+                    
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error validating CEEMIS request: {str(e)}")
+            return False
+    
+    def send_to_helpline(self, ceemis_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Send CEEMIS case data to Helpline API.
+        Converts CEEMIS form data to Helpline JSON format.
+        
+        Args:
+            ceemis_data: Form data received from CEEMIS
+            
+        Returns:
+            Response from Helpline API
+        """
+        try:
+            # Convert CEEMIS data to Helpline format
+            helpline_payload = self._map_ceemis_to_helpline_format(ceemis_data)
+            
+            # Get auth token from config
+            auth_token = getattr(settings, 'ENDPOINT_AUTH_TOKEN', '')
+            print(f"Helpline auth token: {auth_token}")
+            if not auth_token:
+                logger.error("Helpline auth token not configured")
+                return {
+                    "status": "error",
+                    "message": "Helpline authentication not configured"
+                }
+            
+            # Prepare headers
+            headers = {
+                'Authorization': f'Bearer {auth_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # Helpline API endpoint
+            helpline_endpoint = "https://demo-openchs.bitz-itc.com/helpline/api/cases/"
+            
+            logger.debug(f"Sending to Helpline: {helpline_endpoint}")
+            logger.debug(f"Payload: {json.dumps(helpline_payload, indent=2)}")
+            print(f"Payload: {json.dumps(helpline_payload, indent=2)}")
+            # Send to Helpline API
+            response = requests.post(
+                helpline_endpoint,
+                json=helpline_payload,
+                headers=headers,
+                timeout=30
+            )
+            
+            logger.debug(f"Helpline response status: {response.status_code}")
+            logger.debug(f"Helpline response text: {response.text}")
+            
+            if response.status_code in (200, 201):
+                try:
+                    result = response.json()
+                    return {
+                        "status": "success",
+                        "message": "Case successfully sent to Helpline",
+                        "helpline_response": result
+                    }
+                except json.JSONDecodeError:
+                    return {
+                        "status": "success",
+                        "message": "Case sent to Helpline",
+                        "helpline_response": response.text
+                    }
+            else:
+                logger.error(f"Helpline API error: {response.status_code} - {response.text}")
+                return {
+                    "status": "error",
+                    "message": f"Helpline API error: {response.status_code}",
+                    "details": response.text
+                }
+                
+        except requests.RequestException as e:
+            logger.exception(f"Network error sending to Helpline: {str(e)}")
+            return {
+                "status": "error",
+                "message": f"Network error: {str(e)}"
+            }
+        except Exception as e:
+            logger.exception(f"Error sending to Helpline: {str(e)}")
+            return {
+                "status": "error",
+                "message": f"Error sending to Helpline: {str(e)}"
+            }
+    
+    def _map_ceemis_to_helpline_format(self, ceemis_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Convert CEEMIS form data to Helpline JSON format.
+        
+        Args:
+            ceemis_data: CEEMIS form data
+            
+        Returns:
+            Helpline formatted data
+        """
+        # Generate UUIDs and timestamps
+        src_uid = f"ceemis-{uuid.uuid4().hex[:8]}-{int(datetime.now().timestamp())}"
+        src_callid = str(uuid.uuid4())
+        session_id = str(uuid.uuid4())
+        current_timestamp = datetime.now().timestamp()
+        
+        # Build the reporters_uuid (victim/client information)
+        reporters_uuid = {
+            "fname": ceemis_data.get("mw_name", ""),
+            "age_t": "0",
+            "age": "",
+            "dob": "",
+            "age_group_id": "",
+            "location_id": self._lookup_location(ceemis_data.get("mw_loca", "")),
+            "sex_id": "",
+            "landmark": "",
+            "nationality_id": "",
+            "national_id_type_id": self._lookup_id_type("Passport"),
+            "national_id": ceemis_data.get("mw_passport", ""),
+            "lang_id": "",
+            "tribe_id": "",
+            "phone": ceemis_data.get("mw_phone", ""),
+            "phone2": "",
+            "email": ceemis_data.get("mw_email", ""),
+            ".id": ""
+        }
+        
+        # Build clients_case (same as reporters_uuid)
+        clients_case = [reporters_uuid.copy()]
+        
+        # Build perpetrators_case (employer information)
+        perpetrators_case = []
+        if ceemis_data.get("emp_name") and ceemis_data.get("emp_name") != "NA":
+            perpetrator = {
+                "fname": ceemis_data.get("emp_name", ""),
+                "age_t": "0",
+                "age": "",
+                "dob": "",
+                "age_group_id": "",
+                "age_group": "",
+                "location_id": self._lookup_location(ceemis_data.get("location", "")),
+                "sex_id": "",
+                "sex": "",
+                "landmark": "",
+                "nationality_id": "",
+                "national_id_type_id": self._lookup_id_type("EMP_NUMBER"),
+                "national_id": ceemis_data.get("emp_number", ""),
+                "lang_id": "",
+                "tribe_id": "",
+                "phone": "",
+                "phone2": "",
+                "email": "",
+                "relationship_id": "",
+                "relationship": "Employer",
+                "shareshome_id": "",
+                "health_id": "",
+                "employment_id": self._lookup_employment(ceemis_data.get("emp_sector", "")),
+                "marital_id": "",
+                "guardian_fullname": "",
+                "notes": f"Employer in {ceemis_data.get('emp_sector', 'Unknown')} sector",
+                ".id": ""
+            }
+            perpetrators_case.append(perpetrator)
+        
+        # Build the complete Helpline payload
+        helpline_payload = {
+            "src": "ceemis",
+            "src_uid": src_uid,
+            # "src_uid": "walkin-100-1743763537",
+            "src_address": ceemis_data.get("mw_phone", ""),
+            # "src_address": "010101010",
+            "src_uid2": "walkin-100-1743763537",
+            "src_usr": "ceemis",
+            "src_vector": "2",
+            "src_callid": src_callid,
+            "src_ts": str(current_timestamp),
+            "reporter_nickname": "ceemis_user",
+            "case_category": ceemis_data.get("comp_category", ""),
+            "case_category_id": self._lookup_case_category(ceemis_data.get("comp_category", "")),
+            "narrative": ceemis_data.get("mw_narative", ""),
+            "complaint_text": None,
+            "complaint_image": None,
+            "complaint_audio": None,
+            "complaint_video": None,
+            "message_id_ref": "",
+            "session_id": session_id,
+            "plan": "---",
+            "priority": "1",
+            "status": "1",
+            "escalated_to_id": "0",
+            "gbv_related": "0",
+            "reporters_uuid": reporters_uuid,
+            "clients_case": clients_case,
+            "perpetrators_case": perpetrators_case,
+            "attachments_case": [],
+            "services": []
+        }
+        
+        return helpline_payload
+    
+    def _lookup_id_type(self, id_type: str) -> str:
+        """
+        Lookup ID type mapping.
+        
+        Args:
+            id_type: The ID type to lookup
+            
+        Returns:
+            Mapped ID type value
+        """
+        lookup_map = {
+            "Passport": "1",
+            "EMP_NUMBER": "2",
+            "National_ID": "3"
+        }
+        return lookup_map.get(id_type, "1")  # Default to Passport
+    
+    def _lookup_location(self, location: str) -> str:
+        """
+        Lookup location mapping.
+        
+        Args:
+            location: The location to lookup
+            
+        Returns:
+            Mapped location ID
+        """
+        lookup_map = {
+            "Kampala": "258783",
+            "Uganda": "258783",
+            "Entebbe": "258784",
+            "Jinja": "258785"
+        }
+        return lookup_map.get(location, "258783")  # Default to Kampala
+    
+    def _lookup_employment(self, sector: str) -> str:
+        """
+        Lookup employment sector mapping.
+        
+        Args:
+            sector: The employment sector to lookup
+            
+        Returns:
+            Mapped employment ID
+        """
+        lookup_map = {
+            "Housemaid": "1",
+            "Construction": "2",
+            "Agriculture": "3",
+            "Manufacturing": "4",
+            "Services": "5"
+        }
+        return lookup_map.get(sector, "1")  # Default to Housemaid
+    
+    def _lookup_case_category(self, category: str) -> str:
+        """
+        Lookup case category mapping.
+        
+        Args:
+            category: The case category to lookup
+            
+        Returns:
+            Mapped case category ID
+        """
+        lookup_map = {
+            "COMPLAINT": "362484",
+            "COMPLIMENT": "362485",
+            "Child Exploitation": "362486",
+            "Labor Abuse": "362487",
+            "Wage Theft": "362488"
+        }
+        return lookup_map.get(category, "362484")  # Default to COMPLAINT
