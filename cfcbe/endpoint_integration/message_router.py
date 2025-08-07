@@ -299,7 +299,7 @@ class MessageRouter:
         return messaging_payload
     
     def _send_to_endpoint(self, formatted_message: Dict[str, Any], 
-                         config: Dict[str, Any]) -> Dict[str, Any]:
+                     config: Dict[str, Any]) -> Dict[str, Any]:
         """
         Send the formatted message to the endpoint.
         
@@ -343,11 +343,30 @@ class MessageRouter:
                 # Parse response JSON
                 try:
                     response_data = response.json()
-                    return {
-                        'status': 'success',
-                        'message_id': response_data.get('id'),  # Adjust based on API
-                        'response': response_data
-                    }
+                    
+                    # Check if this is a case creation response (has cases array)
+                    if 'cases' in response_data and len(response_data['cases']) > 0:
+                        # Extract case ID from first case
+                        case_id = response_data['cases'][0][0]  # Get "31661"
+                        case_reference = f"lwf{case_id}"  # Create "lwf31661"
+                        
+                        logger.info(f"Case created successfully with ID: {case_id}, Reference: {case_reference}")
+                        
+                        return {
+                            'status': 'success',
+                            'case_id': case_id,
+                            'case_reference': case_reference,
+                            'message': 'Case submitted successfully',
+                            'tracking_info': f'Use reference "{case_reference}" to track your case status',
+                            'response': response_data
+                        }
+                    else:
+                        # Regular response without cases
+                        return {
+                            'status': 'success',
+                            'message_id': response_data.get('id'),  # Adjust based on API
+                            'response': response_data
+                        }
                 except json.JSONDecodeError:
                     return {
                         'status': 'success',

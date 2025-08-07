@@ -2,7 +2,7 @@ from django.urls import path
 
 from webhook_handler import auth_views
 from webhook_handler.views_eemis import EEMISWebhookView
-from .views import HelplineCEEMISUpdateView, HelplineCEEMISView, UnifiedWebhookView, CEEMISHelplineView 
+from .views import CaseStatusCheckView, HelplineCEEMISUpdateView, HelplineCEEMISView, UnifiedWebhookView, CEEMISHelplineView 
 # from .views import CaseCategoryExportView, HelplineCEEMISView, LocationExportView, TokenGenerationView, UnifiedWebhookView, WebformCategoriesView
 
 urlpatterns = [
@@ -16,7 +16,8 @@ urlpatterns = [
     path('webhook/eemis', EEMISWebhookView.as_view(), name='eemis_webhook'),
     path('webhook/helpline/case/ceemis/', HelplineCEEMISView.as_view(), name='helpline_ceemis_case'),
     path('webhook/helpline/case/ceemis/update/', HelplineCEEMISUpdateView.as_view(), name='helpline_ceemis_case_update'),
-    path('webhook/ceemis/create/', CEEMISHelplineView.as_view(), name='ceemis-helpline')
+    path('webhook/ceemis/create/', CEEMISHelplineView.as_view(), name='ceemis-helpline'),
+    path('case/status/<str:case_reference>/', CaseStatusCheckView.as_view(), name='case-status-check'),
 ]
 
 

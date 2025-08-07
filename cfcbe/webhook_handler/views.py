@@ -12,6 +12,7 @@ import logging
 import requests
 import csv
 from django.http import JsonResponse, HttpResponse
+from cfcbe import settings
 from webhook_handler.token_manager import TokenManager
 from platform_adapters.adapter_factory import AdapterFactory
 from endpoint_integration.message_router import MessageRouter
@@ -599,7 +600,6 @@ class UnifiedWebhookView(View):
         
         Args:
             adapter: The platform adapter
-            platform: The platform identifier
             payload: The request payload
             request: The HTTP request
             
@@ -646,13 +646,30 @@ class UnifiedWebhookView(View):
                 message=f"Your complaint has been submitted successfully. Reference ID: {complaint.complaint_id}"
             )
             
-            return JsonResponse({
-                'status': 'success',
-                'complaint_id': str(complaint.complaint_id),
-                'message': 'Complaint submitted successfully',
-                'notification_id': str(notification.notification_id),
-                'response_from_kim': response
-            })
+            # Format response based on whether we have a case reference
+            if response.get('case_reference'):
+                # Case was successfully created in helpline
+                return JsonResponse({
+                    'status': 'success',
+                    'complaint_id': str(complaint.complaint_id),
+                    'case_reference': response.get('case_reference'),  # "lwf31661"
+                    'message': 'Your complaint has been submitted successfully',
+                    'tracking_info': response.get('tracking_info'),
+                    'notification_id': str(notification.notification_id),
+                    'helpline_response': {
+                        'case_id': response.get('case_id'),
+                        'status': 'submitted'
+                    }
+                })
+            else:
+                # Fallback response
+                return JsonResponse({
+                    'status': 'success',
+                    'complaint_id': str(complaint.complaint_id),
+                    'message': 'Complaint submitted successfully',
+                    'notification_id': str(notification.notification_id),
+                    'response_from_helpline': response
+                })
                 
         except Exception as e:
             logger.exception(f"Error processing webform: {str(e)}")
@@ -1242,3 +1259,131 @@ class HelplineCEEMISUpdateView(View):
 # Add this to your urls.py
 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class CaseStatusCheckView(View):
+    """
+    View for checking case status using case reference (e.g., "lwf31661").
+    """
+    
+    def get(self, request, case_reference, *args, **kwargs):
+        """
+        Handle GET requests for case status checking.
+        
+        Args:
+            request: The HTTP request
+            case_reference: The case reference (e.g., "lwf31661")
+            
+        Returns:
+            JSON response with case status information
+        """
+        try:
+            # Validate case reference format
+            if not case_reference.startswith('lwf'):
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Invalid case reference format. Reference should start with "lwf"'
+                }, status=400)
+            
+            # Extract case ID by removing "lwf" prefix
+            try:
+                case_id = case_reference[3:]  # Remove "lwf" prefix
+                # Validate that case_id is numeric
+                int(case_id)
+            except (ValueError, IndexError):
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Invalid case reference. Unable to extract case ID'
+                }, status=400)
+            
+            # Get endpoint configuration
+            endpoint_config = getattr(settings, 'ENDPOINT_CONFIG', {})
+            cases_config = endpoint_config.get('cases_endpoint', {})
+            
+            if not cases_config.get('url') or not cases_config.get('auth_token'):
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Case tracking service is not configured'
+                }, status=500)
+            
+            # Construct helpline API URL
+            helpline_url = f"https://demo-openchs.bitz-itc.com/helpline/api/cases/{case_id}"
+            headers = {
+                'Authorization': f"Bearer {cases_config.get('auth_token')}",
+                'Content-Type': 'application/json'
+            }
+            
+            # Make request to helpline API
+            logger.info(f"Fetching case status for case ID: {case_id}")
+            response = requests.get(helpline_url, headers=headers)
+            
+            if response.status_code == 200:
+                try:
+                    response_data = response.json()
+                    
+                    # Check if cases array exists and has data
+                    if 'cases' in response_data and len(response_data['cases']) > 0:
+                        case_data = response_data['cases'][0]
+                        
+                        # Extract case assessment and status
+                        case_assessment = case_data[25] if len(case_data) > 25 else "Unknown"
+                        case_status_code = case_data[36] if len(case_data) > 36 else "0"
+                        
+                        # Convert status code to readable format
+                        status_mapping = {
+                            "1": "Ongoing",
+                            "2": "Closed"
+                        }
+                        case_status = status_mapping.get(str(case_status_code), "Unknown")
+                        
+                        # Additional case information
+                        case_category = case_data[15] if len(case_data) > 15 else "Unknown"
+                        case_subcategory = case_data[16] if len(case_data) > 16 else ""
+                        case_type = case_data[17] if len(case_data) > 17 else ""
+                        
+                        logger.info(f"Case {case_id} status retrieved: {case_status}")
+                        
+                        return JsonResponse({
+                            'status': 'success',
+                            'case_reference': case_reference,
+                            'case_id': case_id,
+                            'case_status': case_status,
+                            'case_assessment': case_assessment,
+                            'case_details': {
+                                'category': case_category,
+                                'subcategory': case_subcategory,
+                                'type': case_type
+                            },
+                            'message': f'Your case {case_reference} is currently {case_status.lower()}',
+                            'last_updated': datetime.now().isoformat()
+                        })
+                    else:
+                        return JsonResponse({
+                            'status': 'error',
+                            'message': f'No case found with reference {case_reference}'
+                        }, status=404)
+                        
+                except json.JSONDecodeError:
+                    logger.error(f"Invalid JSON response from helpline API for case {case_id}")
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'Error processing case information from helpline system'
+                    }, status=500)
+                    
+            elif response.status_code == 404:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Case with reference {case_reference} was not found'
+                }, status=404)
+            else:
+                logger.error(f"Helpline API error for case {case_id}: {response.status_code} - {response.text}")
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Unable to retrieve case information at this time'
+                }, status=500)
+                
+        except Exception as e:
+            logger.exception(f"Error checking case status for {case_reference}: {str(e)}")
+            return JsonResponse({
+                'status': 'error',
+                'message': 'An unexpected error occurred while checking case status'
+            }, status=500)
