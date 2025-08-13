@@ -243,6 +243,20 @@ WHATSAPP_ACCESS_TOKEN = os.getenv('WHATSAPP_ACCESS_TOKEN')
 WHATSAPP_API_URL = os.getenv('WHATSAPP_API_URL')
 WHATSAPP_WEBHOOK_VERIFY_TOKEN = os.getenv('WHATSAPP_VERIFY_TOKEN')
 
+# Media Processing Configuration for Helpline Transmission
+MEDIA_PROCESSING_CONFIG = {
+    'MAX_FILE_SIZE_BYTES': int(os.getenv('MEDIA_MAX_FILE_SIZE', 16 * 1024 * 1024)),  # 16MB default
+    'DOWNLOAD_TIMEOUT_SECONDS': int(os.getenv('MEDIA_DOWNLOAD_TIMEOUT', 30)),  # 30 seconds default
+    'SUPPORTED_MIME_TYPES': {
+        'image/jpeg', 'image/png', 'image/webp',
+        'video/mp4', 'video/quicktime',  
+        'audio/ogg', 'audio/mpeg', 'audio/mp3',
+        'application/pdf', 'text/plain'
+    },
+    'ENCODING_ENABLED': bool(os.getenv('MEDIA_ENCODING_ENABLED', 'True').lower() in ('true', '1', 'yes')),
+    'FALLBACK_TO_URL_ON_ERROR': bool(os.getenv('MEDIA_FALLBACK_TO_URL', 'True').lower() in ('true', '1', 'yes'))
+}
+
 # Add to gateway/settings.py
 
 # WhatsApp Chatbot Settings

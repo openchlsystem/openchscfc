@@ -82,6 +82,20 @@ class UnifiedWebhookView(View):
                 payload = json.loads(request.body)
                 # Log full raw payload for debugging
                 logger.info(f"THIS IS THE PAYLOAD{payload}")
+                
+                # Enhanced logging for media messages
+                if platform == 'whatsapp' and 'entry' in payload:
+                    for entry in payload.get('entry', []):
+                        for change in entry.get('changes', []):
+                            messages = change.get('value', {}).get('messages', [])
+                            for message in messages:
+                                if message.get('type') in ['image', 'video', 'audio', 'document']:
+                                    media_info = message.get(message.get('type'), {})
+                                    logger.info(f"🎬 INCOMING MEDIA MESSAGE DETECTED!")
+                                    logger.info(f"📄 Type: {message.get('type')}")
+                                    logger.info(f"🆔 Media ID: {media_info.get('id', 'NOT_FOUND')}")
+                                    logger.info(f"🎭 MIME: {media_info.get('mime_type', 'NOT_FOUND')}")
+                                    logger.info(f"📝 Caption: {message.get('caption', 'NO_CAPTION')}")
             except json.JSONDecodeError:
                 # If the body isn't JSON, treat it as form data
                 payload = request.POST.dict()
