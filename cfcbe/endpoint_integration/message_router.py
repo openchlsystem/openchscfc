@@ -292,9 +292,25 @@ class MessageRouter:
             "mime": message.content_type        # Maps from message.content_type
         }
         
-        # Include media URL if available
+        # Include media URL if available (for fallback)
         if message.media_url:
             messaging_payload["media_url"] = message.media_url
+        
+        # Include base64 encoded media content if available
+        if message.media_content:
+            messaging_payload["media_content"] = message.media_content
+            messaging_payload["media_mime"] = message.media_mime
+            messaging_payload["media_filename"] = message.media_filename
+            messaging_payload["media_size"] = message.media_size
+            logger.info(f"📦 ENHANCED PAYLOAD - Added media content: {message.media_filename}, size: {message.media_size} bytes")
+            logger.info(f"📊 Final payload keys: {list(messaging_payload.keys())}")
+            
+            # Log payload structure (without full base64 content)
+            payload_preview = {k: v if k != 'media_content' else f"<base64_content_{len(v)}_chars>" 
+                             for k, v in messaging_payload.items()}
+            logger.info(f"📋 FINAL PAYLOAD PREVIEW: {json.dumps(payload_preview, indent=2)}")
+        else:
+            logger.info(f"📦 STANDARD PAYLOAD - No media content to add")
         
         return messaging_payload
     
