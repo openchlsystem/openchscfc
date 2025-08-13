@@ -21,6 +21,10 @@ class StandardMessage:
     platform: str             # Internal platform identifier (may be different from source)
     content_type: str = "text/plain"  # MIME type for the content
     media_url: Optional[str] = None  # URL to any media content
+    media_content: Optional[str] = None  # Base64 encoded media content
+    media_mime: Optional[str] = None  # MIME type of the media file
+    media_filename: Optional[str] = None  # Generated filename for media
+    media_size: Optional[int] = None  # File size in bytes
     metadata: Dict[str, Any] = field(default_factory=dict)
     
     def to_dict(self) -> Dict[str, Any]:
@@ -35,6 +39,10 @@ class StandardMessage:
             'content_type': self.content_type,
             'platform': self.platform,
             'media_url': self.media_url,
+            'media_content': self.media_content,
+            'media_mime': self.media_mime,
+            'media_filename': self.media_filename,
+            'media_size': self.media_size,
             'metadata': self.metadata
         }
     
@@ -58,5 +66,9 @@ class StandardMessage:
             platform=data['platform'],
             content_type=data.get('content_type', 'text/plain'),
             media_url=data.get('media_url'),
+            media_content=data.get('media_content'),
+            media_mime=data.get('media_mime'),
+            media_filename=data.get('media_filename'),
+            media_size=data.get('media_size'),
             metadata=data.get('metadata', {})
         )

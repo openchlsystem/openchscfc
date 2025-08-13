@@ -117,6 +117,118 @@ class WhatsAppAdapter(BaseAdapter):
             logger.error(f"Error downloading media: {e}")
             return None
     
+    def download_and_encode_media_for_transmission(self, media_id, media_type):
+        """
+        Download media and encode to base64 for helpline transmission.
+        This method downloads media in-memory and encodes to base64 without persistent storage.
+        
+        Args:
+            media_id: ID of the media to fetch
+            media_type: Type of media (image, video, audio, document)
+            
+        Returns:
+            Dict with media_content (base64), media_mime, media_filename, media_size or None if failed
+        """
+        try:
+            logger.info(f"📥 DOWNLOAD START - Media ID: {media_id}, Type: {media_type}")
+            
+            # Check if media encoding is enabled
+            media_config = getattr(settings, 'MEDIA_PROCESSING_CONFIG', {})
+            if not media_config.get('ENCODING_ENABLED', True):
+                logger.info("⚙️ Media encoding is disabled in settings")
+                return None
+            # Get media URL from WhatsApp
+            logger.info(f"🔗 Getting media URL for ID: {media_id}")
+            media_url = self.get_media_url_from_whatsapp(media_id)
+            if not media_url:
+                logger.error(f"❌ Failed to get media URL for media_id: {media_id}")
+                return None
+            logger.info(f"✅ Got media URL: {media_url[:100]}..." if len(media_url) > 100 else f"✅ Got media URL: {media_url}")
+            
+            # Get access token for downloading
+            access_token = TokenManager.get_access_token()
+            if not access_token:
+                logger.error("Missing WhatsApp API token for media download")
+                return None
+            
+            headers = {"Authorization": f"Bearer {access_token}"}
+            
+            # Get timeout from configuration
+            download_timeout = media_config.get('DOWNLOAD_TIMEOUT_SECONDS', 30)
+            
+            # Download media content directly to memory
+            logger.info(f"⬇️ Downloading media from URL with timeout: {download_timeout}s")
+            response = requests.get(media_url, headers=headers, timeout=download_timeout)
+            response.raise_for_status()
+            logger.info(f"✅ Download successful, status: {response.status_code}")
+            
+            # Check file size against configuration limit
+            content_length = len(response.content)
+            max_file_size = media_config.get('MAX_FILE_SIZE_BYTES', 16 * 1024 * 1024)  # 16MB default
+            logger.info(f"📊 File size: {content_length} bytes (limit: {max_file_size} bytes)")
+            
+            if content_length > max_file_size:
+                logger.error(f"❌ Media file too large: {content_length} bytes > {max_file_size} bytes limit")
+                return None
+            
+            # Get actual MIME type from response headers or use default mapping
+            actual_mime_type = response.headers.get('content-type')
+            if not actual_mime_type:
+                # Use default MIME type mapping
+                mime_type_map = {
+                    "image": "image/jpeg",
+                    "video": "video/mp4", 
+                    "audio": "audio/ogg",
+                    "document": "application/pdf",
+                }
+                actual_mime_type = mime_type_map.get(media_type, "application/octet-stream")
+            
+            # Validate MIME type against supported types
+            supported_mime_types = media_config.get('SUPPORTED_MIME_TYPES', set())
+            if supported_mime_types and actual_mime_type not in supported_mime_types:
+                logger.warning(f"Unsupported MIME type for helpline transmission: {actual_mime_type}")
+                # Could optionally return None here to skip unsupported types
+                # For now, we'll allow it but log a warning
+            
+            # Get file extension based on MIME type
+            extension_map = {
+                "image/jpeg": "jpg",
+                "image/png": "png", 
+                "image/webp": "webp",
+                "video/mp4": "mp4",
+                "audio/ogg": "ogg",
+                "audio/mpeg": "mp3",
+                "audio/mp3": "mp3",
+                "application/pdf": "pdf",
+                "text/plain": "txt",
+            }
+            file_extension = extension_map.get(actual_mime_type, "bin")
+            
+            # Generate filename
+            filename = f"{media_id}.{file_extension}"
+            
+            # Encode to base64
+            logger.info(f"🔄 Encoding {len(response.content)} bytes to base64...")
+            media_content_bytes = response.content
+            base64_content = base64.b64encode(media_content_bytes).decode('utf-8')
+            
+            logger.info(f"✅ ENCODING COMPLETE - Media ID: {media_id}, Original size: {len(media_content_bytes)} bytes, Base64 length: {len(base64_content)} chars")
+            logger.info(f"📁 Generated filename: {filename}, MIME type: {actual_mime_type}")
+            
+            return {
+                'media_content': base64_content,
+                'media_mime': actual_mime_type,
+                'media_filename': filename,
+                'media_size': len(media_content_bytes)
+            }
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Network error downloading media {media_id}: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Error downloading and encoding media {media_id}: {e}")
+            return None
+    
     def handle_verification(self, request: HttpRequest) -> Optional[HttpResponse]:
         """
         Handle WhatsApp webhook verification challenge.
@@ -298,6 +410,10 @@ class WhatsAppAdapter(BaseAdapter):
             message_type = message.get('type', 'text')
             content = ""
             media_url = None
+            media_content = None
+            media_mime = None
+            media_filename = None
+            media_size = None
             
             if message_type == 'text':
                 content = message.get('text', {}).get('body', '')
@@ -307,11 +423,27 @@ class WhatsAppAdapter(BaseAdapter):
                 
                 # Prefer URL from message if already fetched, otherwise use ID
                 media_url = media_data.get('url')
-                if not media_url:
-                    media_id = media_data.get('id')
-                    if media_id:
-                        # Try to get the URL on-demand if not already fetched
-                        media_url = self.get_media_url_from_whatsapp(media_id)
+                media_id = media_data.get('id')
+                
+                if not media_url and media_id:
+                    # Try to get the URL on-demand if not already fetched
+                    media_url = self.get_media_url_from_whatsapp(media_id)
+                
+                # Download and encode media for helpline transmission
+                if media_id:
+                    logger.info(f"🎬 MEDIA PROCESSING START - Media ID: {media_id}, Type: {message_type}")
+                    media_encoded = self.download_and_encode_media_for_transmission(media_id, message_type)
+                    if media_encoded:
+                        media_content = media_encoded['media_content']
+                        media_mime = media_encoded['media_mime'] 
+                        media_filename = media_encoded['media_filename']
+                        media_size = media_encoded['media_size']
+                        logger.info(f"✅ MEDIA ENCODING SUCCESS - File: {media_filename}, Size: {media_size} bytes, MIME: {media_mime}")
+                        logger.info(f"📝 Base64 content length: {len(media_content)} characters")
+                    else:
+                        logger.warning(f"❌ MEDIA ENCODING FAILED for media_id: {media_id}")
+                else:
+                    logger.warning(f"⚠️ NO MEDIA ID found in message type: {message_type}")
                 
                 caption = message.get('caption', '')
                 content = caption or f"{message_type} message"
@@ -351,6 +483,10 @@ class WhatsAppAdapter(BaseAdapter):
                 platform='whatsapp',
                 content_type=self._get_content_type(message_type),
                 media_url=media_url,
+                media_content=media_content,
+                media_mime=media_mime,
+                media_filename=media_filename,
+                media_size=media_size,
                 metadata=metadata
             )
         
