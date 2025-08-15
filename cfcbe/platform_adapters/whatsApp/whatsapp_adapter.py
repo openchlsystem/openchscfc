@@ -927,6 +927,12 @@ class WhatsAppAdapter(BaseAdapter):
                 if all(key in message_data for key in ['source', 'source_uid', 'message_id', 'content', 'platform']):
                     logger.info("Message appears to be in StandardMessage format already")
                     
+                    # Check if media content is present
+                    if message_data.get('media_content'):
+                        logger.info(f"🎬 MEDIA CONTENT PRESERVED - Size: {message_data.get('media_size')} bytes, File: {message_data.get('media_filename')}")
+                    else:
+                        logger.info("📝 No media content in StandardMessage dict")
+                    
                     # If it's already a StandardMessage object, return it
                     if isinstance(message_data, StandardMessage):
                         return message_data
@@ -942,6 +948,10 @@ class WhatsAppAdapter(BaseAdapter):
                         platform=message_data.get('platform', 'whatsapp'),
                         content_type=message_data.get('content_type', 'text/plain'),
                         media_url=message_data.get('media_url'),
+                        media_content=message_data.get('media_content'),
+                        media_mime=message_data.get('media_mime'),
+                        media_filename=message_data.get('media_filename'),
+                        media_size=message_data.get('media_size'),
                         metadata=message_data.get('metadata', {})
                     )
                     
