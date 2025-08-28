@@ -355,3 +355,10 @@ EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+
+# CPIMS Configuration
+CPIMS_ENDPOINT_URL = os.getenv('CPIMS_ENDPOINT_URL', 'https://test.cpims.net/api/v1/crs/')
+CPIMS_AUTH_TOKEN = os.getenv('CPIMS_AUTH_TOKEN', '')
+
+# SSL Configuration
+DISABLE_SSL_VERIFICATION = os.getenv('DISABLE_SSL_VERIFICATION', 'False').lower() in ('true', '1', 'yes')
