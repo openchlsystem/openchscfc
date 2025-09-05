@@ -7,7 +7,7 @@ class Email(models.Model):
     body = models.TextField()
     received_date = models.DateTimeField()
     is_read = models.BooleanField(default=False)
-    raw_message = models.BinaryField(default=None)  # Store raw email message
+    raw_message = models.BinaryField(default=None, null=True, blank=True)  # Store raw email message
 
 
     def __str__(self):

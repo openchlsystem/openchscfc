@@ -85,3 +85,4 @@ For more detailed information on the core apps, please see their individual `REA
 -   **[`webhook_handler/README.md`](./webhook_handler/README.md)**: Detailed documentation for the app that handles all incoming webhook requests.
 -   **[`platform_adapters/README.md`](./platform_adapters/README.md)**: A deep dive into the adapter pattern used for platform integration.
 -   **[`endpoint_integration/README.md`](./endpoint_integration/README.md)**: Information on how standardized messages are routed to their final destinations.
+-   **[`authentication.md`](./authentication.md)**: Detailed documentation on the authentication processes.
