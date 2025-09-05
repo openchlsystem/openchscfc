@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from whatsapp.views import send_whatsapp_message
+from whatsapp.utils import send_whatsapp_message, get_access_token
 
 
 
@@ -29,7 +29,7 @@ import random
 import logging
 
 # Import necessary functions
-from whatsapp.views import send_whatsapp_message  
+from whatsapp.utils import send_whatsapp_message, get_access_token  
 from whatsapp.utils import get_access_token  
 
 User = get_user_model()
