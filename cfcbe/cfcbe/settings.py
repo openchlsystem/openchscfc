@@ -61,7 +61,7 @@ INSTALLED_APPS = [
     
 
     
-    # 'emailfeedback',
+    'emailfeedback',
     'django_filters',
 
 
@@ -70,6 +70,9 @@ INSTALLED_APPS = [
     'platform_adapters',
     'endpoint_integration',
     'shared',
+    'feedback',
+    'whatsapp',
+    'transcription',
 
     # 'platform_adapters.apps.PlatformAdaptersConfig',
     # 'webhook_handler.apps.WebhookHandlerConfig',
