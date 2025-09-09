@@ -113,3 +113,10 @@ class AdapterFactory:
 # from .whatsapp.whatsapp_adapter import WhatsAppAdapter
 # from .messenger.messenger_adapter import MessengerAdapter
 # from .email.email_adapter import EmailAdapter
+
+# Register the CPIMS abuse adapter
+try:
+    from .cpims.helpline_cpims_abuse_adapter import HelplineCPIMSAbuseAdapter
+    AdapterFactory.register_adapter('cpims_abuse', HelplineCPIMSAbuseAdapter)
+except ImportError:
+    pass
