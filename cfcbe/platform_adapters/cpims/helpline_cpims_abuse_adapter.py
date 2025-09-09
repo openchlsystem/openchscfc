@@ -393,14 +393,17 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         logger.info(f"   County (reporter contact_location_2, index 41): '{county_name}'")
         logger.info(f"   Sub County (reporter contact_location_3, index 42): '{subcounty_name}'")
         
-        # Look up area_type_id values from CPIMS geo API
-        county_code = self._lookup_area_type_id(county_name) if county_name else None
-        subcounty_code = self._lookup_area_type_id(subcounty_name) if subcounty_name else None
+        # Look up area_code values from CPIMS geo API for reporter fields only
+        ward_name = get_safe(reporter_data, 43, "")  # contact_location_4 - Parish/Ward
+        reporter_county_code = self._lookup_area_code_by_type(county_name, "GPRV") if county_name else None
+        reporter_subcounty_code = self._lookup_area_code_by_type(subcounty_name, "GDIS") if subcounty_name else None
+        reporter_ward_code = self._lookup_area_code_by_type(ward_name, "GWRD") if ward_name else None
         
         # Log the lookup results
-        logger.info(f"🔍 Geo Lookup Results:")
-        logger.info(f"   County '{county_name}' -> area_type_id: '{county_code}'")
-        logger.info(f"   Constituency '{subcounty_name}' -> area_type_id: '{subcounty_code}'")
+        logger.info(f"🔍 Reporter Location Lookup Results:")
+        logger.info(f"   County '{county_name}' -> area_code: '{reporter_county_code}' (GPRV)")
+        logger.info(f"   Sub County '{subcounty_name}' -> area_code: '{reporter_subcounty_code}' (GDIS)")
+        logger.info(f"   Ward '{ward_name}' -> area_code: '{reporter_ward_code}' (GWRD)")
         
         # Extract case category from cases["cases"][0]["cat_0"] - index 15
         category_description = get_safe(case_data, 15, "")  # cat_0
@@ -471,6 +474,10 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "hobbies": None,
             "reporter_email": get_safe(reporter_data, 10, ""),  # reporter contact_email
             "location": get_safe(reporter_data, 44, "") or "Unknown",  # reporter village
+            "reporter_county": reporter_county_code,  # County area_code from GPRV lookup
+            "reporter_sub_county": reporter_subcounty_code,  # Sub County area_code from GDIS lookup
+            "reporter_ward": reporter_ward_code,  # Ward area_code from GWRD lookup
+            "reporter_village": get_safe(reporter_data, 44, ""),  # reporter village
             "has_birth_cert": None,
             "user": get_safe(case_data, 2, "helpline_user"),  # case created_by
             
@@ -604,6 +611,38 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         except Exception as e:
             logger.error(f"Error fetching geo data: {str(e)}")
             return None
+    
+    def _lookup_area_code_by_type(self, area_name: str, area_type_id: str) -> Optional[str]:
+        """
+        Look up area_code for a given area name and area_type_id from CPIMS geo data.
+        
+        Args:
+            area_name: The name of the area to look up
+            area_type_id: The area type ID to filter by (GPRV, GDIS, GWRD)
+            
+        Returns:
+            The area_code if found, None otherwise
+        """
+        if not area_name:
+            return None
+        
+        geo_data = self._get_geo_data()
+        if not geo_data:
+            logger.warning(f"No geo data available for lookup of: {area_name}")
+            return None
+        
+        # Search for the area by name and area_type_id (case-insensitive)
+        area_name_lower = area_name.lower().strip()
+        
+        for area in geo_data:
+            if (area.get('area_name', '').lower().strip() == area_name_lower and 
+                area.get('area_type_id') == area_type_id):
+                area_code = area.get('area_code')
+                logger.info(f"Found area_code '{area_code}' for area '{area_name}' with type '{area_type_id}'")
+                return area_code
+        
+        logger.warning(f"Area '{area_name}' with type '{area_type_id}' not found in CPIMS geo data")
+        return None
     
     def _lookup_area_type_id(self, area_name: str) -> Optional[str]:
         """
