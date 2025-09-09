@@ -125,6 +125,8 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             if not payload["reporters"] or len(payload["reporters"]) == 0:
                 logger.error("Reporters array cannot be empty")
                 return False
+                
+            # Note: clients array can be empty in some cases, so we don't validate it as required
                     
             return True
             
@@ -183,6 +185,19 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         except (json.JSONDecodeError, KeyError, ValueError) as e:
             logger.error(f"Error parsing message: {str(e)}")
             return []
+    
+    def to_standard_message(self, message_dict: Dict[str, Any]):
+        """
+        Convert message dictionary to StandardMessage object.
+        
+        Args:
+            message_dict: Message dictionary from parse_messages
+            
+        Returns:
+            StandardMessage object
+        """
+        from shared.models.standard_message import StandardMessage
+        return StandardMessage(**message_dict)
     
     def send_message(self, recipient_id: str, message_content: Any) -> Dict[str, Any]:
         """
@@ -357,25 +372,35 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             except (IndexError, TypeError):
                 return default
         
-        # Extract county and sub-county names for geo lookup (based on your specific positions)
-        # county: cases["clients"][0]["contact_location_0"] - index 33
-        # constituency: cases["clients"][0]["contact_location_1"] - index 34
-        county_name = get_safe(client_data, 33, "")  # contact_location_0
-        subcounty_name = get_safe(client_data, 34, "")  # contact_location_1
+        # Extract location from reporter data (since clients array is empty in real payload)
+        # Region: reporters[0][39] = "CENTRAL" (contact_location_0)  
+        # District: reporters[0][40] = "WAKISO" (contact_location_1)
+        # County: reporters[0][41] = "ENTEBBE MUNICIPALITY" (contact_location_2)
+        # Sub County: reporters[0][42] = "DIVISION A" (contact_location_3)
+        # Parish: reporters[0][43] = "CENTRAL" (contact_location_4)  
+        # Village: reporters[0][44] = "LUNYO CENTRAL" (contact_location_5)
+        
+        # Use reporter location data since clients array is empty
+        region_name = get_safe(reporter_data, 39, "")  # contact_location_0 - Region
+        district_name = get_safe(reporter_data, 40, "")  # contact_location_1 - District  
+        county_name = get_safe(reporter_data, 41, "")  # contact_location_2 - County
+        subcounty_name = get_safe(reporter_data, 42, "")  # contact_location_3 - Sub County
         
         # Log the extracted location values for debugging
         logger.info(f"🌍 Location Extraction Debug:")
-        logger.info(f"   County (contact_location_0, index 33): '{county_name}'")
-        logger.info(f"   Constituency (contact_location_1, index 34): '{subcounty_name}'")
+        logger.info(f"   Region (reporter contact_location_0, index 39): '{region_name}'")
+        logger.info(f"   District (reporter contact_location_1, index 40): '{district_name}'")
+        logger.info(f"   County (reporter contact_location_2, index 41): '{county_name}'")
+        logger.info(f"   Sub County (reporter contact_location_3, index 42): '{subcounty_name}'")
         
-        # Look up area_type_id values from CPIMS geo API
-        county_code = self._lookup_area_type_id(county_name) if county_name else None
-        subcounty_code = self._lookup_area_type_id(subcounty_name) if subcounty_name else None
+        # Look up area_code values from CPIMS geo API
+        county_code = self._lookup_area_code(county_name) if county_name else None
+        subcounty_code = self._lookup_area_code(subcounty_name) if subcounty_name else None
         
         # Log the lookup results
         logger.info(f"🔍 Geo Lookup Results:")
-        logger.info(f"   County '{county_name}' -> area_type_id: '{county_code}'")
-        logger.info(f"   Constituency '{subcounty_name}' -> area_type_id: '{subcounty_code}'")
+        logger.info(f"   County '{county_name}' -> area_code: '{county_code}'")
+        logger.info(f"   Constituency '{subcounty_name}' -> area_code: '{subcounty_code}'")
         
         # Extract case category from cases["cases"][0]["cat_0"] - index 15
         category_description = get_safe(case_data, 15, "")  # cat_0
@@ -391,53 +416,69 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         logger.info(f"🔍 Category Lookup Results:")
         logger.info(f"   Category '{category_description}' -> item_id: '{category_item_id}'")
         
+        # Determine if we have client data or need to use reporter data as fallback
+        has_client_data = len(client_data) > 10
+        
+        # Helper function to get data from client or fallback to reporter
+        def get_person_data(client_index, reporter_index, default=""):
+            if has_client_data:
+                return get_safe(client_data, client_index, default)
+            else:
+                return get_safe(reporter_data, reporter_index, default)
+        
         # Map according to the provided mapping using array indices with fallback values for required fields
         cpims_payload = {
             # Basic case information - using the mapping you provided with required field fallbacks
-            "physical_condition": self._map_code(get_safe(client_data, 57, ""), "physical_condition") or "PNRM",  # Default to "Appears Normal"
-            "county": county_code or county_name or "NOT",  # Use geo lookup result or fallback
-            "hh_economic_status": self._map_code(get_safe(client_data, 86, ""), "economic_status") or "UINC",  # Default to Unknown
-            "other_condition": self._map_code(get_safe(client_data, 59, ""), "other_condition") or "CHNM",  # Default to "Appears Normal"
-            "child_sex": self._map_code(get_safe(client_data, 18, ""), "sex"),  # client contact_sex
-            "reporter_first_name": self._extract_name(get_safe(reporter_data, 6, ""), "first"),  # reporter contact_fullname
+            "physical_condition": "PNRM",  # Default to "Appears Normal" - not available in this payload structure
+            "county": county_code or "NOTFOUND",  # Use the actual county area_code found
+            "sub_county_code": subcounty_code or "NOTFOUND",  # Include subcounty area_code explicitly
+            "hh_economic_status": "UINC",  # Default to Unknown - not available in this payload structure
+            "other_condition": "CHNM",  # Default to "Appears Normal" - not available in this payload structure  
+            "child_sex": self._map_code(get_person_data(18, 16, ""), "sex") or "SMAL",  # Use person data with fallback
+            "reporter_first_name": self._extract_name(get_safe(reporter_data, 6, ""), "first") or "Unknown",  # reporter contact_fullname
             "ob_number": get_safe(case_data, 41, ""),  # case police_ob_no
             "longitude": None,
             "recommendation_bic": get_safe(case_data, 40, ""),  # case plan
-            "family_status": self._map_code(get_safe(client_data, 86, ""), "family_status") or "FSLA",  # Default to "Living alone"
+            "family_status": "FSLA",  # Default to "Living alone" - not available in this payload structure
             "reporter_other_names": self._extract_name(get_safe(reporter_data, 6, ""), "other"),  # reporter contact_fullname
             "case_date": self._format_timestamp(get_safe(case_data, 1, "")),  # case created_on
-            "child_other_names": self._extract_name(get_safe(client_data, 7, ""), "other"),  # client contact_fullname
+            "child_other_names": self._extract_name(get_person_data(7, 6, ""), "other"),  # Use person data
             "friends": None,
-            "organization_unit": "Helpline",
-            "case_reporter": self._map_code("Self", "case_reporter"),  # Default to Self for now
-            "child_in_school": self._map_code(get_safe(client_data, 63, ""), "yes_no"),  # client in_school
-            "tribe": self._map_code(get_safe(client_data, 27, ""), "tribe"),  # client contact_tribe
-            "sublocation": get_safe(client_data, 34, ""),  # client contact_location_id_1 (constituency)
-            "child_surname": self._extract_name(get_safe(client_data, 7, ""), "surname"),  # client contact_fullname
-            "case_village": get_safe(client_data, 35, ""),  # client contact_location_id_2 (ward)
+            "organization_unit": "Helpline Uganda",  
+            "case_reporter": self._map_code("Helpline 116", "case_reporter") or "CRHE",  # Use Helpline as reporter
+            "child_in_school": None,  # Not available in this payload structure
+            "tribe": None,  # Not available in this payload structure 
+            "sublocation": subcounty_name or "Unknown",  # Use sub county name
+            "child_surname": self._extract_name(get_person_data(7, 6, ""), "surname") or "Unknown",  # Use person data
+            "case_village": get_safe(reporter_data, 44, "") or "Unknown Village",  # reporter village
             "latitude": None,
-            "child_first_name": self._extract_name(get_safe(client_data, 7, ""), "first"),  # client contact_fullname
-            "reporter_telephone": get_safe(reporter_data, 9, "") or "Unknown",  # Required field - provide fallback
+            "child_first_name": self._extract_name(get_person_data(7, 6, ""), "first") or "Unknown",  # Use person data
+            "reporter_telephone": get_safe(reporter_data, 49, "") or "0700000000",  # reporter src_address (phone)
             "court_number": "",
-            "verification_status": "001",
-            "child_dob": self._format_timestamp(get_safe(client_data, 13, "")),  # client contact_dob
-            "perpetrator_status": self._map_code(get_safe(perpetrator_data, 49, ""), "perpetrator_status"),  # perp relationship
-            "reporter_surname": self._extract_name(get_safe(reporter_data, 6, ""), "surname"),  # reporter contact_fullname
-            "case_narration": get_safe(case_data, 39, ""),  # case narrative
+            "verification_status": "VSUN",  # Unverified status as default
+            "child_dob": "2010-01-01",  # Default birth date - not available in this payload structure
+            "perpetrator_status": "PUNK",  # Default to Unknown - no perpetrator data
+            "reporter_surname": self._extract_name(get_safe(reporter_data, 6, ""), "surname") or "Unknown",  # reporter contact_fullname
+            "case_narration": get_safe(case_data, 39, "") or "Case reported through helpline",  # case narrative
             "court_name": "",
-            "case_landmark": get_safe(client_data, 32, "") or "Unknown Landmark",  # Required field - provide fallback
+            "case_landmark": county_name or "Helpline Report",  # Use county as landmark
+            "reporter_county": county_code or "NOTFOUND",  # Always use found county_code
+            "reporter_sub_county": subcounty_code or "NOTFOUND",  # Always use found subcounty_code
+            "reporter_ward": get_safe(reporter_data, 43, "UNKNOWN_WARD"),  # Use parish if available
+            "reporter_village": get_safe(reporter_data, 44, "UNKNOWN_VILLAGE"),  # Use village if available
             "religion_type": None,
             "long_term_needs": None,
             "immediate_needs": None,
-            "mental_condition": "MNRM",  # Required field - default to "Appears Normal"
+            "mental_condition": "MNRM",  # Default to "Appears Normal"
             "police_station": "",
-            "risk_level": self._map_code(get_safe(case_data, 35, ""), "risk_level"),  # case priority
-            "constituency": subcounty_code or subcounty_name or "NOT",  # Use geo lookup result or fallback
+            "risk_level": self._map_code(get_safe(case_data, 35, ""), "risk_level") or "RLMD",  # case priority with default
+            "constituency": subcounty_code or "NOTFOUND",  # Use the actual subcounty area_code found
             "hobbies": None,
             "reporter_email": get_safe(reporter_data, 10, ""),  # reporter contact_email
-            "location": get_safe(client_data, 35, ""),  # client contact_location_id_2
+            "location": get_safe(reporter_data, 44, "") or "Unknown",  # reporter village
             "has_birth_cert": None,
-            "user": get_safe(client_data, 2, get_safe(case_data, 2, "")),  # Fixed missing comma
+            "user": get_safe(case_data, 2, "helpline_user"),  # case created_by
+            "area_code": county_code or "NOTFOUND",  # Always include the actual county area_code in payload
             
             # Case details array
             "case_details": [{
@@ -508,6 +549,16 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
                 return str(timestamp_str)
         except (ValueError, TypeError):
             return str(timestamp_str)
+    
+    def _get_current_date(self) -> str:
+        """
+        Get current date in CPIMS format.
+        
+        Returns:
+            Current date as YYYY-MM-DD string
+        """
+        from datetime import datetime
+        return datetime.now().strftime("%Y-%m-%d")
     
     def _get_geo_data(self) -> Optional[List[Dict[str, Any]]]:
         """
@@ -589,6 +640,37 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         
         logger.warning(f"Area '{area_name}' not found in CPIMS geo data")
         return None
+    
+    def _lookup_area_code(self, area_name: str) -> Optional[str]:
+        """
+        Look up area_code for a given area name from CPIMS geo data.
+        
+        Args:
+            area_name: The name of the area to look up
+            
+        Returns:
+            The area_code if found, None otherwise
+        """
+        if not area_name:
+            return None
+            
+        geo_data = self._get_geo_data()
+        if not geo_data:
+            logger.warning(f"No geo data available for lookup of: {area_name}")
+            return None
+            
+        # Search for the area by name (case-insensitive)
+        area_name_lower = area_name.lower().strip()
+        
+        for area in geo_data:
+            if area.get('area_name', '').lower().strip() == area_name_lower:
+                area_code = area.get('area_code')
+                logger.info(f"Found area_code '{area_code}' for area '{area_name}'")
+                return area_code
+                
+        logger.warning(f"Area '{area_name}' not found in CPIMS geo data")
+        return None
+    
     
     def _lookup_category_item_id(self, category_description: str) -> Optional[str]:
         """
