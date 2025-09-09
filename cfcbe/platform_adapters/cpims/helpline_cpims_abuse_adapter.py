@@ -393,16 +393,22 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         logger.info(f"   County (reporter contact_location_2, index 41): '{county_name}'")
         logger.info(f"   Sub County (reporter contact_location_3, index 42): '{subcounty_name}'")
         
-        # Look up area_code values from CPIMS geo API for reporter fields only
+        # Look up area_code values from CPIMS geo API using type-specific lookups for better accuracy
         ward_name = get_safe(reporter_data, 43, "")  # contact_location_4 - Parish/Ward
+        
+        # Use type-specific lookups for better disambiguation
         reporter_county_code = self._lookup_area_code_by_type(county_name, "GPRV") if county_name else None
         reporter_subcounty_code = self._lookup_area_code_by_type(subcounty_name, "GDIS") if subcounty_name else None
         reporter_ward_code = self._lookup_area_code_by_type(ward_name, "GWRD") if ward_name else None
         
+        # Fallback to generic lookup for broader compatibility
+        county_code = reporter_county_code or (self._lookup_area_code(county_name) if county_name else None)
+        subcounty_code = reporter_subcounty_code or (self._lookup_area_code(subcounty_name) if subcounty_name else None)
+        
         # Log the lookup results
-        logger.info(f"🔍 Reporter Location Lookup Results:")
-        logger.info(f"   County '{county_name}' -> area_code: '{reporter_county_code}' (GPRV)")
-        logger.info(f"   Sub County '{subcounty_name}' -> area_code: '{reporter_subcounty_code}' (GDIS)")
+        logger.info(f"🔍 Location Lookup Results:")
+        logger.info(f"   County '{county_name}' -> type-specific: '{reporter_county_code}' (GPRV), generic: '{county_code}'")
+        logger.info(f"   Sub County '{subcounty_name}' -> type-specific: '{reporter_subcounty_code}' (GDIS), generic: '{subcounty_code}'")
         logger.info(f"   Ward '{ward_name}' -> area_code: '{reporter_ward_code}' (GWRD)")
         
         # Extract case category from cases["cases"][0]["cat_0"] - index 15
@@ -433,7 +439,8 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         cpims_payload = {
             # Basic case information - using the mapping you provided with required field fallbacks
             "physical_condition": "PNRM",  # Default to "Appears Normal" - not available in this payload structure
-            "county": "GWR",  # Fixed county code as requested
+            "county": county_code or "NOTFOUND",  # Use the actual county area_code found
+            "sub_county_code": subcounty_code or "NOTFOUND",  # Include subcounty area_code explicitly
             "hh_economic_status": "UINC",  # Default to Unknown - not available in this payload structure
             "other_condition": "CHNM",  # Default to "Appears Normal" - not available in this payload structure  
             "child_sex": self._map_code(get_person_data(18, 16, ""), "sex") or "SMAL",  # Use person data with fallback
@@ -470,16 +477,17 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "mental_condition": "MNRM",  # Default to "Appears Normal"
             "police_station": "",
             "risk_level": self._map_code(get_safe(case_data, 35, ""), "risk_level") or "RLMD",  # case priority with default
-            "constituency": "GPR",  # Fixed constituency code as requested
+            "constituency": subcounty_code or "NOTFOUND",  # Use the actual subcounty area_code found
             "hobbies": None,
             "reporter_email": get_safe(reporter_data, 10, ""),  # reporter contact_email
             "location": get_safe(reporter_data, 44, "") or "Unknown",  # reporter village
-            "reporter_county": reporter_county_code,  # County area_code from GPRV lookup
-            "reporter_sub_county": reporter_subcounty_code,  # Sub County area_code from GDIS lookup
-            "reporter_ward": reporter_ward_code,  # Ward area_code from GWRD lookup
-            "reporter_village": get_safe(reporter_data, 44, ""),  # reporter village
+            "reporter_county": reporter_county_code or county_code or "NOTFOUND",  # County area_code from type-specific lookup with fallback
+            "reporter_sub_county": reporter_subcounty_code or subcounty_code or "NOTFOUND",  # Sub County area_code from type-specific lookup with fallback  
+            "reporter_ward": reporter_ward_code or get_safe(reporter_data, 43, "UNKNOWN_WARD"),  # Ward area_code from GWRD lookup with fallback
+            "reporter_village": get_safe(reporter_data, 44, "UNKNOWN_VILLAGE"),  # reporter village
             "has_birth_cert": None,
             "user": get_safe(case_data, 2, "helpline_user"),  # case created_by
+            "area_code": county_code or "NOTFOUND",  # Always include the actual county area_code in payload
             
             # Case details array
             "case_details": [{
@@ -673,6 +681,37 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         
         logger.warning(f"Area '{area_name}' not found in CPIMS geo data")
         return None
+    
+    def _lookup_area_code(self, area_name: str) -> Optional[str]:
+        """
+        Look up area_code for a given area name from CPIMS geo data.
+        
+        Args:
+            area_name: The name of the area to look up
+            
+        Returns:
+            The area_code if found, None otherwise
+        """
+        if not area_name:
+            return None
+            
+        geo_data = self._get_geo_data()
+        if not geo_data:
+            logger.warning(f"No geo data available for lookup of: {area_name}")
+            return None
+            
+        # Search for the area by name (case-insensitive)
+        area_name_lower = area_name.lower().strip()
+        
+        for area in geo_data:
+            if area.get('area_name', '').lower().strip() == area_name_lower:
+                area_code = area.get('area_code')
+                logger.info(f"Found area_code '{area_code}' for area '{area_name}'")
+                return area_code
+                
+        logger.warning(f"Area '{area_name}' not found in CPIMS geo data")
+        return None
+    
     
     def _lookup_category_item_id(self, category_description: str) -> Optional[str]:
         """

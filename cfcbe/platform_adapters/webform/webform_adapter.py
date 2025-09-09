@@ -213,13 +213,15 @@ class WebformAdapter(BaseAdapter):
             media_url = data.get('complaint_video')
         
         # Create StandardMessage
+        # Align with StandardMessage required fields
         return StandardMessage(
+            source="walkin",
+            source_uid=f"walkin-100-{int(time.time())}",
+            source_address=sender_id,
             message_id=message_id,
-            sender_id=sender_id,
-            platform='webform',
+            source_timestamp=time.time(),
             content=content,
-            timestamp=time.time(),
-            message_type=message_type,
+            platform='webform',
             media_url=media_url,
             metadata=metadata
         )
