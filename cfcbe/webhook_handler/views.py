@@ -1148,6 +1148,72 @@ class CaseStatusCheckView(View):
                 'status': 'error',
                 'message': 'An unexpected error occurred while checking case status'
             }, status=500)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class HelplineCPIMSAbuseView(View):
+    """
+    Dedicated view for handling Helpline to CPIMS abuse case forwarding.
+    """
+    
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests for Helpline abuse case creation to be forwarded to CPIMS.
+        """
+        try:
+            # Get the CPIMS adapter
+            adapter = AdapterFactory.get_adapter('cpims_abuse')
+            
+            # Parse the request body
+            try:
+                payload = json.loads(request.body)
+            except json.JSONDecodeError:
+                return JsonResponse({
+                    "status": "error", 
+                    "message": "Invalid JSON payload"
+                }, status=400)
+            
+            # Log only essential incoming data
+            case_id = payload.get("cases", [[""]])[0][0] if payload.get("cases") else "unknown"
+            logger.info(f"📥 Received case {case_id} from Helpline for CPIMS processing")
+            
+            # Validate the request
+            if not adapter.validate_request(payload):
+                return JsonResponse({
+                    "status": "error", 
+                    "message": "Invalid case data - missing required fields (cases, clients, reporters)"
+                }, status=400)
+
+            # Parse the message
+            messages = adapter.parse_messages(payload)
+            
+            if not messages:
+                return JsonResponse({
+                    "status": "error", 
+                    "message": "Failed to parse case data"
+                }, status=400)
+            
+            # Process each message (likely just one for a case)
+            responses = []
+
+            for msg_dict in messages:
+                # Create StandardMessage object
+                message = StandardMessage(**msg_dict)
+                logger.info(f"Processing message for CPIMS: {message.source_uid}")
+                
+                # Send to CPIMS
+                response = adapter.send_message("cpims", message.metadata)
+                logger.info(f"CPIMS response: {response}")
+                responses.append(response)
+            
+            # Format response
+            return adapter.format_webhook_response(responses)
+            
+        except Exception as e:
+            logger.exception(f"Error processing Helpline to CPIMS abuse case: {str(e)}")
+            return JsonResponse({
+                "status": "error",
+                "message": f"Failed to process case: {str(e)}"
+            }, status=500)
         
 # Assuming you have a logger set up
 # logger = logging.getLogger(__name__)

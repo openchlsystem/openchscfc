@@ -282,14 +282,14 @@ class MessageRouter:
         iso_timestamp = message.get_iso_timestamp()
         
         # Construct the messaging endpoint payload directly mapping StandardMessage fields
-        messaging_payload = {
+        messaging_payload: Dict[str, Any] = {
             "channel": channel,                 # Maps from message.source
             "timestamp": iso_timestamp,         # Maps from message.source_timestamp
-            "session_id": message.source_uid,   # Maps from message.source_uid
-            "message_id": message.message_id,   # Maps from message.message_id
-            "from": message.source_address,     # Maps from message.source_address
+            "session_id": message.source_uid or "",   # Maps from message.source_uid (ensure not None)
+            "message_id": message.message_id or "",   # Maps from message.message_id (ensure not None)
+            "from": message.source_address or "",     # Maps from message.source_address (ensure not None)
             "message": encoded_content,         # Maps from message.content (encoded)
-            "mime": message.content_type        # Maps from message.content_type
+            "mime": message.content_type or ""  # Maps from message.content_type (ensure not None)
         }
         
         # Include media URL if available (for fallback)
@@ -299,9 +299,9 @@ class MessageRouter:
         # Include base64 encoded media content if available
         if message.media_content:
             messaging_payload["media_content"] = message.media_content
-            messaging_payload["media_mime"] = message.media_mime
-            messaging_payload["media_filename"] = message.media_filename
-            messaging_payload["media_size"] = message.media_size
+            messaging_payload["media_mime"] = message.media_mime or ""
+            messaging_payload["media_filename"] = message.media_filename or ""
+            messaging_payload["media_size"] = message.media_size or 0
             logger.info(f"📦 ENHANCED PAYLOAD - Added media content: {message.media_filename}, size: {message.media_size} bytes")
             logger.info(f"📊 Final payload keys: {list(messaging_payload.keys())}")
             
@@ -344,11 +344,18 @@ class MessageRouter:
         try:
             logger.info(f"Sending to endpoint {url}: {json.dumps(formatted_message)}")
             
+            # Handle SSL verification based on configuration
+            disable_ssl = getattr(settings, 'DISABLE_SSL_VERIFICATION', False)
+            verify_ssl = not disable_ssl
+            
+            if disable_ssl:
+                logger.warning(f"SSL verification disabled by configuration for: {url}")
+            
             response = requests.post(
                 url, 
                 headers=headers, 
                 json=formatted_message,
-                # verify=False
+                verify=verify_ssl
             )
             
             # Log the response for debugging
