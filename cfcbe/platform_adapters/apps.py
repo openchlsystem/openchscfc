@@ -8,21 +8,13 @@ class PlatformAdaptersConfig(AppConfig):
         # Import and register adapters here
         from platform_adapters.adapter_factory import AdapterFactory
         from platform_adapters.webform.webform_adapter import WebformAdapter
-        
-        # Only attempt to import WhatsApp adapter if directory exists
-        try:
-            from platform_adapters.whatsApp.whatsapp_adapter import WhatsAppAdapter
-            AdapterFactory.register_adapter('whatsapp', WhatsAppAdapter)
-        except ImportError:
-            pass
-            
-        # Register webform adapter
+        from platform_adapters.whatsApp.whatsapp_adapter import WhatsAppAdapter
+        from platform_adapters.ceemis.ceemis_adapter import CEEMISAdapter
+        from platform_adapters.eemis.eemis_adapter import EEMISAdapter
+        from platform_adapters.mamacare_chatbot.mamacare_adapter import MamaCareAdapter
+
+        AdapterFactory.register_adapter('whatsapp', WhatsAppAdapter)
         AdapterFactory.register_adapter('webform', WebformAdapter)
-        
-        # Register EEMIS adapter
-        try:
-            from platform_adapters.eemis.eemis_adapter import EEMISAdapter
-            AdapterFactory.register_adapter('eemis', EEMISAdapter)
-            print("EEMIS adapter registered successfully")
-        except ImportError as e:
-            print(f"Could not import EEMIS adapter: {str(e)}")
+        AdapterFactory.register_adapter('ceemis', CEEMISAdapter)
+        AdapterFactory.register_adapter('eemis', EEMISAdapter)
+        AdapterFactory.register_adapter('mamacare', MamaCareAdapter)
