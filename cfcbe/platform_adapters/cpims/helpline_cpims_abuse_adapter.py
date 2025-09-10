@@ -456,7 +456,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "case_date": self._format_timestamp(get_safe(case_data, 1, "")),  # case created_on
             "child_other_names": self._extract_name(get_person_data(7, 6, ""), "other"),  # Use person data
             "friends": None,
-            "organization_unit": "Helpline Uganda",  
+            "organization_unit": "Helpline 116",  
             "case_reporter": self._map_code("Helpline 116", "case_reporter") or "CRHE",  # Use Helpline as reporter
             "child_in_school": None,  # Not available in this payload structure
             "tribe": None,  # Not available in this payload structure 
@@ -465,9 +465,9 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "case_village": get_safe(reporter_data, 44, "") or "Unknown Village",  # reporter village
             "latitude": None,
             "child_first_name": self._extract_name(get_person_data(7, 6, ""), "first") or "Unknown",  # Use person data
-            "reporter_telephone": get_safe(reporter_data, 49, "") or "0700000000",  # reporter src_address (phone)
+            "reporter_telephone": get_safe(reporter_data, 9, "") or "0700000000",  # reporter contact_phone
             "court_number": "",
-            "verification_status": "VSUN",  # Unverified status as default
+            "verification_status": "001",  # Unverified status as default
             "child_dob": "2010-01-01",  # Default birth date - not available in this payload structure
             "perpetrator_status": "PUNK",  # Default to Unknown - no perpetrator data
             "reporter_surname": self._extract_name(get_safe(reporter_data, 6, ""), "surname") or "Unknown",  # reporter contact_fullname
@@ -818,11 +818,15 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "Chronic": "CHRO"
         }
         
-        # Risk level codes
+        # Risk level codes - handle both description and order number
         risk_level_codes = {
             "Low": "RLLW",
             "Medium": "RLMD", 
-            "High": "RLHG"
+            "High": "RLHG",
+            # Handle numeric order values
+            "1": "RLLW",  # Low (the_order: 1)
+            "2": "RLMD",  # Medium (the_order: 2) 
+            "3": "RLHG"   # High (the_order: 3)
         }
         
         # Case reporter codes
