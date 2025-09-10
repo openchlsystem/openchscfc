@@ -381,35 +381,38 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         # Village: reporters[0][44] = "LUNYO CENTRAL" (contact_location_5)
         
         # Use reporter location data since clients array is empty
-        region_name = get_safe(reporter_data, 39, "")  # contact_location_0 - Region
-        district_name = get_safe(reporter_data, 40, "")  # contact_location_1 - District  
-        county_name = get_safe(reporter_data, 41, "")  # contact_location_2 - County
+        # Corrected mapping based on actual data structure:
+        county_name = get_safe(reporter_data, 39, "")  # contact_location_0 - County (was Region)
+        constituency_name = get_safe(reporter_data, 40, "")  # contact_location_1 - Constituency (was District)  
+        ward_name = get_safe(reporter_data, 41, "")  # contact_location_2 - Ward (was County)
         subcounty_name = get_safe(reporter_data, 42, "")  # contact_location_3 - Sub County
         
         # Log the extracted location values for debugging
         logger.info(f"🌍 Location Extraction Debug:")
-        logger.info(f"   Region (reporter contact_location_0, index 39): '{region_name}'")
-        logger.info(f"   District (reporter contact_location_1, index 40): '{district_name}'")
-        logger.info(f"   County (reporter contact_location_2, index 41): '{county_name}'")
+        logger.info(f"   County (reporter contact_location_0, index 39): '{county_name}'")
+        logger.info(f"   Constituency (reporter contact_location_1, index 40): '{constituency_name}'")
+        logger.info(f"   Ward (reporter contact_location_2, index 41): '{ward_name}'")
         logger.info(f"   Sub County (reporter contact_location_3, index 42): '{subcounty_name}'")
         
         # Look up area_code values from CPIMS geo API using type-specific lookups for better accuracy
-        ward_name = get_safe(reporter_data, 43, "")  # contact_location_4 - Parish/Ward
+        parish_name = get_safe(reporter_data, 43, "")  # contact_location_4 - Parish
         
         # Use type-specific lookups for better disambiguation
-        reporter_county_code = self._lookup_area_code_by_type(county_name, "GPRV") if county_name else None
-        reporter_subcounty_code = self._lookup_area_code_by_type(subcounty_name, "GDIS") if subcounty_name else None
-        reporter_ward_code = self._lookup_area_code_by_type(ward_name, "GWRD") if ward_name else None
+        county_code = self._lookup_area_code_by_type(county_name, "GPRV") if county_name else None
+        constituency_code = self._lookup_area_code_by_type(constituency_name, "GDIS") if constituency_name else None
+        ward_code = self._lookup_area_code_by_type(ward_name, "GWRD") if ward_name else None
         
-        # Fallback to generic lookup for broader compatibility
-        county_code = reporter_county_code or (self._lookup_area_code(county_name) if county_name else None)
-        subcounty_code = reporter_subcounty_code or (self._lookup_area_code(subcounty_name) if subcounty_name else None)
+        # Fallback to generic lookup for broader compatibility if type-specific lookup fails
+        if not county_code and county_name:
+            county_code = self._lookup_area_code(county_name)
+        if not constituency_code and constituency_name:
+            constituency_code = self._lookup_area_code(constituency_name)
         
         # Log the lookup results
         logger.info(f"🔍 Location Lookup Results:")
-        logger.info(f"   County '{county_name}' -> type-specific: '{reporter_county_code}' (GPRV), generic: '{county_code}'")
-        logger.info(f"   Sub County '{subcounty_name}' -> type-specific: '{reporter_subcounty_code}' (GDIS), generic: '{subcounty_code}'")
-        logger.info(f"   Ward '{ward_name}' -> area_code: '{reporter_ward_code}' (GWRD)")
+        logger.info(f"   County '{county_name}' -> area_code: '{county_code}' (GPRV)")
+        logger.info(f"   Constituency '{constituency_name}' -> area_code: '{constituency_code}' (GDIS)")
+        logger.info(f"   Ward '{ward_name}' -> area_code: '{ward_code}' (GWRD)")
         
         # Extract case category from cases["cases"][0]["cat_0"] - index 15
         category_description = get_safe(case_data, 15, "")  # cat_0
@@ -439,8 +442,8 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         cpims_payload = {
             # Basic case information - using the mapping you provided with required field fallbacks
             "physical_condition": "PNRM",  # Default to "Appears Normal" - not available in this payload structure
-            "county": county_code or "NOTFOUND",  # Use the actual county area_code found
-            "sub_county_code": subcounty_code or "NOTFOUND",  # Include subcounty area_code explicitly
+            "county": county_code or "UNK",  # Use the actual county area_code found
+            "sub_county_code": constituency_code or "UNK",  # Use constituency code as sub_county_code
             "hh_economic_status": "UINC",  # Default to Unknown - not available in this payload structure
             "other_condition": "CHNM",  # Default to "Appears Normal" - not available in this payload structure  
             "child_sex": self._map_code(get_person_data(18, 16, ""), "sex") or "SMAL",  # Use person data with fallback
@@ -457,7 +460,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "case_reporter": self._map_code("Helpline 116", "case_reporter") or "CRHE",  # Use Helpline as reporter
             "child_in_school": None,  # Not available in this payload structure
             "tribe": None,  # Not available in this payload structure 
-            "sublocation": subcounty_name or "Unknown",  # Use sub county name
+            "sublocation": ward_name or "Unknown",  # Use ward name as sublocation
             "child_surname": self._extract_name(get_person_data(7, 6, ""), "surname") or "Unknown",  # Use person data
             "case_village": get_safe(reporter_data, 44, "") or "Unknown Village",  # reporter village
             "latitude": None,
@@ -470,24 +473,24 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "reporter_surname": self._extract_name(get_safe(reporter_data, 6, ""), "surname") or "Unknown",  # reporter contact_fullname
             "case_narration": get_safe(case_data, 39, "") or "Case reported through helpline",  # case narrative
             "court_name": "",
-            "case_landmark": county_name or "Helpline Report",  # Use county as landmark
+            "case_landmark": ward_name or county_name or "Helpline Report",  # Use ward or county as landmark
             "religion_type": None,
             "long_term_needs": None,
             "immediate_needs": None,
             "mental_condition": "MNRM",  # Default to "Appears Normal"
             "police_station": "",
             "risk_level": self._map_code(get_safe(case_data, 35, ""), "risk_level") or "RLMD",  # case priority with default
-            "constituency": subcounty_code or "NOTFOUND",  # Use the actual subcounty area_code found
+            "constituency": (constituency_code or "UNK")[:3],  # Use the actual constituency area_code found, max 3 chars
             "hobbies": None,
             "reporter_email": get_safe(reporter_data, 10, ""),  # reporter contact_email
             "location": get_safe(reporter_data, 44, "") or "Unknown",  # reporter village
-            "reporter_county": reporter_county_code or county_code or "NOTFOUND",  # County area_code from type-specific lookup with fallback
-            "reporter_sub_county": reporter_subcounty_code or subcounty_code or "NOTFOUND",  # Sub County area_code from type-specific lookup with fallback  
-            "reporter_ward": reporter_ward_code or get_safe(reporter_data, 43, "UNKNOWN_WARD"),  # Ward area_code from GWRD lookup with fallback
+            "reporter_county": county_code or "UNK",  # County area_code from lookup
+            "reporter_sub_county": constituency_code or "UNK",  # Constituency area_code as sub_county
+            "reporter_ward": ward_code or get_safe(reporter_data, 43, "UNKNOWN_WARD"),  # Ward area_code from GWRD lookup with fallback
             "reporter_village": get_safe(reporter_data, 44, "UNKNOWN_VILLAGE"),  # reporter village
             "has_birth_cert": None,
             "user": get_safe(case_data, 2, "helpline_user"),  # case created_by
-            "area_code": county_code or "NOTFOUND",  # Always include the actual county area_code in payload
+            "area_code": county_code or "UNK",  # Always include the actual county area_code in payload
             
             # Case details array
             "case_details": [{
