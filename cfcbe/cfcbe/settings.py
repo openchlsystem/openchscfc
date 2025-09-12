@@ -18,8 +18,6 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Suppress FutureWarning from torch.load in Whisper
-warnings.filterwarnings("ignore", category=FutureWarning, module="whisper")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -72,7 +70,6 @@ INSTALLED_APPS = [
     'shared',
     'feedback',
     'whatsapp',
-    'transcription',
 
     # 'platform_adapters.apps.PlatformAdaptersConfig',
     # 'webhook_handler.apps.WebhookHandlerConfig',
