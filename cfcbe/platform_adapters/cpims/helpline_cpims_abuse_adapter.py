@@ -93,7 +93,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
     
     def validate_request(self, request: Any) -> bool:
         """
-        Validate authenticity of incoming Helpline request.
+        Validate authenticity of incoming Helpline API request.
         
         Args:
             request: The request data to validate
@@ -107,8 +107,8 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             else:
                 payload = json.loads(request.body)
             
-            # Check for required fields for CPIMS case creation
-            required_fields = ["cases", "reporters"]
+            # Check for required fields for CPIMS case creation from API payload
+            required_fields = ["id", "narrative", "reporter_phone"]
             
             # Validate required fields exist
             for field in required_fields:
@@ -116,18 +116,16 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
                     logger.error(f"Missing required field for CPIMS: {field}")
                     return False
             
-            # Validate that cases array has at least one item
-            if not payload["cases"] or len(payload["cases"]) == 0:
-                logger.error("Cases array cannot be empty")
+            # Validate that case has an ID
+            if not payload.get("id"):
+                logger.error("Case ID cannot be empty")
                 return False
                 
-            # Validate that reporters array has at least one item  
-            if not payload["reporters"] or len(payload["reporters"]) == 0:
-                logger.error("Reporters array cannot be empty")
-                return False
+            # Validate that there's some narrative content
+            if not payload.get("narrative", "").strip():
+                logger.warning("Case narrative is empty - this may affect case quality")
+                # Don't fail validation for empty narrative, just warn
                 
-            # Note: clients array can be empty in some cases, so we don't validate it as required
-                    
             return True
             
         except (json.JSONDecodeError, AttributeError) as e:
@@ -136,7 +134,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
     
     def parse_messages(self, request: Any) -> List[Dict[str, Any]]:
         """
-        Convert Helpline data to StandardMessage format.
+        Convert Helpline API JSON data to StandardMessage format.
         
         Args:
             request: The request data to parse
@@ -150,17 +148,13 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             else:
                 payload = json.loads(request.body)
             
-            # Extract data from the array-based structure
-            case_data = payload.get("cases", [[]])[0]  # First case array
-            reporter_data = payload.get("reporters", [[]])[0] if payload.get("reporters") else []
+            # Extract data from the JSON structure
+            case_id = payload.get("id", "")
+            narrative = payload.get("narrative", "")
+            reporter_phone = payload.get("reporter_phone", "")
             
-            # Extract basic info for StandardMessage
-            case_id = case_data[0] if len(case_data) > 0 else ""
-            narrative = case_data[39] if len(case_data) > 39 else ""  # narrative is at index 39
-            reporter_phone = reporter_data[9] if len(reporter_data) > 9 else ""  # contact_phone is at index 9
-            
-            # Extract timestamp and convert to float  
-            created_on_timestamp = case_data[1] if len(case_data) > 1 else "0"
+            # Extract timestamp and convert to float
+            created_on_timestamp = payload.get("created_on", "0")
             try:
                 timestamp = float(created_on_timestamp) if created_on_timestamp else 0
             except (ValueError, TypeError):
@@ -183,7 +177,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             return [message]
             
         except (json.JSONDecodeError, KeyError, ValueError) as e:
-            logger.error(f"Error parsing message: {str(e)}")
+            logger.error(f"Error parsing API message: {str(e)}")
             return []
     
     def to_standard_message(self, message_dict: Dict[str, Any]):
@@ -236,53 +230,56 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         try:
             # Map Helpline fields to CPIMS fields
             cpims_payload = self._map_to_cpims_format(helpline_data)
-        
+
+            # Flatten the payload: all fields in cpims_payload go to the top level
+            outgoing_payload = dict(cpims_payload)
+
             # Debug logging - only show what's being sent to CPIMS
             logger.info(f"📤 Sending case to CPIMS: {self.cpims_endpoint}")
             logger.info("=== CPIMS OUTGOING PAYLOAD ===")
-            logger.info(json.dumps(cpims_payload, indent=2))
+            logger.info(json.dumps(outgoing_payload, indent=2))
             logger.info("=== END CPIMS PAYLOAD ===")
-            
+
             # Prepare headers
             headers = {
                 'Content-Type': 'application/json'
             }
-            
+
             # Add authorization if token is configured (optional for test environment)
             logger.info(f"🔐 Header Preparation Debug:")
             logger.info(f"   Token value: '{self.cpims_auth_token}'")
             logger.info(f"   Token bool check: {bool(self.cpims_auth_token)}")
-            
+
             if self.cpims_auth_token:
                 # CPIMS expects the token directly in Authorization header (as per Postman)
                 headers['Authorization'] = f"Token {self.cpims_auth_token}"
-                
+
                 logger.info(f"✅ Using CPIMS authentication token in Authorization header")
                 logger.info(f"   Token: {self.cpims_auth_token[:8]}...{self.cpims_auth_token[-8:]}")
             else:
                 logger.info("❌ No CPIMS auth token - proceeding without authentication")
-            
+
             logger.info(f"📋 Final headers: {dict(headers)}")
-            
+
             # Handle SSL verification based on configuration
             disable_ssl = getattr(settings, 'DISABLE_SSL_VERIFICATION', False)
             verify_ssl = not disable_ssl
-            
+
             if disable_ssl:
                 logger.warning(f"SSL verification disabled by configuration for CPIMS: {self.cpims_endpoint}")
-            
+
             # Send to CPIMS endpoint
             response = requests.post(
                 self.cpims_endpoint,
-                json=cpims_payload,
+                json=outgoing_payload,
                 headers=headers,
                 timeout=30,
                 verify=verify_ssl
             )
-            
+
             logger.info(f"CPIMS response status: {response.status_code}")
             logger.info(f"CPIMS response text: {response.text}")
-            
+
             if response.status_code in (200, 201, 202):
                 try:
                     result = response.json()
@@ -290,14 +287,14 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
                         "status": "success",
                         "message": "Case successfully sent to CPIMS",
                         "cpims_response": result,
-                        "payload_sent": cpims_payload
+                        "payload_sent": outgoing_payload
                     }
                 except json.JSONDecodeError:
                     return {
                         "status": "success",
                         "message": "Case sent to CPIMS",
                         "cpims_response": response.text,
-                        "payload_sent": cpims_payload
+                        "payload_sent": outgoing_payload
                     }
             elif response.status_code == 401 and self.cpims_auth_token:
                 # Only treat 401 as auth error if we actually tried to use a token
@@ -314,7 +311,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
                     "status": "partial_success", 
                     "message": "Payload processed and sent to CPIMS but received 401 response",
                     "cpims_response": response.text,
-                    "payload_sent": cpims_payload,
+                    "payload_sent": outgoing_payload,
                     "note": "Check if CPIMS endpoint configuration is correct"
                 }
             else:
@@ -323,9 +320,9 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
                     "status": "error",
                     "message": f"CPIMS API error: {response.status_code}",
                     "details": response.text,
-                    "payload_sent": cpims_payload
+                    "payload_sent": outgoing_payload
                 }
-                
+
         except requests.RequestException as e:
             logger.exception(f"Network error sending to CPIMS: {str(e)}")
             return {
@@ -351,189 +348,231 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
     
     def _map_to_cpims_format(self, helpline_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Map Helpline array-based data format to CPIMS expected format.
+        Map Helpline JSON API data format to CPIMS expected format.
         
         Args:
-            helpline_data: The helpline case data
+            helpline_data: The helpline case data from API
             
         Returns:
             CPIMS formatted payload
         """
-        # Extract data arrays from the helpline payload
-        case_data = helpline_data.get("cases", [[]])[0]  # First case array
-        reporter_data = helpline_data.get("reporters", [[]])[0] if helpline_data.get("reporters") else []
-        client_data = helpline_data.get("clients", [[]])[0] if helpline_data.get("clients") else []
-        perpetrator_data = helpline_data.get("perpetrators", [[]])[0] if helpline_data.get("perpetrators") else []
-        
-        # Helper function to safely get array element
-        def get_safe(arr, index, default=""):
+        # Helper function to safely get nested values
+        def get_safe(data, key, default=""):
             try:
-                return arr[index] if arr and len(arr) > index else default
-            except (IndexError, TypeError):
+                return data.get(key, default) if data else default
+            except (AttributeError, TypeError):
                 return default
         
-        # Extract location from reporter data (since clients array is empty in real payload)
-        # Region: reporters[0][39] = "CENTRAL" (contact_location_0)  
-        # District: reporters[0][40] = "WAKISO" (contact_location_1)
-        # County: reporters[0][41] = "ENTEBBE MUNICIPALITY" (contact_location_2)
-        # Sub County: reporters[0][42] = "DIVISION A" (contact_location_3)
-        # Parish: reporters[0][43] = "CENTRAL" (contact_location_4)  
-        # Village: reporters[0][44] = "LUNYO CENTRAL" (contact_location_5)
+        # Extract main case data
+        case_data = helpline_data
         
-        # Use reporter location data since clients array is empty
-        # Corrected mapping based on actual data structure:
-        county_name = get_safe(reporter_data, 39, "")  # contact_location_0 - County (was Region)
-        constituency_name = get_safe(reporter_data, 40, "")  # contact_location_1 - Constituency (was District)  
-        ward_name = get_safe(reporter_data, 41, "")  # contact_location_2 - Ward (was County)
-        subcounty_name = get_safe(reporter_data, 42, "")  # contact_location_3 - Sub County
+        # Extract client data (first client if exists)
+        clients = helpline_data.get("clients", [])
+        client_data = clients[0] if clients else {}
         
+        # Extract perpetrator data (first perpetrator if exists)  
+        perpetrators = helpline_data.get("perpetrators", [])
+        perpetrator_data = perpetrators[0] if perpetrators else {}
+        
+        # Use reporter data as primary source for location and contact info
+        reporter_location = get_safe(case_data, "reporter_location", "")  # "^Murang'a^Kandara^Kagundu-Ini"
+        reporter_location_parts = reporter_location.split("^") if reporter_location else []
+        
+        # Extract location components from reporter_location string
+        # Format: "^County^Constituency^Ward" 
+        county_name = reporter_location_parts[1] if len(reporter_location_parts) > 1 else get_safe(case_data, "reporter_location_0", "")
+        constituency_name = reporter_location_parts[2] if len(reporter_location_parts) > 2 else get_safe(case_data, "reporter_location_1", "")
+        ward_name = reporter_location_parts[3] if len(reporter_location_parts) > 3 else get_safe(case_data, "reporter_location_2", "")
+        
+        # Fallback to individual location fields if split didn't work
+        if not county_name:
+            county_name = get_safe(case_data, "reporter_location_0", "")
+        if not constituency_name:
+            constituency_name = get_safe(case_data, "reporter_location_1", "")  
+        if not ward_name:
+            ward_name = get_safe(case_data, "reporter_location_2", "")
+            
         # Log the extracted location values for debugging
-        logger.info(f"🌍 Location Extraction Debug:")
-        logger.info(f"   County (reporter contact_location_0, index 39): '{county_name}'")
-        logger.info(f"   Constituency (reporter contact_location_1, index 40): '{constituency_name}'")
-        logger.info(f"   Ward (reporter contact_location_2, index 41): '{ward_name}'")
-        logger.info(f"   Sub County (reporter contact_location_3, index 42): '{subcounty_name}'")
+        logger.info(f"🌍 Location Extraction Debug (API Format):")
+        logger.info(f"   County: '{county_name}'")
+        logger.info(f"   Constituency: '{constituency_name}'")
+        logger.info(f"   Ward: '{ward_name}'")
+        logger.info(f"   Full reporter_location: '{reporter_location}'")
         
-        # Look up area_code values from CPIMS geo API using type-specific lookups for better accuracy
-        parish_name = get_safe(reporter_data, 43, "")  # contact_location_4 - Parish
-        
-        # Use type-specific lookups for better disambiguation
+        # Look up area_code values from CPIMS geo API
         county_code = self._lookup_area_code_by_type(county_name, "GPRV") if county_name else None
         constituency_code = self._lookup_area_code_by_type(constituency_name, "GDIS") if constituency_name else None
         ward_code = self._lookup_area_code_by_type(ward_name, "GWRD") if ward_name else None
         
-        # Fallback to generic lookup for broader compatibility if type-specific lookup fails
+        # Fallback to generic lookup if type-specific lookup fails
         if not county_code and county_name:
             county_code = self._lookup_area_code(county_name)
         if not constituency_code and constituency_name:
             constituency_code = self._lookup_area_code(constituency_name)
-        
+        if not ward_code and ward_name:
+            ward_code = self._lookup_area_code(ward_name)
+            
         # Log the lookup results
-        logger.info(f"🔍 Location Lookup Results:")
-        logger.info(f"   County '{county_name}' -> area_code: '{county_code}' (GPRV)")
-        logger.info(f"   Constituency '{constituency_name}' -> area_code: '{constituency_code}' (GDIS)")
-        logger.info(f"   Ward '{ward_name}' -> area_code: '{ward_code}' (GWRD)")
+        logger.info(f"🔍 Location Lookup Results (API Format):")
+        logger.info(f"   County '{county_name}' -> area_code: '{county_code}'")
+        logger.info(f"   Constituency '{constituency_name}' -> area_code: '{constituency_code}'")
+        logger.info(f"   Ward '{ward_name}' -> area_code: '{ward_code}'")
         
-        # Extract case category from cases["cases"][0]["cat_0"] - index 15
-        category_description = get_safe(case_data, 15, "")  # cat_0
+        # Extract case category 
+        category_description = get_safe(case_data, "cat_0", "")
         
         # Log the extracted category value for debugging
-        logger.info(f"📂 Category Extraction Debug:")
-        logger.info(f"   Category (cat_0, index 15): '{category_description}'")
+        logger.info(f"📂 Category Extraction Debug (API Format):")
+        logger.info(f"   Category (cat_0): '{category_description}'")
         
         # Look up item_id for the category description
         category_item_id = self._lookup_category_item_id(category_description) if category_description else None
         
         # Log the category lookup result
-        logger.info(f"🔍 Category Lookup Results:")
+        logger.info(f"🔍 Category Lookup Results (API Format):")
         logger.info(f"   Category '{category_description}' -> item_id: '{category_item_id}'")
         
-        # Determine if we have client data or need to use reporter data as fallback
-        has_client_data = len(client_data) > 10
+        # Determine data source priority: client data if available, otherwise reporter data
+        has_client_data = bool(client_data)
         
-        # Helper function to get data from client or fallback to reporter
-        def get_person_data(client_index, reporter_index, default=""):
-            if has_client_data:
-                return get_safe(client_data, client_index, default)
+        # Helper function to get person data with fallback
+        def get_person_data(client_field, reporter_field, default=""):
+            if has_client_data and client_field in client_data:
+                return get_safe(client_data, client_field, default)
             else:
-                return get_safe(reporter_data, reporter_index, default)
+                return get_safe(case_data, reporter_field, default)
         
-        # Map according to the provided mapping using array indices with fallback values for required fields
+        # Extract sex from client or reporter data
+        person_sex = get_person_data("contact_sex", "reporter_sex", "")
+        # Remove the "^" prefix if present (e.g., "^Female" -> "Female")
+        person_sex = person_sex.lstrip("^") if person_sex else ""
+        
+        # Extract full name from client or reporter data
+        person_fullname = get_person_data("contact_fullname", "reporter_fullname", "")
+        
+        # Extract phone from client or reporter
+        person_phone = get_person_data("contact_phone", "reporter_phone", "")
+        
+        # Extract email from client or reporter  
+        person_email = get_person_data("contact_email", "reporter_email", "")
+        
+        # Format timestamp helper
+        def format_api_timestamp(timestamp_str):
+            if not timestamp_str or timestamp_str == "0":
+                return self._get_current_date()
+            try:
+                # API timestamps appear to be Unix timestamps as strings
+                if timestamp_str.isdigit():
+                    from datetime import datetime
+                    dt = datetime.fromtimestamp(int(timestamp_str))
+                    return dt.strftime("%Y-%m-%d")
+                else:
+                    return str(timestamp_str)
+            except (ValueError, TypeError):
+                return self._get_current_date()
+        
+        # Map according to CPIMS format using API payload fields
         cpims_payload = {
-            # Basic case information - using the mapping you provided with required field fallbacks
-            "physical_condition": "PNRM",  # Default to "Appears Normal" - not available in this payload structure
-            "county": county_code or "UNK",  # Use the actual county area_code found
-            "sub_county_code": constituency_code or "UNK",  # Use constituency code as sub_county_code
-            "hh_economic_status": "UINC",  # Default to Unknown - not available in this payload structure
-            "other_condition": "CHNM",  # Default to "Appears Normal" - not available in this payload structure  
-            "child_sex": self._map_code(get_person_data(18, 16, ""), "sex") or "SMAL",  # Use person data with fallback
-            "reporter_first_name": self._extract_name(get_safe(reporter_data, 6, ""), "first") or "Unknown",  # reporter contact_fullname
-            "ob_number": get_safe(case_data, 41, ""),  # case police_ob_no
-            "longitude": None,
-            "recommendation_bic": get_safe(case_data, 40, ""),  # case plan
-            "family_status": "FSLA",  # Default to "Living alone" - not available in this payload structure
-            "reporter_other_names": self._extract_name(get_safe(reporter_data, 6, ""), "other"),  # reporter contact_fullname
-            "case_date": self._format_timestamp(get_safe(case_data, 1, "")),  # case created_on
-            "child_other_names": self._extract_name(get_person_data(7, 6, ""), "other"),  # Use person data
+            # Basic case information
+            "physical_condition": "PNRM",  # Default - not available in API payload
+            "county": county_code or "UNK",
+            "sub_county_code": constituency_code or "UNK",
+            "hh_economic_status": "UINC",  # Default - not available in API payload
+            "other_condition": "CHNM",  # Default - not available in API payload
+            "child_sex": self._map_code(person_sex, "sex") or "SMAL",
+            "reporter_first_name": self._extract_name(get_safe(case_data, "reporter_fullname", ""), "first") or "Unknown",
+            "ob_number": get_safe(case_data, "police_ob_no", ""),
+            "longitude": None,  # Not available in this API payload structure
+            "recommendation_bic": get_safe(case_data, "plan", ""),
+            "family_status": "FSLA",  # Default - not available in API payload
+            "reporter_other_names": self._extract_name(get_safe(case_data, "reporter_fullname", ""), "other"),
+            "case_date": format_api_timestamp(get_safe(case_data, "created_on", "")),
+            "child_other_names": self._extract_name(person_fullname, "other"),
             "friends": None,
-            "organization_unit": "Helpline Uganda",  
-            "case_reporter": self._map_code("Helpline 116", "case_reporter") or "CRHE",  # Use Helpline as reporter
-            "child_in_school": None,  # Not available in this payload structure
-            "tribe": None,  # Not available in this payload structure 
-            "sublocation": ward_name or "Unknown",  # Use ward name as sublocation
-            "child_surname": self._extract_name(get_person_data(7, 6, ""), "surname") or "Unknown",  # Use person data
-            "case_village": get_safe(reporter_data, 44, "") or "Unknown Village",  # reporter village
-            "latitude": None,
-            "child_first_name": self._extract_name(get_person_data(7, 6, ""), "first") or "Unknown",  # Use person data
-            "reporter_telephone": get_safe(reporter_data, 49, "") or "0700000000",  # reporter src_address (phone)
+            "organization_unit": "Helpline Kenya",
+            "case_reporter": self._map_code("Helpline 116", "case_reporter") or "CRHE",
+            "child_in_school": get_safe(client_data, "in_school", None) if has_client_data else None,
+            "tribe": get_safe(client_data, "contact_tribe", None) if has_client_data else get_safe(case_data, "reporter_tribe", None),
+            "sublocation": ward_name or "Unknown",
+            "child_surname": self._extract_name(person_fullname, "surname") or "Unknown",
+            "case_village": get_safe(case_data, "reporter_location_5", "") or "Unknown Village",  # Lowest level location
+            "latitude": None,  # Not available in this API payload structure
+            "child_first_name": self._extract_name(person_fullname, "first") or "Unknown",
+            "reporter_telephone": get_safe(case_data, "reporter_phone", "0700000000"),
             "court_number": "",
             "verification_status": "VSUN",  # Unverified status as default
-            "child_dob": "2010-01-01",  # Default birth date - not available in this payload structure
-            "perpetrator_status": "PUNK",  # Default to Unknown - no perpetrator data
-            "reporter_surname": self._extract_name(get_safe(reporter_data, 6, ""), "surname") or "Unknown",  # reporter contact_fullname
-            "case_narration": get_safe(case_data, 39, "") or "Case reported through helpline",  # case narrative
+            "child_dob": format_api_timestamp(get_safe(client_data, "contact_dob", "")) if has_client_data else "2010-01-01",
+            "perpetrator_status": "PUNK" if not perpetrator_data else "PKNW",  # Unknown if no perpetrator data
+            "reporter_surname": self._extract_name(get_safe(case_data, "reporter_fullname", ""), "surname") or "Unknown",
+            "case_narration": get_safe(case_data, "narrative", "") or "Case reported through helpline",
             "court_name": "",
-            "case_landmark": ward_name or county_name or "Helpline Report",  # Use ward or county as landmark
+            "case_landmark": get_safe(case_data, "reporter_landmark", "") or ward_name or county_name or "Helpline Report",
             "religion_type": None,
             "long_term_needs": None,
             "immediate_needs": None,
-            "mental_condition": "MNRM",  # Default to "Appears Normal"
+            "mental_condition": "MNRM",  # Default
             "police_station": "",
-            "risk_level": self._map_code(get_safe(case_data, 35, ""), "risk_level") or "RLMD",  # case priority with default
-            "constituency": (constituency_code or "UNK")[:3],  # Use the actual constituency area_code found, max 3 chars
+            "risk_level": self._map_code(get_safe(case_data, "priority", ""), "risk_level") or "RLMD",
+            "constituency": (constituency_code or "UNK")[:3],  # Max 3 chars
             "hobbies": None,
-            "reporter_email": get_safe(reporter_data, 10, ""),  # reporter contact_email
-            "location": get_safe(reporter_data, 44, "") or "Unknown",  # reporter village
-            "reporter_county": county_code or "UNK",  # County area_code from lookup
-            "reporter_sub_county": constituency_code or "UNK",  # Constituency area_code as sub_county
-            "reporter_ward": ward_code or get_safe(reporter_data, 43, "UNKNOWN_WARD"),  # Ward area_code from GWRD lookup with fallback
-            "reporter_village": get_safe(reporter_data, 44, "UNKNOWN_VILLAGE"),  # reporter village
+            "reporter_email": get_safe(case_data, "reporter_email", ""),
+            "location": get_safe(case_data, "reporter_location_5", "") or ward_name or "Unknown",
+            "reporter_county": county_code or "UNK",
+            "reporter_sub_county": constituency_code or "UNK", 
+            "reporter_ward": ward_code or "UNKNOWN_WARD",
+            "reporter_village": get_safe(case_data, "reporter_location_5", "") or "UNKNOWN_VILLAGE",
             "has_birth_cert": None,
-            "user": get_safe(case_data, 2, "helpline_user"),  # case created_by
-            "area_code": county_code or "UNK",  # Always include the actual county area_code in payload
-            
+            "user": get_safe(case_data, "created_by", "helpline_user"),
+            "area_code": county_code or "UNK",
+
             # Case details array
             "case_details": [{
-                "place_of_event": get_safe(case_data, 52, ""),  # case incidence_location
-                "category": category_item_id or category_description,  # Use looked-up item_id or fallback to description
-                "nature_of_event": self._map_code(get_safe(case_data, 17, ""), "case_nature"),  # case cat_2
-                "date_of_event": get_safe(case_data, 51, "")  # case incidence_when
+                "place_of_event": get_safe(case_data, "incidence_location", ""),
+                "category": category_item_id or category_description,
+                "nature_of_event": self._map_code(get_safe(case_data, "cat_2", ""), "case_nature"),
+                "date_of_event": format_api_timestamp(get_safe(case_data, "incidence_when", ""))
             }],
             
-            # Categories array (same as case_details but with additional fields)
+            # Categories array
             "categories": [{
-                "case_category": category_item_id or category_description,  # Use looked-up item_id or fallback to description
-                "case_sub_category": get_safe(case_data, 16, ""),  # case cat_1
-                "case_date_event": get_safe(case_data, 51, ""),  # case incidence_when
-                "case_nature": self._map_code(get_safe(case_data, 17, ""), "case_nature"),  # case cat_2
-                "case_place_of_event": get_safe(case_data, 52, ""),  # case incidence_location
-                "case_id": get_safe(case_data, 0, "")  # case id
+                "case_category": category_item_id or category_description,
+                "case_sub_category": get_safe(case_data, "cat_1", ""),
+                "case_date_event": format_api_timestamp(get_safe(case_data, "incidence_when", "")),
+                "case_nature": self._map_code(get_safe(case_data, "cat_2", ""), "case_nature"),
+                "case_place_of_event": get_safe(case_data, "incidence_location", ""),
+                "case_id": get_safe(case_data, "id", "")
             }],
             
             # Perpetrators array
             "perpetrators": [{
-                "first_name": self._extract_name(get_safe(perpetrator_data, 7, ""), "first"),  # perp contact_fullname
-                "surname": self._extract_name(get_safe(perpetrator_data, 7, ""), "surname"),  # perp contact_fullname
-                "relationship": self._map_code(get_safe(perpetrator_data, 49, ""), "relationship"),  # perp relationship
-                "sex": self._map_code(get_safe(perpetrator_data, 18, ""), "sex")  # perp contact_sex
-            }] if len(perpetrator_data) > 0 else [],
+                "first_name": self._extract_name(get_safe(perpetrator_data, "contact_fullname", ""), "first"),
+                "surname": self._extract_name(get_safe(perpetrator_data, "contact_fullname", ""), "surname"),
+                "relationship": self._map_code(get_safe(perpetrator_data, "relationship", ""), "relationship"),
+                "sex": self._map_code(get_safe(perpetrator_data, "contact_sex", "").lstrip("^"), "sex")
+            }] if perpetrator_data else [],
             
-            # Siblings array (using client data)
+            # Siblings array (using client data if available)
             "siblings": [{
-                "surname": self._extract_name(get_safe(client_data, 7, ""), "surname"),  # client contact_fullname
-                "dob": self._format_timestamp(get_safe(client_data, 13, "")),  # client contact_dob
-                "sex": self._map_code(get_safe(client_data, 18, ""), "sex"),  # client contact_sex
-                "school_name": get_safe(client_data, 69, ""),  # client school_name
-                "other_names": self._extract_name(get_safe(client_data, 7, ""), "other"),  # client contact_fullname
-                "first_name": self._extract_name(get_safe(client_data, 7, ""), "first"),  # client contact_fullname
-                "class": get_safe(client_data, 67, ""),  # client school_level
-                "remarks": get_safe(client_data, 62, "")  # client special_services
-            }] if len(client_data) > 0 else [],
+                "surname": self._extract_name(get_safe(client_data, "contact_fullname", ""), "surname"),
+                "dob": format_api_timestamp(get_safe(client_data, "contact_dob", "")),
+                "sex": self._map_code(get_safe(client_data, "contact_sex", "").lstrip("^"), "sex"),
+                "school_name": get_safe(client_data, "school_name", ""),
+                "other_names": self._extract_name(get_safe(client_data, "contact_fullname", ""), "other"),
+                "first_name": self._extract_name(get_safe(client_data, "contact_fullname", ""), "first"),
+                "class": get_safe(client_data, "school_level", ""),
+                "remarks": get_safe(client_data, "special_services", "")
+            }] if has_client_data else [],
             
             # Empty arrays for now
             "parents": [{}, {}],
             "caregivers": []
         }
+
+        # Debug log for final payload structure
+        logger.info(f"[CPIMS PAYLOAD] Final payload structure created from API data")
+        logger.info(f"   Case ID: '{cpims_payload.get('case_details', [{}])[0].get('case_id', 'N/A')}'")
+        logger.info(f"   Reporter County: '{cpims_payload['reporter_county']}'")
+        logger.info(f"   Child Name: '{cpims_payload['child_first_name']} {cpims_payload['child_surname']}'")
         
         return cpims_payload
     
