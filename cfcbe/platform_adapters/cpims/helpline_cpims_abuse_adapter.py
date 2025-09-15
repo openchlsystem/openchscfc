@@ -93,7 +93,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
     
     def validate_request(self, request: Any) -> bool:
         """
-        Validate authenticity of incoming Helpline API request.
+        Validate authenticity of incoming Helpline request.
         
         Args:
             request: The request data to validate
@@ -107,8 +107,8 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             else:
                 payload = json.loads(request.body)
             
-            # Check for required fields for CPIMS case creation from API payload
-            required_fields = ["id", "narrative", "reporter_phone"]
+            # Check for required fields for CPIMS case creation
+            required_fields = ["cases", "reporters"]
             
             # Validate required fields exist
             for field in required_fields:
@@ -116,16 +116,18 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
                     logger.error(f"Missing required field for CPIMS: {field}")
                     return False
             
-            # Validate that case has an ID
-            if not payload.get("id"):
-                logger.error("Case ID cannot be empty")
+            # Validate that cases array has at least one item
+            if not payload["cases"] or len(payload["cases"]) == 0:
+                logger.error("Cases array cannot be empty")
                 return False
                 
-            # Validate that there's some narrative content
-            if not payload.get("narrative", "").strip():
-                logger.warning("Case narrative is empty - this may affect case quality")
-                # Don't fail validation for empty narrative, just warn
+            # Validate that reporters array has at least one item  
+            if not payload["reporters"] or len(payload["reporters"]) == 0:
+                logger.error("Reporters array cannot be empty")
+                return False
                 
+            # Note: clients array can be empty in some cases, so we don't validate it as required
+                    
             return True
             
         except (json.JSONDecodeError, AttributeError) as e:
@@ -955,7 +957,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "Defilement": "CCDF",
             "Trafficked child / Person": "CSTC",
             "Harmful cultural practice": "CSCU",
-            "Sexual Exploitation and abuse": "CSRG",
+            "Sexual Exploitation and abuse": "CSRG",    
             "Child Mother": "CLCM",
             "Online Abuse": "CCOA",
             "Orphaned Child": "CIDC",
