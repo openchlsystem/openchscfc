@@ -18,7 +18,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
     Adapter for the CPIMS (Child Protection Information Management System) platform integration.
     
     This adapter:
-    1. Receives case data from Helpline
+    1. Receives case data from Helpline.
     2. Transforms the data to CPIMS format
     3. Sends the case to CPIMS CRS endpoint
     4. Returns appropriate responses to the Helpline
