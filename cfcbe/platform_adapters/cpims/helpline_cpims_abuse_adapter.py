@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class HelplineCPIMSAbuseAdapter(BaseAdapter):
     """
-    Adapter for the CPIMS (Child Protection Information Management System) platform integration.
+    Adapter for the CPIMS (Child Protection Information Management System) platform integration ,.
     
     This adapter:
     1. Receives case data from Helpline.
