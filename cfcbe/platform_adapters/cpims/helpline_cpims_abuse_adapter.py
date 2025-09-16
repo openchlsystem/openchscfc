@@ -1034,5 +1034,13 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         elif mapping_type == "relationship":
             mapping_dict = relationship_codes
         
-        # Return the mapped value or the original value if not found
-        return mapping_dict.get(value, value)
+        # Normalize incoming value (remove caret prefixes and trim whitespace)
+        normalized_value = (value or "").lstrip("^").strip()
+
+        # For risk_level, enforce strict mapping to ensure CPIMS codes are emitted
+        if mapping_type == "risk_level":
+            # Return empty string if not found so caller can apply a safe default
+            return mapping_dict.get(normalized_value, "")
+
+        # Return the mapped value or the original value if not found (non-strict)
+        return mapping_dict.get(normalized_value, value)
