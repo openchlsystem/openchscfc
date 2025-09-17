@@ -93,7 +93,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
     
     def validate_request(self, request: Any) -> bool:
         """
-        Validate authenticity of incoming Helpline request.
+        Validate authenticity of incoming Helpline request (new object-based format).
         
         Args:
             request: The request data to validate
@@ -107,8 +107,8 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             else:
                 payload = json.loads(request.body)
             
-            # Check for required fields for CPIMS case creation
-            required_fields = ["cases", "reporters"]
+            # Check for required fields in new object-based format
+            required_fields = ["id", "narrative"]
             
             # Validate required fields exist
             for field in required_fields:
@@ -116,17 +116,10 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
                     logger.error(f"Missing required field for CPIMS: {field}")
                     return False
             
-            # Validate that cases array has at least one item
-            if not payload["cases"] or len(payload["cases"]) == 0:
-                logger.error("Cases array cannot be empty")
+            # Validate narrative is not empty
+            if not payload.get("narrative", "").strip():
+                logger.error("Narrative cannot be empty")
                 return False
-                
-            # Validate that reporters array has at least one item  
-            if not payload["reporters"] or len(payload["reporters"]) == 0:
-                logger.error("Reporters array cannot be empty")
-                return False
-                
-            # Note: clients array can be empty in some cases, so we don't validate it as required
                     
             return True
             
@@ -136,7 +129,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
     
     def parse_messages(self, request: Any) -> List[Dict[str, Any]]:
         """
-        Convert Helpline data to StandardMessage format.
+        Convert Helpline data to StandardMessage format (new object-based format).
         
         Args:
             request: The request data to parse
@@ -150,17 +143,13 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             else:
                 payload = json.loads(request.body)
             
-            # Extract data from the array-based structure
-            case_data = payload.get("cases", [[]])[0]  # First case array
-            reporter_data = payload.get("reporters", [[]])[0] if payload.get("reporters") else []
-            
-            # Extract basic info for StandardMessage
-            case_id = case_data[0] if len(case_data) > 0 else ""
-            narrative = case_data[39] if len(case_data) > 39 else ""  # narrative is at index 39
-            reporter_phone = reporter_data[9] if len(reporter_data) > 9 else ""  # contact_phone is at index 9
+            # Extract basic info from new object-based format
+            case_id = payload.get("id", "")
+            narrative = payload.get("narrative", "")
+            reporter_phone = payload.get("reporter_phone", "")
             
             # Extract timestamp and convert to float  
-            created_on_timestamp = case_data[1] if len(case_data) > 1 else "0"
+            created_on_timestamp = payload.get("created_on", "0")
             try:
                 timestamp = float(created_on_timestamp) if created_on_timestamp else 0
             except (ValueError, TypeError):
@@ -351,51 +340,42 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
     
     def _map_to_cpims_format(self, helpline_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Map Helpline array-based data format to CPIMS expected format.
+        Map Helpline object-based data format to CPIMS expected format.
         
         Args:
-            helpline_data: The helpline case data
+            helpline_data: The helpline case data (new object format)
             
         Returns:
             CPIMS formatted payload
         """
-        # Extract data arrays from the helpline payload
-        case_data = helpline_data.get("cases", [[]])[0]  # First case array
-        reporter_data = helpline_data.get("reporters", [[]])[0] if helpline_data.get("reporters") else []
-        client_data = helpline_data.get("clients", [[]])[0] if helpline_data.get("clients") else []
-        perpetrator_data = helpline_data.get("perpetrators", [[]])[0] if helpline_data.get("perpetrators") else []
+        # Extract data from the new object-based structure
+        clients = helpline_data.get("clients", [])
+        perpetrators = helpline_data.get("perpetrators", [])
         
-        # Helper function to safely get array element
-        def get_safe(arr, index, default=""):
+        # Helper function to safely get field value
+        def get_safe(data, field, default=""):
             try:
-                return arr[index] if arr and len(arr) > index else default
-            except (IndexError, TypeError):
+                value = data.get(field, default) if data else default
+                return value if value is not None else default
+            except (AttributeError, TypeError):
                 return default
         
-        # Extract location from reporter data (since clients array is empty in real payload)
-        # Region: reporters[0][39] = "CENTRAL" (contact_location_0)  
-        # District: reporters[0][40] = "WAKISO" (contact_location_1)
-        # County: reporters[0][41] = "ENTEBBE MUNICIPALITY" (contact_location_2)
-        # Sub County: reporters[0][42] = "DIVISION A" (contact_location_3)
-        # Parish: reporters[0][43] = "CENTRAL" (contact_location_4)  
-        # Village: reporters[0][44] = "LUNYO CENTRAL" (contact_location_5)
-        
-        # Use reporter location data since clients array is empty
-        # Corrected mapping based on actual data structure:
-        county_name = get_safe(reporter_data, 39, "")  # contact_location_0 - County (was Region)
-        constituency_name = get_safe(reporter_data, 40, "")  # contact_location_1 - Constituency (was District)  
-        ward_name = get_safe(reporter_data, 41, "")  # contact_location_2 - Ward (was County)
-        subcounty_name = get_safe(reporter_data, 42, "")  # contact_location_3 - Sub County
+        # Extract location from reporter data in the main object
+        county_name = get_safe(helpline_data, "reporter_location_0", "")  # County
+        constituency_name = get_safe(helpline_data, "reporter_location_1", "")  # Constituency  
+        ward_name = get_safe(helpline_data, "reporter_location_2", "")  # Ward
+        subcounty_name = get_safe(helpline_data, "reporter_location_3", "")  # Sub County
         
         # Log the extracted location values for debugging
         logger.info(f"🌍 Location Extraction Debug:")
-        logger.info(f"   County (reporter contact_location_0, index 39): '{county_name}'")
-        logger.info(f"   Constituency (reporter contact_location_1, index 40): '{constituency_name}'")
-        logger.info(f"   Ward (reporter contact_location_2, index 41): '{ward_name}'")
-        logger.info(f"   Sub County (reporter contact_location_3, index 42): '{subcounty_name}'")
+        logger.info(f"   County (reporter_location_0): '{county_name}'")
+        logger.info(f"   Constituency (reporter_location_1): '{constituency_name}'")
+        logger.info(f"   Ward (reporter_location_2): '{ward_name}'")
+        logger.info(f"   Sub County (reporter_location_3): '{subcounty_name}'")
         
-        # Look up area_code values from CPIMS geo API using type-specific lookups for better accuracy
-        parish_name = get_safe(reporter_data, 43, "")  # contact_location_4 - Parish
+        # Look up area_code values from CPIMS geo API using type-specific lookups
+        parish_name = get_safe(helpline_data, "reporter_location_4", "")  # Parish
+        village_name = get_safe(helpline_data, "reporter_location_5", "")  # Village
         
         # Use type-specific lookups for better disambiguation
         county_code = self._lookup_area_code_by_type(county_name, "GPRV") if county_name else None
@@ -414,12 +394,12 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         logger.info(f"   Constituency '{constituency_name}' -> area_code: '{constituency_code}' (GDIS)")
         logger.info(f"   Ward '{ward_name}' -> area_code: '{ward_code}' (GWRD)")
         
-        # Extract case category from cases["cases"][0]["cat_0"] - index 15
-        category_description = get_safe(case_data, 15, "")  # cat_0
+        # Extract case category from new object format
+        category_description = get_safe(helpline_data, "cat_1", "")  # Sub category
         
         # Log the extracted category value for debugging
         logger.info(f"📂 Category Extraction Debug:")
-        logger.info(f"   Category (cat_0, index 15): '{category_description}'")
+        logger.info(f"   Category (cat_1): '{category_description}'")
         
         # Look up item_id for the category description
         category_item_id = self._lookup_category_item_id(category_description) if category_description else None
@@ -428,107 +408,114 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         logger.info(f"🔍 Category Lookup Results:")
         logger.info(f"   Category '{category_description}' -> item_id: '{category_item_id}'")
         
-        # Determine if we have client data or need to use reporter data as fallback
-        has_client_data = len(client_data) > 10
+        # Get first client data if available, otherwise use reporter data as fallback
+        client_data = clients[0] if clients else {}
+        has_client_data = bool(client_data)
         
         # Helper function to get data from client or fallback to reporter
-        def get_person_data(client_index, reporter_index, default=""):
+        def get_person_data(client_field, reporter_field, default=""):
             if has_client_data:
-                return get_safe(client_data, client_index, default)
+                return get_safe(client_data, client_field, default)
             else:
-                return get_safe(reporter_data, reporter_index, default)
+                return get_safe(helpline_data, reporter_field, default)
         
-        # Map according to the provided mapping using array indices with fallback values for required fields
+        # Map according to the new object-based format with fallback values for required fields
         cpims_payload = {
-            # Basic case information - using the mapping you provided with required field fallbacks
-            "physical_condition": "PNRM",  # Default to "Appears Normal" - not available in this payload structure
+            # Basic case information - using the new object format
+            "physical_condition": "PNRM",  # Default to "Appears Normal"
             "county": county_code or "UNK",  # Use the actual county area_code found
             "sub_county_code": constituency_code or "UNK",  # Use constituency code as sub_county_code
-            "hh_economic_status": "UINC",  # Default to Unknown - not available in this payload structure
-            "other_condition": "CHNM",  # Default to "Appears Normal" - not available in this payload structure  
-            "child_sex": self._map_code(get_person_data(18, 16, ""), "sex") or "SMAL",  # Use person data with fallback
-            "reporter_first_name": self._extract_name(get_safe(reporter_data, 6, ""), "first") or "Unknown",  # reporter contact_fullname
-            "ob_number": get_safe(case_data, 41, ""),  # case police_ob_no
+            "hh_economic_status": "UINC",  # Default to Unknown
+            "other_condition": "CHNM",  # Default to "Appears Normal"
+            "child_sex": self._map_code(get_person_data("contact_sex", "reporter_sex", ""), "sex") or "SMAL",
+            "reporter_first_name": self._extract_name(get_safe(helpline_data, "reporter_fullname", ""), "first") or "Unknown",
+            "ob_number": get_safe(helpline_data, "police_ob_no", ""),
             "longitude": None,
-            "recommendation_bic": get_safe(case_data, 40, ""),  # case plan
-            "family_status": "FSLA",  # Default to "Living alone" - not available in this payload structure
-            "reporter_other_names": self._extract_name(get_safe(reporter_data, 6, ""), "other"),  # reporter contact_fullname
-            "case_date": self._format_timestamp(get_safe(case_data, 1, "")),  # case created_on
-            "child_other_names": self._extract_name(get_person_data(7, 6, ""), "other"),  # Use person data
+            "recommendation_bic": get_safe(helpline_data, "plan", ""),
+            "family_status": "FSLA",  # Default to "Living alone"
+            "reporter_other_names": self._extract_name(get_safe(helpline_data, "reporter_fullname", ""), "other"),
+            "case_date": self._format_timestamp(get_safe(helpline_data, "created_on", "")),
+            "child_other_names": self._extract_name(get_person_data("contact_fullname", "reporter_fullname", ""), "other"),
             "friends": None,
             "organization_unit": "Helpline 116",  
-            "case_reporter": self._map_code("Helpline 116", "case_reporter") or "CRHE",  # Use Helpline as reporter
-            "child_in_school": None,  # Not available in this payload structure
-            "tribe": None,  # Not available in this payload structure 
-            "sublocation": ward_name or "Unknown",  # Use ward name as sublocation
-            "child_surname": self._extract_name(get_person_data(7, 6, ""), "surname") or "Unknown",  # Use person data
-            "case_village": get_safe(reporter_data, 44, "") or "Unknown Village",  # reporter village
+            "case_reporter": self._map_code("Helpline 116", "case_reporter") or "CRHE",
+            "child_in_school": None,
+            "tribe": None, 
+            "sublocation": ward_name or "Unknown",
+            "child_surname": self._extract_name(get_person_data("contact_fullname", "reporter_fullname", ""), "surname") or "Unknown",
+            "case_village": village_name or "Unknown Village",
             "latitude": None,
-            "child_first_name": self._extract_name(get_person_data(7, 6, ""), "first") or "Unknown",  # Use person data
-            "reporter_telephone": get_safe(reporter_data, 9, "") or "0700000000",  # reporter contact_phone
+            "child_first_name": self._extract_name(get_person_data("contact_fullname", "reporter_fullname", ""), "first") or "Unknown",
+            "reporter_telephone": get_safe(helpline_data, "reporter_phone", "") or "0700000000",
             "court_number": "",
             "verification_status": "001",  # Unverified status as default
-            "child_dob": "2010-01-01",  # Default birth date - not available in this payload structure
-            "perpetrator_status": "PUNK",  # Default to Unknown - no perpetrator data
-            "reporter_surname": self._extract_name(get_safe(reporter_data, 6, ""), "surname") or "Unknown",  # reporter contact_fullname
-            "case_narration": get_safe(case_data, 39, "") or "Case reported through helpline",  # case narrative
+            "child_dob": self._format_timestamp(get_person_data("contact_dob", "reporter_dob", "")) or "2010-01-01",
+            "perpetrator_status": "PUNK",  # Default to Unknown
+            "reporter_surname": self._extract_name(get_safe(helpline_data, "reporter_fullname", ""), "surname") or "Unknown",
+            "case_narration": get_safe(helpline_data, "narrative", "") or "Case reported through helpline",
             "court_name": "",
-            "case_landmark": ward_name or county_name or "Helpline Report",  # Use ward or county as landmark
+            "case_landmark": get_safe(helpline_data, "reporter_landmark", "") or ward_name or county_name or "Helpline Report",
             "religion_type": None,
             "long_term_needs": None,
             "immediate_needs": None,
             "mental_condition": "MNRM",  # Default to "Appears Normal"
             "police_station": "",
-            "risk_level": self._map_code(get_safe(case_data, 35, ""), "risk_level") or "RLMD",  # case priority with default
-            "constituency": (constituency_code or "UNK")[:3],  # Use the actual constituency area_code found, max 3 chars
+            "risk_level": self._map_code(get_safe(helpline_data, "priority", ""), "risk_level") or "RLMD",
+            "constituency": (constituency_code or "UNK")[:3],  # Max 3 chars
             "hobbies": None,
-            "reporter_email": get_safe(reporter_data, 10, ""),  # reporter contact_email
-            "location": get_safe(reporter_data, 44, "") or "Unknown",  # reporter village
-            "reporter_county": county_code or "UNK",  # County area_code from lookup
-            "reporter_sub_county": constituency_code or "UNK",  # Constituency area_code as sub_county
-            "reporter_ward": ward_code or get_safe(reporter_data, 43, "UNKNOWN_WARD"),  # Ward area_code from GWRD lookup with fallback
-            "reporter_village": get_safe(reporter_data, 44, "UNKNOWN_VILLAGE"),  # reporter village
+            "reporter_email": get_safe(helpline_data, "reporter_email", ""),
+            "location": village_name or "Unknown",
+            "reporter_county": county_code or "UNK",
+            "reporter_sub_county": constituency_code or "UNK",
+            "reporter_ward": ward_code or "UNKNOWN_WARD",
+            "reporter_village": village_name or "UNKNOWN_VILLAGE",
             "has_birth_cert": None,
-            "user": get_safe(case_data, 2, "helpline_user"),  # case created_by
-            "area_code": county_code or "UNK",  # Always include the actual county area_code in payload
+            "user": get_safe(helpline_data, "created_by", "helpline_user"),
+            "area_code": county_code or "UNK",
             
             # Case details array
             "case_details": [{
-                "place_of_event": get_safe(case_data, 52, ""),  # case incidence_location
-                "category": category_item_id or category_description,  # Use looked-up item_id or fallback to description
-                "nature_of_event": self._map_code(get_safe(case_data, 17, ""), "case_nature"),  # case cat_2
-                "date_of_event": get_safe(case_data, 51, "")  # case incidence_when
+                "place_of_event": get_safe(helpline_data, "incidence_location", ""),
+                "category": category_item_id or category_description,
+                "nature_of_event": self._map_code(get_safe(helpline_data, "cat_2", ""), "case_nature"),
+                "date_of_event": get_safe(helpline_data, "incidence_when", "")
             }],
             
-            # Categories array (same as case_details but with additional fields)
+            # Categories array
             "categories": [{
-                "case_category": category_item_id or category_description,  # Use looked-up item_id or fallback to description
-                "case_sub_category": get_safe(case_data, 16, ""),  # case cat_1
-                "case_date_event": get_safe(case_data, 51, ""),  # case incidence_when
-                "case_nature": self._map_code(get_safe(case_data, 17, ""), "case_nature"),  # case cat_2
-                "case_place_of_event": get_safe(case_data, 52, ""),  # case incidence_location
-                "case_id": get_safe(case_data, 0, "")  # case id
+                "case_category": category_item_id or category_description,
+                "case_sub_category": get_safe(helpline_data, "cat_1", ""),
+                "case_date_event": get_safe(helpline_data, "incidence_when", ""),
+                "case_nature": self._map_code(get_safe(helpline_data, "cat_2", ""), "case_nature"),
+                "case_place_of_event": get_safe(helpline_data, "incidence_location", ""),
+                "case_id": get_safe(helpline_data, "id", "")
             }],
             
             # Perpetrators array
-            "perpetrators": [{
-                "first_name": self._extract_name(get_safe(perpetrator_data, 7, ""), "first"),  # perp contact_fullname
-                "surname": self._extract_name(get_safe(perpetrator_data, 7, ""), "surname"),  # perp contact_fullname
-                "relationship": self._map_code(get_safe(perpetrator_data, 49, ""), "relationship"),  # perp relationship
-                "sex": self._map_code(get_safe(perpetrator_data, 18, ""), "sex")  # perp contact_sex
-            }] if len(perpetrator_data) > 0 else [],
+            "perpetrators": [
+                {
+                    "first_name": self._extract_name(get_safe(perp, "contact_fullname", ""), "first"),
+                    "surname": self._extract_name(get_safe(perp, "contact_fullname", ""), "surname"),
+                    "relationship": self._map_code(get_safe(perp, "relationship", ""), "relationship"),
+                    "sex": self._map_code(get_safe(perp, "contact_sex", ""), "sex")
+                }
+                for perp in perpetrators
+            ] if perpetrators else [],
             
             # Siblings array (using client data)
-            "siblings": [{
-                "surname": self._extract_name(get_safe(client_data, 7, ""), "surname"),  # client contact_fullname
-                "dob": self._format_timestamp(get_safe(client_data, 13, "")),  # client contact_dob
-                "sex": self._map_code(get_safe(client_data, 18, ""), "sex"),  # client contact_sex
-                "school_name": get_safe(client_data, 69, ""),  # client school_name
-                "other_names": self._extract_name(get_safe(client_data, 7, ""), "other"),  # client contact_fullname
-                "first_name": self._extract_name(get_safe(client_data, 7, ""), "first"),  # client contact_fullname
-                "class": get_safe(client_data, 67, ""),  # client school_level
-                "remarks": get_safe(client_data, 62, "")  # client special_services
-            }] if len(client_data) > 0 else [],
+            "siblings": [
+                {
+                    "surname": self._extract_name(get_safe(client, "contact_fullname", ""), "surname"),
+                    "dob": self._format_timestamp(get_safe(client, "contact_dob", "")),
+                    "sex": self._map_code(get_safe(client, "contact_sex", ""), "sex"),
+                    "school_name": get_safe(client, "school_name", ""),
+                    "other_names": self._extract_name(get_safe(client, "contact_fullname", ""), "other"),
+                    "first_name": self._extract_name(get_safe(client, "contact_fullname", ""), "first"),
+                    "class": get_safe(client, "school_level", ""),
+                    "remarks": get_safe(client, "special_services", "")
+                }
+                for client in clients
+            ] if clients else [],
             
             # Empty arrays for now
             "parents": [{}, {}],
@@ -914,26 +901,37 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "Not Applicable": "PSNA"
         }
         
-        # Case category codes
+        # Case category codes - updated with latest CPIMS mapping
         case_category_codes = {
-            "Neglect": "CSIC",
-            "Defilement": "CCDF",
-            "Trafficked child / Person": "CSTC",
             "Harmful cultural practice": "CSCU",
-            "Sexual Exploitation and abuse": "CSRG",
+            "Child Prostitution": "CSRG", 
             "Child Mother": "CLCM",
             "Online Abuse": "CCOA",
             "Orphaned Child": "CIDC",
+            "Child Neglect": "CSIC",
             "Mother Offer": "CCMO",
+            "Defilement": "CCDF",
+            "Child Trafficking": "CSTC",
             "Smuggling": "CSSM",
             "Children / Persons on the streets": "CCIP",
-            "Abandoned": "CDIS",
-            "Abduction": "CDSA",
+            "Child Abandonment": "CDIS",
+            "Child Abduction": "CDSA",
             "Child Affected by HIV/AIDS": "CLAB",
             "Child Delinquency": "CORP",
             "Child headed household": "COSR",
-            "Child Labour": "CTRF",
-            "Child Marriage": "CCCM"
+            "Child Labor": "CTRF",
+            "Child Marriage": "CCCM",
+            "Sexual Abuse": "CSHV",
+            "Child radicalization": "CSDQ",
+            "Emotional Abuse": "CCEA",
+            "Female Genital Mutilation": "CSCS",
+            "Sexual Abuse(Incest)": "CSDF",
+            "Sexual assault": "CSRC",
+            "Parental child abduction": "CLFC",
+            "Sexual Abuse (Sodomy)": "CSSO",
+            "Physical Abuse": "CSNG",
+            "Unlawful Confinement": "CSUC",
+            "Online Abuse": "CCOA"
         }
         
         # Case nature codes
