@@ -546,17 +546,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "case_date": format_api_timestamp(get_safe(case_data, "created_on", "")),
             "child_other_names": self._extract_name(person_fullname, "other"),
             "friends": None,
-            "organization_unit": "Helpline 116",  
-            "case_reporter": self._map_code("Helpline 116", "case_reporter") or "CRHE",  # Use Helpline as reporter
-            "child_in_school": None,  # Not available in this payload structure
-            "tribe": None,  # Not available in this payload structure 
-            "sublocation": ward_name or "Unknown",  # Use ward name as sublocation
-            "child_surname": self._extract_name(get_person_data(7, 6, ""), "surname") or "Unknown",  # Use person data
-            "case_village": get_safe(reporter_data, 44, "") or "Unknown Village",  # reporter village
-            "latitude": None,
-            "child_first_name": self._extract_name(get_person_data(7, 6, ""), "first") or "Unknown",  # Use person data
-            "reporter_telephone": get_safe(reporter_data, 9, "") or "0700000000",  # reporter contact_phone
-            "organization_unit": "Helpline Kenya",
+            "organization_unit": "Helpline 116",
             "case_reporter": self._map_code("Helpline 116", "case_reporter") or "CRHE",
             "child_in_school": get_safe(client_data, "in_school", None) if has_client_data else None,
             "tribe": get_safe(client_data, "contact_tribe", None) if has_client_data else get_safe(case_data, "reporter_tribe", None),
@@ -568,11 +558,6 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "reporter_telephone": get_safe(case_data, "reporter_phone", "0700000000"),
             "court_number": "",
             "verification_status": "001",  # Unverified status as default
-            "child_dob": "2010-01-01",  # Default birth date - not available in this payload structure
-            "perpetrator_status": "PUNK",  # Default to Unknown - no perpetrator data
-            "reporter_surname": self._extract_name(get_safe(reporter_data, 6, ""), "surname") or "Unknown",  # reporter contact_fullname
-            "case_narration": get_safe(case_data, 39, "") or "Case reported through helpline",  # case narrative
-            "verification_status": "VSUN",  # Unverified status as default
             "child_dob": format_api_timestamp(get_safe(client_data, "contact_dob", "")) if has_client_data else "2010-01-01",
             "perpetrator_status": "PUNK" if not perpetrator_data else "PKNW",  # Unknown if no perpetrator data
             "reporter_surname": self._extract_name(get_safe(case_data, "reporter_fullname", ""), "surname") or "Unknown",
@@ -946,10 +931,9 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "Low": "RLLW",
             "Medium": "RLMD", 
             "High": "RLHG",
-            # Handle numeric order values
-            "1": "RLLW",  # Low (the_order: 1)
-            "2": "RLMD",  # Medium (the_order: 2) 
-            "3": "RLHG"   # High (the_order: 3)
+            "1": "RLLW",
+            "2": "RLMD", 
+            "3": "RLHG"
         }
         
         # Case reporter codes
@@ -1122,5 +1106,15 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         elif mapping_type == "relationship":
             mapping_dict = relationship_codes
         
-        # Return the mapped value or the original value if not found
-        return mapping_dict.get(value, value)
+
+        # Normalize incoming value (remove caret prefixes and trim whitespace)
+        normalized_value = (value or "").lstrip("^").strip()
+
+        # For risk_level, enforce strict mapping to ensure CPIMS codes are emitted
+        if mapping_type == "risk_level":
+            # Return empty string if not found so caller can apply a safe default
+            return mapping_dict.get(normalized_value, "")
+
+        # Return the mapped value or the original value if not found (non-strict)
+        return mapping_dict.get(normalized_value, value)
+
