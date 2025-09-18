@@ -489,7 +489,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "case_date": format_api_timestamp(get_safe(case_data, "created_on", "")),
             "child_other_names": self._extract_name(person_fullname, "other"),
             "friends": None,
-            "organization_unit": "Helpline Kenya",
+            "organization_unit": "Helpline 116",
             "case_reporter": self._map_code("Helpline 116", "case_reporter") or "CRHE",
             "child_in_school": get_safe(client_data, "in_school", None) if has_client_data else None,
             "tribe": get_safe(client_data, "contact_tribe", None) if has_client_data else get_safe(case_data, "reporter_tribe", None),
@@ -500,7 +500,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "child_first_name": self._extract_name(person_fullname, "first") or "Unknown",
             "reporter_telephone": get_safe(case_data, "reporter_phone", "0700000000"),
             "court_number": "",
-            "verification_status": "VSUN",  # Unverified status as default
+            "verification_status": "001",  # Unverified status as default
             "child_dob": format_api_timestamp(get_safe(client_data, "contact_dob", "")) if has_client_data else "2010-01-01",
             "perpetrator_status": "PUNK" if not perpetrator_data else "PKNW",  # Unknown if no perpetrator data
             "reporter_surname": self._extract_name(get_safe(case_data, "reporter_fullname", ""), "surname") or "Unknown",
@@ -861,7 +861,10 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         risk_level_codes = {
             "Low": "RLLW",
             "Medium": "RLMD", 
-            "High": "RLHG"
+            "High": "RLHG",
+            "1": "RLLW",
+            "2": "RLMD", 
+            "3": "RLHG"
         }
         
         # Case reporter codes
