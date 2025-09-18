@@ -93,7 +93,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
     
     def validate_request(self, request: Any) -> bool:
         """
-        Validate authenticity of incoming Helpline request.
+        Validate authenticity of incoming Helpline API request.
         
         Args:
             request: The request data to validate
@@ -107,8 +107,8 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             else:
                 payload = json.loads(request.body)
             
-            # Check for required fields for CPIMS case creation
-            required_fields = ["cases", "reporters"]
+            # Check for required fields for CPIMS case creation from API payload
+            required_fields = ["id", "narrative", "reporter_phone"]
             
             # Validate required fields exist
             for field in required_fields:
@@ -116,26 +116,21 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
                     logger.error(f"Missing required field for CPIMS: {field}")
                     return False
             
-            # Validate that cases array has at least one item
-            if not payload["cases"] or len(payload["cases"]) == 0:
-                logger.error("Cases array cannot be empty")
+            # Validate that case has an ID
+            if not payload.get("id"):
+                logger.error("Case ID cannot be empty")
                 return False
                 
-            # Validate that reporters array has at least one item  
-            if not payload["reporters"] or len(payload["reporters"]) == 0:
-                logger.error("Reporters array cannot be empty")
-                return False
+            # Validate that there's some narrative content
+            if not payload.get("narrative", "").strip():
+                logger.warning("Case narrative is empty - this may affect case quality")
+                # Don't fail validation for empty narrative, just warn
                 
-            # Note: clients array can be empty in some cases, so we don't validate it as required
-                    
             return True
             
         except (json.JSONDecodeError, AttributeError) as e:
             logger.error(f"Invalid request format: {str(e)}")
             return False
-    
-    
-    
     
     def parse_messages(self, request: Any) -> List[Dict[str, Any]]:
         """
@@ -368,21 +363,6 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             except (AttributeError, TypeError):
                 return default
         
-        # Extract location from reporter data (since clients array is empty in real payload)
-        # Region: reporters[0][39] = "CENTRAL" (contact_location_0)  
-        # District: reporters[0][40] = "WAKISO" (contact_location_1)
-        # County: reporters[0][41] = "ENTEBBE MUNICIPALITY" (contact_location_2)
-        # Sub County: reporters[0][42] = "DIVISION A" (contact_location_3)
-        # Parish: reporters[0][43] = "CENTRAL" (contact_location_4)  
-        # Village: reporters[0][44] = "LUNYO CENTRAL" (contact_location_5)
-        
-        # Use reporter location data since clients array is empty
-        # Corrected mapping based on actual data structure:
-        county_name = get_safe(reporter_data, 39, "")  # contact_location_0 - County (was Region)
-        constituency_name = get_safe(reporter_data, 40, "")  # contact_location_1 - Constituency (was District)  
-        ward_name = get_safe(reporter_data, 41, "")  # contact_location_2 - Ward (was County)
-        subcounty_name = get_safe(reporter_data, 42, "")  # contact_location_3 - Sub County
-        
         # Extract main case data
         case_data = helpline_data
         
@@ -413,34 +393,16 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             ward_name = get_safe(case_data, "reporter_location_2", "")
             
         # Log the extracted location values for debugging
-        logger.info(f"🌍 Location Extraction Debug:")
-        logger.info(f"   County (reporter contact_location_0, index 39): '{county_name}'")
-        logger.info(f"   Constituency (reporter contact_location_1, index 40): '{constituency_name}'")
-        logger.info(f"   Ward (reporter contact_location_2, index 41): '{ward_name}'")
-        logger.info(f"   Sub County (reporter contact_location_3, index 42): '{subcounty_name}'")
         logger.info(f"🌍 Location Extraction Debug (API Format):")
         logger.info(f"   County: '{county_name}'")
         logger.info(f"   Constituency: '{constituency_name}'")
         logger.info(f"   Ward: '{ward_name}'")
         logger.info(f"   Full reporter_location: '{reporter_location}'")
         
-        # Look up area_code values from CPIMS geo API using type-specific lookups for better accuracy
-        parish_name = get_safe(reporter_data, 43, "")  # contact_location_4 - Parish
-        
-        # Use type-specific lookups for better disambiguation
-        county_code = self._lookup_area_code_by_type(county_name, "GPRV") if county_name else None
-        constituency_code = self._lookup_area_code_by_type(constituency_name, "GDIS") if constituency_name else None
-        ward_code = self._lookup_area_code_by_type(ward_name, "GWRD") if ward_name else None
         # Look up area_code values from CPIMS geo API
         county_code = self._lookup_area_code_by_type(county_name, "GPRV") if county_name else None
         constituency_code = self._lookup_area_code_by_type(constituency_name, "GDIS") if constituency_name else None
         ward_code = self._lookup_area_code_by_type(ward_name, "GWRD") if ward_name else None
-        
-        # Fallback to generic lookup for broader compatibility if type-specific lookup fails
-        if not county_code and county_name:
-            county_code = self._lookup_area_code(county_name)
-        if not constituency_code and constituency_name:
-            constituency_code = self._lookup_area_code(constituency_name)
         
         # Fallback to generic lookup if type-specific lookup fails
         if not county_code and county_name:
@@ -451,10 +413,6 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             ward_code = self._lookup_area_code(ward_name)
             
         # Log the lookup results
-        logger.info(f"🔍 Location Lookup Results:")
-        logger.info(f"   County '{county_name}' -> area_code: '{county_code}' (GPRV)")
-        logger.info(f"   Constituency '{constituency_name}' -> area_code: '{constituency_code}' (GDIS)")
-        logger.info(f"   Ward '{ward_name}' -> area_code: '{ward_code}' (GWRD)")
         logger.info(f"🔍 Location Lookup Results (API Format):")
         logger.info(f"   County '{county_name}' -> area_code: '{county_code}'")
         logger.info(f"   Constituency '{constituency_name}' -> area_code: '{constituency_code}'")
@@ -515,21 +473,6 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         
         # Map according to CPIMS format using API payload fields
         cpims_payload = {
-            # Basic case information - using the mapping you provided with required field fallbacks
-            "physical_condition": "PNRM",  # Default to "Appears Normal" - not available in this payload structure
-            "county": county_code or "UNK",  # Use the actual county area_code found
-            "sub_county_code": constituency_code or "UNK",  # Use constituency code as sub_county_code
-            "hh_economic_status": "UINC",  # Default to Unknown - not available in this payload structure
-            "other_condition": "CHNM",  # Default to "Appears Normal" - not available in this payload structure  
-            "child_sex": self._map_code(get_person_data(18, 16, ""), "sex") or "SMAL",  # Use person data with fallback
-            "reporter_first_name": self._extract_name(get_safe(reporter_data, 6, ""), "first") or "Unknown",  # reporter contact_fullname
-            "ob_number": get_safe(case_data, 41, ""),  # case police_ob_no
-            "longitude": None,
-            "recommendation_bic": get_safe(case_data, 40, ""),  # case plan
-            "family_status": "FSLA",  # Default to "Living alone" - not available in this payload structure
-            "reporter_other_names": self._extract_name(get_safe(reporter_data, 6, ""), "other"),  # reporter contact_fullname
-            "case_date": self._format_timestamp(get_safe(case_data, 1, "")),  # case created_on
-            "child_other_names": self._extract_name(get_person_data(7, 6, ""), "other"),  # Use person data
             # Basic case information
             "physical_condition": "PNRM",  # Default - not available in API payload
             "county": county_code or "UNK",
@@ -563,24 +506,15 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "reporter_surname": self._extract_name(get_safe(case_data, "reporter_fullname", ""), "surname") or "Unknown",
             "case_narration": get_safe(case_data, "narrative", "") or "Case reported through helpline",
             "court_name": "",
-            "case_landmark": ward_name or county_name or "Helpline Report",  # Use ward or county as landmark
             "case_landmark": get_safe(case_data, "reporter_landmark", "") or ward_name or county_name or "Helpline Report",
             "religion_type": None,
             "long_term_needs": None,
             "immediate_needs": None,
             "mental_condition": "MNRM",  # Default
             "police_station": "",
-            "risk_level": self._map_code(get_safe(case_data, 35, ""), "risk_level") or "RLMD",  # case priority with default
-            "constituency": (constituency_code or "UNK")[:3],  # Use the actual constituency area_code found, max 3 chars
             "risk_level": self._map_code(get_safe(case_data, "priority", ""), "risk_level") or "RLMD",
             "constituency": (constituency_code or "UNK")[:3],  # Max 3 chars
             "hobbies": None,
-            "reporter_email": get_safe(reporter_data, 10, ""),  # reporter contact_email
-            "location": get_safe(reporter_data, 44, "") or "Unknown",  # reporter village
-            "reporter_county": county_code or "UNK",  # County area_code from lookup
-            "reporter_sub_county": constituency_code or "UNK",  # Constituency area_code as sub_county
-            "reporter_ward": ward_code or get_safe(reporter_data, 43, "UNKNOWN_WARD"),  # Ward area_code from GWRD lookup with fallback
-            "reporter_village": get_safe(reporter_data, 44, "UNKNOWN_VILLAGE"),  # reporter village
             "reporter_email": get_safe(case_data, "reporter_email", ""),
             "location": get_safe(case_data, "reporter_location_5", "") or ward_name or "Unknown",
             "reporter_county": county_code or "UNK",
@@ -588,9 +522,6 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "reporter_ward": ward_code or "UNKNOWN_WARD",
             "reporter_village": get_safe(case_data, "reporter_location_5", "") or "UNKNOWN_VILLAGE",
             "has_birth_cert": None,
-            "user": get_safe(case_data, 2, "helpline_user"),  # case created_by
-            "area_code": county_code or "UNK",  # Always include the actual county area_code in payload
-            
             "user": get_safe(case_data, "created_by", "helpline_user"),
             "area_code": county_code or "UNK",
 
@@ -926,7 +857,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "Chronic": "CHRO"
         }
         
-        # Risk level codes - handle both description and order number
+        # Risk level codes
         risk_level_codes = {
             "Low": "RLLW",
             "Medium": "RLMD", 
@@ -1027,7 +958,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "Defilement": "CCDF",
             "Trafficked child / Person": "CSTC",
             "Harmful cultural practice": "CSCU",
-            "Sexual Exploitation and abuse": "CSRG",    
+            "Sexual Exploitation and abuse": "CSRG",
             "Child Mother": "CLCM",
             "Online Abuse": "CCOA",
             "Orphaned Child": "CIDC",
@@ -1106,7 +1037,6 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         elif mapping_type == "relationship":
             mapping_dict = relationship_codes
         
-
         # Normalize incoming value (remove caret prefixes and trim whitespace)
         normalized_value = (value or "").lstrip("^").strip()
 
@@ -1117,4 +1047,3 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
 
         # Return the mapped value or the original value if not found (non-strict)
         return mapping_dict.get(normalized_value, value)
-
