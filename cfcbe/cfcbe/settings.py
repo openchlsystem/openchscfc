@@ -18,6 +18,9 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+# Suppress FutureWarning from torch.load in Whisper
+warnings.filterwarnings("ignore", category=FutureWarning, module="whisper")
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -70,6 +73,7 @@ INSTALLED_APPS = [
     'shared',
     'feedback',
     'whatsapp',
+    'transcription',
 
     # 'platform_adapters.apps.PlatformAdaptersConfig',
     # 'webhook_handler.apps.WebhookHandlerConfig',
@@ -355,6 +359,7 @@ EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False') == 'True'
 
 # CPIMS Configuration
 CPIMS_ENDPOINT_URL = os.getenv('CPIMS_ENDPOINT_URL', 'https://test.cpims.net/api/v1/crs/')
