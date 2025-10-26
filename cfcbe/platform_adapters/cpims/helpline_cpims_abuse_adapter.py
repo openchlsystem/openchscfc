@@ -321,6 +321,14 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
                     "payload_sent": outgoing_payload
                 }
 
+        except ValueError as e:
+            # Handle category validation errors
+            logger.warning(f"Case rejected due to invalid category: {str(e)}")
+            return {
+                "status": "rejected",
+                "message": f"Case rejected: {str(e)}",
+                "reason": "invalid_category"
+            }
         except requests.RequestException as e:
             logger.exception(f"Network error sending to CPIMS: {str(e)}")
             return {
@@ -446,11 +454,11 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         logger.info(f"   Ward '{ward_name}' -> area_code: '{ward_code}'")
         
         # Extract case category 
-        category_description = get_safe(case_data, "cat_0", "")
+        category_description = get_safe(case_data, "cat_1", "")
         
         # Log the extracted category value for debugging
         logger.info(f"📂 Category Extraction Debug (API Format):")
-        logger.info(f"   Category (cat_0): '{category_description}'")
+        logger.info(f"   Category (cat_1): '{category_description}'")
         
         # Look up item_id for the category description
         category_item_id = self._lookup_category_item_id(category_description) if category_description else None
@@ -458,6 +466,12 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         # Log the category lookup result
         logger.info(f"🔍 Category Lookup Results (API Format):")
         logger.info(f"   Category '{category_description}' -> item_id: '{category_item_id}'")
+        
+        # Strict validation: If category is not found in CPIMS categories, reject the case
+        if not category_item_id:
+            logger.warning(f"❌ CASE REJECTED: Category '{category_description}' not found in CPIMS category mapping")
+            logger.warning(f"   Available categories: {[cat['item_description'] for cat in self.case_categories]}")
+            raise ValueError(f"Invalid category '{category_description}' - not found in CPIMS category mapping")
         
         # Determine data source priority: client data if available, otherwise reporter data
         has_client_data = bool(client_data)
