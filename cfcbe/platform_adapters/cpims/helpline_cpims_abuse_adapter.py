@@ -516,8 +516,8 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         cpims_payload = {
             # Basic case information
             "physical_condition": "PNRM",  # Default - not available in API payload
-            "county": county_code or "UNK",
-            "sub_county_code": constituency_code or "UNK",
+            "county": county_name or "Unknown County",  # Use county name instead of code
+            "sub_county_code": constituency_name or "Unknown Constituency",  # Use constituency name instead of code
             "hh_economic_status": "UINC",  # Default - not available in API payload
             "other_condition": "CHNM",  # Default - not available in API payload
             "child_sex": self._map_code(person_sex, "sex") or "SMAL",
@@ -534,7 +534,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "case_reporter": self._map_code("Helpline 116", "case_reporter") or "CRHE",
             "child_in_school": get_safe(client_data, "in_school", None) if has_client_data else None,
             "tribe": get_safe(client_data, "contact_tribe", None) if has_client_data else get_safe(case_data, "reporter_tribe", None),
-            "sublocation": ward_name or "Unknown",
+            "sublocation": ward_name or "Unknown Ward",
             "child_surname": self._extract_name(person_fullname, "surname") or "Unknown",
             "case_village": get_safe(case_data, "reporter_location_5", "") or "Unknown Village",  # Lowest level location
             "latitude": None,  # Not available in this API payload structure
@@ -554,17 +554,17 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "mental_condition": "MNRM",  # Default
             "police_station": "",
             "risk_level": self._map_code(get_safe(case_data, "priority", ""), "risk_level") or "RLMD",
-            "constituency": (constituency_code or "UNK")[:3],  # Max 3 chars
+            "constituency": constituency_name or "Unknown Constituency",  # Use constituency name instead of code
             "hobbies": None,
             "reporter_email": get_safe(case_data, "reporter_email", ""),
-            "location": get_safe(case_data, "reporter_location_5", "") or ward_name or "Unknown",
-            "reporter_county": county_code or "UNK",
-            "reporter_sub_county": constituency_code or "UNK", 
-            "reporter_ward": ward_code or "UNKNOWN_WARD",
-            "reporter_village": get_safe(case_data, "reporter_location_5", "") or "UNKNOWN_VILLAGE",
+            "location": get_safe(case_data, "reporter_location_5", "") or ward_name or "Unknown Location",
+            "reporter_county": county_name or "Unknown County",  # Use county name instead of code
+            "reporter_sub_county": constituency_name or "Unknown Constituency",  # Use constituency name instead of code
+            "reporter_ward": ward_name or "Unknown Ward",  # Use ward name instead of code
+            "reporter_village": get_safe(case_data, "reporter_location_5", "") or "Unknown Village",
             "has_birth_cert": None,
             "user": get_safe(case_data, "created_by", "helpline_user"),
-            "area_code": county_code or "UNK",
+            "area_code": county_code or "UNK",  # Keep area_code as code for CPIMS internal processing
 
             # Case details array
             "case_details": [{
