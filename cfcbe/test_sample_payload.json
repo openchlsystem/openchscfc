@@ -1,0 +1,3981 @@
+{
+    "cases": [
+        [
+            "31687",
+            "1757487391",
+            "test",
+            "273",
+            "99",
+            "1",
+            "387389",
+            "^Abuse & Violence",
+            "362559",
+            "387389:Abuse & Violence^",
+            "387389",
+            "0",
+            "0",
+            "0",
+            "0",
+            "Abuse & Violence",
+            "",
+            "",
+            "",
+            "",
+            "0",
+            "",
+            "0",
+            "",
+            "0",
+            "",
+            "273",
+            "test",
+            "99",
+            "0",
+            "",
+            "",
+            "273",
+            "test",
+            "99",
+            "3",
+            "1",
+            "",
+            "",
+            "Agnes from Murang'a is severely beaten by her father when he's drunk for no reason.",
+            "Agnes needs to be sheltered from her abusive father.",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "0",
+            "",
+            "",
+            "",
+            "",
+            "walkin",
+            "walkin-100-1757484659785",
+            "",
+            "2",
+            "86732",
+            "133243",
+            "Agnes Wacera",
+            "254728769034",
+            "",
+            "",
+            "24567895",
+            "ACC church",
+            "1252530000",
+            "16",
+            "387605",
+            "^15-17",
+            "387713",
+            "^Female",
+            "0",
+            "",
+            "387684",
+            "^Kenyan",
+            "0",
+            "",
+            "0",
+            "",
+            "386328",
+            "^Murang'a^Kandara^Kagundu-Ini",
+            "385471",
+            "385606",
+            "386328",
+            "0",
+            "0",
+            "0",
+            "Murang'a",
+            "Kandara",
+            "Kagundu-Ini",
+            "",
+            "",
+            "",
+            "0",
+            "",
+            "",
+            "0",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "387725",
+            "Complete",
+            "1",
+            "1735678800",
+            "1756674000",
+            "1757106000",
+            "1757451600",
+            "1757484000",
+            "9",
+            "0",
+            "",
+            "walkin-100-1757484659785",
+            "0",
+            "0",
+            "ro0",
+            "rc0"
+        ]
+    ],
+    "cases_k": {
+        "id": [
+            "0",
+            "id",
+            "31687",
+            "CASE ID",
+            ""
+        ],
+        "created_on": [
+            "1",
+            "created_on",
+            "",
+            "Created On",
+            "d M Y H:i:s"
+        ],
+        "created_by": [
+            "2",
+            "created_by",
+            "",
+            "Created By",
+            ""
+        ],
+        "created_by_id": [
+            "3",
+            "created_by_id",
+            "",
+            "Created By ID",
+            ""
+        ],
+        "created_by_role": [
+            "4",
+            "created_by_role",
+            "",
+            "Created By Role",
+            "::role:0:1"
+        ],
+        "gbv_related": [
+            "5",
+            "gbv_related",
+            "",
+            "GBV Related",
+            "::yesno:0:2"
+        ],
+        "case_category_id": [
+            "6",
+            "case_category_id",
+            "",
+            "Case Category ID",
+            ""
+        ],
+        "case_category": [
+            "7",
+            "case_category",
+            "",
+            "Case Category",
+            ""
+        ],
+        "case_category_root_id": [
+            "8",
+            "case_category_root_id",
+            "",
+            "Case Category Root ID",
+            ""
+        ],
+        "case_category_fullname_id": [
+            "9",
+            "case_category_fullname_id",
+            "",
+            "Case Category Fullname ID",
+            ""
+        ],
+        "cat_id_0": [
+            "10",
+            "cat_id_0",
+            "",
+            "Case Type",
+            ""
+        ],
+        "cat_id_1": [
+            "11",
+            "cat_id_1",
+            "",
+            "Main Category",
+            ""
+        ],
+        "cat_id_2": [
+            "12",
+            "cat_id_2",
+            "",
+            "Sub Category 1 ID",
+            ""
+        ],
+        "cat_id_3": [
+            "13",
+            "cat_id_3",
+            "",
+            "Sub Category 2 ID",
+            ""
+        ],
+        "cat_id_4": [
+            "14",
+            "cat_id_4",
+            "",
+            "Sub Category 3 ID",
+            ""
+        ],
+        "cat_0": [
+            "15",
+            "cat_0",
+            "",
+            "Case Type",
+            ""
+        ],
+        "cat_1": [
+            "16",
+            "cat_1",
+            "",
+            "Main Category",
+            ""
+        ],
+        "cat_2": [
+            "17",
+            "cat_2",
+            "",
+            "Sub Category 1",
+            ""
+        ],
+        "cat_3": [
+            "18",
+            "cat_3",
+            "",
+            "Sub Category 2",
+            ""
+        ],
+        "cat_4": [
+            "19",
+            "cat_4",
+            "",
+            "Sub Category 3",
+            ""
+        ],
+        "knowabout116_id": [
+            "20",
+            "knowabout116_id",
+            "",
+            "Know about 116 Id",
+            ""
+        ],
+        "knowabout116": [
+            "21",
+            "knowabout116",
+            "",
+            "Know about 116",
+            ""
+        ],
+        "justice_id": [
+            "22",
+            "justice_id",
+            "",
+            "Justice ID",
+            ""
+        ],
+        "justice": [
+            "23",
+            "justice",
+            "",
+            "Justice",
+            ""
+        ],
+        "assessment_id": [
+            "24",
+            "assessment_id",
+            "",
+            "Assessment ID",
+            ""
+        ],
+        "assessment": [
+            "25",
+            "assessment",
+            "",
+            "Assessment",
+            ""
+        ],
+        "escalated_by_id": [
+            "26",
+            "escalated_by_id",
+            "",
+            "Escalated By ID",
+            ""
+        ],
+        "escalated_by": [
+            "27",
+            "escalated_by",
+            "",
+            "Escalated By",
+            ""
+        ],
+        "escalated_by_role": [
+            "28",
+            "escalated_by_role",
+            "",
+            "Escalated By Role",
+            ""
+        ],
+        "escalated_to_id": [
+            "29",
+            "escalated_to_id",
+            "",
+            "Escalated To ID",
+            ""
+        ],
+        "escalated_to": [
+            "30",
+            "escalated_to",
+            "",
+            "Escalated To",
+            ""
+        ],
+        "escalated_to_role": [
+            "31",
+            "escalated_to_role",
+            "",
+            "Escalated To Role",
+            ""
+        ],
+        "assigned_to_id": [
+            "32",
+            "assigned_to_id",
+            "",
+            "Assigned To ID",
+            ""
+        ],
+        "assigned_to": [
+            "33",
+            "assigned_to",
+            "",
+            "Assigned To",
+            ""
+        ],
+        "assigned_to_role": [
+            "34",
+            "assigned_to_role",
+            "",
+            "Assigned To Role",
+            ""
+        ],
+        "priority": [
+            "35",
+            "priority",
+            "",
+            "Priority",
+            "::case_priority:0:1"
+        ],
+        "status": [
+            "36",
+            "status",
+            "",
+            "Status",
+            "::case_status:0:1"
+        ],
+        "services": [
+            "37",
+            "services",
+            "",
+            "Services Offered",
+            ""
+        ],
+        "referals": [
+            "38",
+            "referals",
+            "",
+            "Referals",
+            ""
+        ],
+        "narrative": [
+            "39",
+            "narrative",
+            "",
+            "Narrative",
+            ""
+        ],
+        "plan": [
+            "40",
+            "plan",
+            "",
+            "Plan",
+            ""
+        ],
+        "police_ob_no": [
+            "41",
+            "police_ob_no",
+            "",
+            "Police Ref Number",
+            ""
+        ],
+        "specify_service": [
+            "42",
+            "specify_service",
+            "",
+            "Specify Service",
+            ""
+        ],
+        "specify_referal": [
+            "43",
+            "specify_referal",
+            "",
+            "Specify Referal",
+            ""
+        ],
+        "is_medical_exam_done": [
+            "44",
+            "is_medical_exam_done",
+            "",
+            "Is Medical Exam Done?",
+            "::yesno:0:1"
+        ],
+        "is_incidence_reported": [
+            "45",
+            "is_incidence_reported",
+            "",
+            "Is Incidence Reported?",
+            "::yesno:0:1"
+        ],
+        "is_hiv_tested": [
+            "46",
+            "is_hiv_tested",
+            "",
+            "Is HIV Tested?",
+            "::yesno:0:1"
+        ],
+        "is_pep_given": [
+            "47",
+            "is_pep_given",
+            "",
+            "Is PEP Given?",
+            "::yesno:0:1"
+        ],
+        "is_art_given": [
+            "48",
+            "is_art_given",
+            "",
+            "Is ART Given?",
+            "::yesno:0:1"
+        ],
+        "is_ecp_given": [
+            "49",
+            "is_ecp_given",
+            "",
+            "Is ECP Given?",
+            "::yesno:0:1"
+        ],
+        "is_counselling_given": [
+            "50",
+            "is_counselling_given",
+            "",
+            "Is Counselling Given?",
+            "::yesno:0:1"
+        ],
+        "incidence_when": [
+            "51",
+            "incidence_when",
+            "",
+            "Date of Incident",
+            "d M Y H:i:s"
+        ],
+        "incidence_location": [
+            "52",
+            "incidence_location",
+            "",
+            "Incidence Reported Where",
+            ""
+        ],
+        "incidence_ref_no": [
+            "53",
+            "incidence_ref_no",
+            "",
+            "Incidence Police Ref. No.",
+            ""
+        ],
+        "hiv_test_result": [
+            "54",
+            "hiv_test_result",
+            "",
+            "HIV Test Result",
+            "::charge:0:1"
+        ],
+        "counseling_org": [
+            "55",
+            "counseling_org",
+            "",
+            "Counseling Organisation",
+            ""
+        ],
+        "src": [
+            "56",
+            "src",
+            "",
+            "Channel",
+            ""
+        ],
+        "src_uid": [
+            "57",
+            "src_uid",
+            "",
+            "Channel Uniqueid",
+            ""
+        ],
+        "src_address": [
+            "58",
+            "src_address",
+            "",
+            "Channel Address",
+            ""
+        ],
+        "src_vector": [
+            "59",
+            "src_vector",
+            "",
+            "Channel Direction",
+            ""
+        ],
+        "reporter_id": [
+            "60",
+            "reporter_id",
+            "",
+            "Reporter ID",
+            ""
+        ],
+        "reporter_contact_id": [
+            "61",
+            "reporter_contact_id",
+            "",
+            "Reporter Contact ID",
+            ""
+        ],
+        "reporter_fullname": [
+            "62",
+            "reporter_fullname",
+            "",
+            "Reporter Fullname",
+            ""
+        ],
+        "reporter_phone": [
+            "63",
+            "reporter_phone",
+            "",
+            "Reporter Phone",
+            ""
+        ],
+        "reporter_email": [
+            "64",
+            "reporter_email",
+            "",
+            "Reporter Email",
+            ""
+        ],
+        "reporter_phone2": [
+            "65",
+            "reporter_phone2",
+            "",
+            "Reporter Alternative Contact",
+            ""
+        ],
+        "reporter_national_id": [
+            "66",
+            "reporter_national_id",
+            "",
+            "Reporter National ID",
+            ""
+        ],
+        "reporter_landmark": [
+            "67",
+            "reporter_landmark",
+            "",
+            "Reporter Nearest Landmark",
+            ""
+        ],
+        "reporter_dob": [
+            "68",
+            "reporter_dob",
+            "",
+            "Reporter Date of Birth",
+            "d M Y H:i:s"
+        ],
+        "reporter_age": [
+            "69",
+            "reporter_age",
+            "",
+            "Reporter Age",
+            ""
+        ],
+        "reporter_age_group_id": [
+            "70",
+            "reporter_age_group_id",
+            "",
+            "Reporter Age Group",
+            ""
+        ],
+        "reporter_age_group": [
+            "71",
+            "reporter_age_group",
+            "",
+            "Reporter Age Group",
+            ""
+        ],
+        "reporter_sex_id": [
+            "72",
+            "reporter_sex_id",
+            "",
+            "Reporter Gender",
+            ""
+        ],
+        "reporter_sex": [
+            "73",
+            "reporter_sex",
+            "",
+            "Reporter Gender",
+            ""
+        ],
+        "reporter_national_id_type_id": [
+            "74",
+            "reporter_national_id_type_id",
+            "",
+            "ID Type ID",
+            ""
+        ],
+        "reporter_national_id_type": [
+            "75",
+            "reporter_national_id_type",
+            "",
+            "ID Type",
+            ""
+        ],
+        "reporter_nationality_id": [
+            "76",
+            "reporter_nationality_id",
+            "",
+            "Reporter Nationality ID",
+            ""
+        ],
+        "reporter_nationality": [
+            "77",
+            "reporter_nationality",
+            "",
+            "Reporter Nationality",
+            ""
+        ],
+        "reporter_tribe_id": [
+            "78",
+            "reporter_tribe_id",
+            "",
+            "Reporter Tribe ID",
+            ""
+        ],
+        "reporter_tribe": [
+            "79",
+            "reporter_tribe",
+            "",
+            "Reporter Tribe",
+            ""
+        ],
+        "reporter_lang_id": [
+            "80",
+            "reporter_lang_id",
+            "",
+            "Reporter Language ID",
+            ""
+        ],
+        "reporter_lang": [
+            "81",
+            "reporter_lang",
+            "",
+            "Reporter Language",
+            ""
+        ],
+        "reporter_location_id": [
+            "82",
+            "reporter_location_id",
+            "",
+            "Reporter Location ID",
+            ""
+        ],
+        "reporter_location": [
+            "83",
+            "reporter_location",
+            "",
+            "Reporter Location",
+            ""
+        ],
+        "reporter_location_id_0": [
+            "84",
+            "reporter_location_id_0",
+            "",
+            "Reporter Region ID",
+            ""
+        ],
+        "reporter_location_id_1": [
+            "85",
+            "reporter_location_id_1",
+            "",
+            "Reporter District ID",
+            ""
+        ],
+        "reporter_location_id_2": [
+            "86",
+            "reporter_location_id_2",
+            "",
+            "Reporter County ID",
+            ""
+        ],
+        "reporter_location_id_3": [
+            "87",
+            "reporter_location_id_3",
+            "",
+            "Reporter Sub County ID",
+            ""
+        ],
+        "reporter_location_id_4": [
+            "88",
+            "reporter_location_id_4",
+            "",
+            "Reporter Parish ID",
+            ""
+        ],
+        "reporter_location_id_5": [
+            "89",
+            "reporter_location_id_5",
+            "",
+            "Reporter Village ID",
+            ""
+        ],
+        "reporter_location_0": [
+            "90",
+            "reporter_location_0",
+            "",
+            "Reporter Region",
+            ""
+        ],
+        "reporter_location_1": [
+            "91",
+            "reporter_location_1",
+            "",
+            "Reporter District",
+            ""
+        ],
+        "reporter_location_2": [
+            "92",
+            "reporter_location_2",
+            "",
+            "Reporter County",
+            ""
+        ],
+        "reporter_location_3": [
+            "93",
+            "reporter_location_3",
+            "",
+            "Reporter Sub County",
+            ""
+        ],
+        "reporter_location_4": [
+            "94",
+            "reporter_location_4",
+            "",
+            "Reporter Parish",
+            ""
+        ],
+        "reporter_location_5": [
+            "95",
+            "reporter_location_5",
+            "",
+            "Reporter Village",
+            ""
+        ],
+        "reporter_is_refugee": [
+            "96",
+            "reporter_is_refugee",
+            "",
+            "Reporter Is Refugee",
+            "::yesno:0:1"
+        ],
+        "client_count": [
+            "97",
+            "client_count",
+            "",
+            "Client Count",
+            ""
+        ],
+        "perp_count": [
+            "98",
+            "perp_count",
+            "",
+            "Perpetrator Count",
+            ""
+        ],
+        "is_reporter_client": [
+            "99",
+            "is_reporter_client",
+            "",
+            "Is Reporter Client?",
+            "::yesno:0:1"
+        ],
+        "activity_count": [
+            "100",
+            "activity_count",
+            "",
+            "Activity Count",
+            ""
+        ],
+        "activity_ids": [
+            "101",
+            "activity_ids",
+            "",
+            "Activity IDs",
+            ""
+        ],
+        "activity_last_id": [
+            "102",
+            "activity_last_id",
+            "",
+            "Last Activity ID",
+            ""
+        ],
+        "activity_on": [
+            "103",
+            "activity_on",
+            "",
+            "Last Activity On",
+            ""
+        ],
+        "activity_by": [
+            "104",
+            "activity_by",
+            "",
+            "Last Activity By",
+            ""
+        ],
+        "activity_by_id": [
+            "105",
+            "activity_by_id",
+            "",
+            "Last Activity By ID",
+            ""
+        ],
+        "activity_by_role": [
+            "106",
+            "activity_by_role",
+            "",
+            "Last Activity By Role",
+            ""
+        ],
+        "activity_src": [
+            "107",
+            "activity_src",
+            "",
+            "Last Activity Source",
+            ""
+        ],
+        "activity_src_uid": [
+            "108",
+            "activity_src_uid",
+            "",
+            "Last Activity Source UID",
+            ""
+        ],
+        "disposition_id": [
+            "109",
+            "disposition_id",
+            "",
+            "Disposition ID",
+            ""
+        ],
+        "disposition": [
+            "110",
+            "disposition",
+            "",
+            "Disposition",
+            ""
+        ],
+        "final_status": [
+            "111",
+            "final_status",
+            "",
+            "Final Status",
+            ""
+        ],
+        "yr": [
+            "112",
+            "yr",
+            "",
+            "Year",
+            ":d:y:0: "
+        ],
+        "mn": [
+            "113",
+            "mn",
+            "",
+            "Month",
+            ":d:my:0: "
+        ],
+        "wk": [
+            "114",
+            "wk",
+            "",
+            "Week",
+            ":d:dmy:0: "
+        ],
+        "dt": [
+            "115",
+            "dt",
+            "",
+            "Date",
+            ":d:dmy:0: "
+        ],
+        "hr": [
+            "116",
+            "hr",
+            "",
+            "Hour",
+            ":d:dmyh:0: "
+        ],
+        "h": [
+            "117",
+            "h",
+            "",
+            "Hour",
+            ""
+        ],
+        "mn_closed": [
+            "118",
+            "mn_closed",
+            "",
+            "",
+            ""
+        ],
+        "theirref": [
+            "119",
+            "theirref",
+            "",
+            "Reference",
+            ""
+        ],
+        "src_callid": [
+            "120",
+            "src_callid",
+            "",
+            "Session ID",
+            ""
+        ],
+        "dept": [
+            "121",
+            "dept",
+            "",
+            "Department",
+            ""
+        ]
+    },
+    "reporters": [
+        [
+            "86732",
+            "1757487043",
+            "test",
+            "273",
+            "99",
+            "133243",
+            "Agnes Wacera",
+            "Agnes Wacera",
+            "",
+            "254728769034",
+            "",
+            "",
+            "1252530000",
+            "16",
+            "387605",
+            "^15-17",
+            "387713",
+            "^Female",
+            "387674",
+            "^National ID",
+            "24567895",
+            "",
+            "",
+            "387684",
+            "^Kenyan",
+            "0",
+            "",
+            "0",
+            "",
+            "386328",
+            "^Murang'a^Kandara^Kagundu-Ini",
+            "ACC church",
+            "385471",
+            "385606",
+            "386328",
+            "0",
+            "0",
+            "0",
+            "0",
+            "Murang'a",
+            "Kandara",
+            "Kagundu-Ini",
+            "",
+            "",
+            "",
+            "",
+            "0",
+            "walkin",
+            "walkin-100-1757484659785",
+            "",
+            "2",
+            "",
+            "31687",
+            "0",
+            "ro0",
+            "rc0"
+        ]
+    ],
+    "reporters_k": {
+        "id": [
+            "0",
+            "id",
+            "86732",
+            "",
+            ""
+        ],
+        "created_on": [
+            "1",
+            "created_on",
+            "",
+            "",
+            ""
+        ],
+        "created_by": [
+            "2",
+            "created_by",
+            "",
+            "",
+            ""
+        ],
+        "created_by_id": [
+            "3",
+            "created_by_id",
+            "",
+            "",
+            ""
+        ],
+        "created_by_role": [
+            "4",
+            "created_by_role",
+            "",
+            "Created By Role",
+            ""
+        ],
+        "contact_id": [
+            "5",
+            "contact_id",
+            "",
+            "Contact",
+            ""
+        ],
+        "contact_fullname": [
+            "6",
+            "contact_fullname",
+            "",
+            "Fullname",
+            ""
+        ],
+        "contact_fname": [
+            "7",
+            "contact_fname",
+            "",
+            "First Name",
+            ""
+        ],
+        "contact_lname": [
+            "8",
+            "contact_lname",
+            "",
+            "Last Name",
+            ""
+        ],
+        "contact_phone": [
+            "9",
+            "contact_phone",
+            "",
+            "Phone",
+            ""
+        ],
+        "contact_email": [
+            "10",
+            "contact_email",
+            "",
+            "Email",
+            ""
+        ],
+        "contact_phone2": [
+            "11",
+            "contact_phone2",
+            "",
+            "Alternative Contact",
+            ""
+        ],
+        "contact_dob": [
+            "12",
+            "contact_dob",
+            "",
+            "Date of Birth",
+            "d M Y H:i:s"
+        ],
+        "contact_age": [
+            "13",
+            "contact_age",
+            "",
+            "Age",
+            ""
+        ],
+        "contact_age_group_id": [
+            "14",
+            "contact_age_group_id",
+            "",
+            "Age Group ID",
+            ""
+        ],
+        "contact_age_group": [
+            "15",
+            "contact_age_group",
+            "",
+            "Age Group",
+            ""
+        ],
+        "contact_sex_id": [
+            "16",
+            "contact_sex_id",
+            "",
+            "Gender ID",
+            ""
+        ],
+        "contact_sex": [
+            "17",
+            "contact_sex",
+            "",
+            "Gender",
+            ""
+        ],
+        "contact_national_id_type_id": [
+            "18",
+            "contact_national_id_type_id",
+            "",
+            "ID Type",
+            ""
+        ],
+        "contact_national_id_type": [
+            "19",
+            "contact_national_id_type",
+            "",
+            "ID Type",
+            ""
+        ],
+        "contact_national_id": [
+            "20",
+            "contact_national_id",
+            "",
+            "National ID",
+            ""
+        ],
+        "contact_address": [
+            "21",
+            "contact_address",
+            "",
+            "Address",
+            ""
+        ],
+        "contact_residence": [
+            "22",
+            "contact_residence",
+            "",
+            "Residence",
+            ""
+        ],
+        "contact_nationality_id": [
+            "23",
+            "contact_nationality_id",
+            "",
+            "Nationality ID",
+            ""
+        ],
+        "contact_nationality": [
+            "24",
+            "contact_nationality",
+            "",
+            "Nationality",
+            ""
+        ],
+        "contact_tribe_id": [
+            "25",
+            "contact_tribe_id",
+            "",
+            "Tribe ID",
+            ""
+        ],
+        "contact_tribe": [
+            "26",
+            "contact_tribe",
+            "",
+            "Tribe",
+            ""
+        ],
+        "contact_lang_id": [
+            "27",
+            "contact_lang_id",
+            "",
+            "Language ID",
+            ""
+        ],
+        "contact_lang": [
+            "28",
+            "contact_lang",
+            "",
+            "Language",
+            ""
+        ],
+        "contact_location_id": [
+            "29",
+            "contact_location_id",
+            "",
+            "Location ID",
+            ""
+        ],
+        "contact_location": [
+            "30",
+            "contact_location",
+            "",
+            "Location",
+            ""
+        ],
+        "contact_landmark": [
+            "31",
+            "contact_landmark",
+            "",
+            "Nearest Landmark",
+            ""
+        ],
+        "contact_location_id_0": [
+            "32",
+            "contact_location_id_0",
+            "",
+            "Location Level 0 ID",
+            ""
+        ],
+        "contact_location_id_1": [
+            "33",
+            "contact_location_id_1",
+            "",
+            "Location Level 1 ID",
+            ""
+        ],
+        "contact_location_id_2": [
+            "34",
+            "contact_location_id_2",
+            "",
+            "Location Level 2 ID",
+            ""
+        ],
+        "contact_location_id_3": [
+            "35",
+            "contact_location_id_3",
+            "",
+            "Location Level 3 ID",
+            ""
+        ],
+        "contact_location_id_4": [
+            "36",
+            "contact_location_id_4",
+            "",
+            "Location Level 4 ID",
+            ""
+        ],
+        "contact_location_id_5": [
+            "37",
+            "contact_location_id_5",
+            "",
+            "Location Level 5 ID",
+            ""
+        ],
+        "contact_location_id_6": [
+            "38",
+            "contact_location_id_6",
+            "",
+            "Location Level 6 ID",
+            ""
+        ],
+        "contact_location_0": [
+            "39",
+            "contact_location_0",
+            "",
+            "Location Level 0",
+            ""
+        ],
+        "contact_location_1": [
+            "40",
+            "contact_location_1",
+            "",
+            "Location Level 1",
+            ""
+        ],
+        "contact_location_2": [
+            "41",
+            "contact_location_2",
+            "",
+            "Location Level 2",
+            ""
+        ],
+        "contact_location_3": [
+            "42",
+            "contact_location_3",
+            "",
+            "Location Level 3",
+            ""
+        ],
+        "contact_location_4": [
+            "43",
+            "contact_location_4",
+            "",
+            "Location Level 4",
+            ""
+        ],
+        "contact_location_5": [
+            "44",
+            "contact_location_5",
+            "",
+            "Location Level 5",
+            ""
+        ],
+        "contact_location_6": [
+            "45",
+            "contact_location_6",
+            "",
+            "Location Level 6",
+            ""
+        ],
+        "contact_is_refugee": [
+            "46",
+            "contact_is_refugee",
+            "",
+            "Reporter Is Refugee",
+            "::yesno:0:2"
+        ],
+        "src": [
+            "47",
+            "src",
+            "",
+            "Channel",
+            ""
+        ],
+        "src_uid": [
+            "48",
+            "src_uid",
+            "",
+            "Channel Uniqueid",
+            ""
+        ],
+        "src_address": [
+            "49",
+            "src_address",
+            "",
+            "Channel Address",
+            ""
+        ],
+        "src_vector": [
+            "50",
+            "src_vector",
+            "",
+            "Channel Direction",
+            ""
+        ],
+        "is_client": [
+            "51",
+            "is_client",
+            "",
+            "Is Client",
+            ""
+        ],
+        "case_id": [
+            "52",
+            "case_id",
+            "",
+            "Case ID",
+            ""
+        ]
+    },
+    "reporters_ctx": [
+        [
+            "0",
+            "10",
+            "1",
+            "1",
+            "1",
+            "",
+            ""
+        ]
+    ],
+    "perpetrators": [],
+    "perpetrators_no_data": [
+        []
+    ],
+    "perpetrators_k": {
+        "id": [
+            "0",
+            "id",
+            "",
+            "",
+            ""
+        ],
+        "created_on": [
+            "1",
+            "created_on",
+            "",
+            "",
+            ""
+        ],
+        "created_by": [
+            "2",
+            "created_by",
+            "",
+            "",
+            ""
+        ],
+        "created_by_id": [
+            "3",
+            "created_by_id",
+            "",
+            "",
+            ""
+        ],
+        "created_by_role": [
+            "4",
+            "created_by_role",
+            "",
+            "Created By Role",
+            ""
+        ],
+        "case_id": [
+            "5",
+            "case_id",
+            "",
+            "Case ID",
+            ""
+        ],
+        "contact_id": [
+            "6",
+            "contact_id",
+            "",
+            "Contact ID",
+            ""
+        ],
+        "contact_fullname": [
+            "7",
+            "contact_fullname",
+            "",
+            "Perp Fullname",
+            ""
+        ],
+        "contact_fname": [
+            "8",
+            "contact_fname",
+            "",
+            "First Name",
+            ""
+        ],
+        "contact_lname": [
+            "9",
+            "contact_lname",
+            "",
+            "Last Name",
+            ""
+        ],
+        "contact_phone": [
+            "10",
+            "contact_phone",
+            "",
+            "Perp Phone",
+            ""
+        ],
+        "contact_email": [
+            "11",
+            "contact_email",
+            "",
+            "Perp Email",
+            ""
+        ],
+        "contact_phone2": [
+            "12",
+            "contact_phone2",
+            "",
+            "Perp Alternative Contact",
+            ""
+        ],
+        "contact_dob": [
+            "13",
+            "contact_dob",
+            "",
+            "Perp Date of Birth",
+            "d M Y H:i:s"
+        ],
+        "contact_age": [
+            "14",
+            "contact_age",
+            "",
+            "Perp Age",
+            ""
+        ],
+        "contact_age_group_id": [
+            "15",
+            "contact_age_group_id",
+            "",
+            "Age Group ID",
+            ""
+        ],
+        "contact_age_group": [
+            "16",
+            "contact_age_group",
+            "",
+            "Perp Age Group",
+            ""
+        ],
+        "contact_sex_id": [
+            "17",
+            "contact_sex_id",
+            "",
+            "Gender ID",
+            ""
+        ],
+        "contact_sex": [
+            "18",
+            "contact_sex",
+            "",
+            "Perp Gender",
+            ""
+        ],
+        "contact_national_id_type_id": [
+            "19",
+            "contact_national_id_type_id",
+            "",
+            "ID Type",
+            ""
+        ],
+        "contact_national_id_type": [
+            "20",
+            "contact_national_id_type",
+            "",
+            "Perp ID Type",
+            ""
+        ],
+        "contact_national_id": [
+            "21",
+            "contact_national_id",
+            "",
+            "Perp National ID",
+            ""
+        ],
+        "contact_address": [
+            "22",
+            "contact_address",
+            "",
+            "Perp Address",
+            ""
+        ],
+        "contact_residence": [
+            "23",
+            "contact_residence",
+            "",
+            "Perp Residence",
+            ""
+        ],
+        "contact_nationality_id": [
+            "24",
+            "contact_nationality_id",
+            "",
+            "Nationality ID",
+            ""
+        ],
+        "contact_nationality": [
+            "25",
+            "contact_nationality",
+            "",
+            "Perp Nationality",
+            ""
+        ],
+        "contact_tribe_id": [
+            "26",
+            "contact_tribe_id",
+            "",
+            "Tribe ID",
+            ""
+        ],
+        "contact_tribe": [
+            "27",
+            "contact_tribe",
+            "",
+            "Perp Tribe",
+            ""
+        ],
+        "contact_lang_id": [
+            "28",
+            "contact_lang_id",
+            "",
+            "Language ID",
+            ""
+        ],
+        "contact_lang": [
+            "29",
+            "contact_lang",
+            "",
+            "Perp Language",
+            ""
+        ],
+        "contact_location_id": [
+            "30",
+            "contact_location_id",
+            "",
+            "Location ID",
+            ""
+        ],
+        "contact_location": [
+            "31",
+            "contact_location",
+            "",
+            "Perp Location",
+            ""
+        ],
+        "contact_landmark": [
+            "32",
+            "contact_landmark",
+            "",
+            "Perp Nearest Landmark",
+            ""
+        ],
+        "contact_location_id_0": [
+            "33",
+            "contact_location_id_0",
+            "",
+            "Perp Region ID",
+            ""
+        ],
+        "contact_location_id_1": [
+            "34",
+            "contact_location_id_1",
+            "",
+            "Perp District ID",
+            ""
+        ],
+        "contact_location_id_2": [
+            "35",
+            "contact_location_id_2",
+            "",
+            "Perp County ID",
+            ""
+        ],
+        "contact_location_id_3": [
+            "36",
+            "contact_location_id_3",
+            "",
+            "Perp Sub County ID",
+            ""
+        ],
+        "contact_location_id_4": [
+            "37",
+            "contact_location_id_4",
+            "",
+            "Perp Parish ID",
+            ""
+        ],
+        "contact_location_id_5": [
+            "38",
+            "contact_location_id_5",
+            "",
+            "Perp Village ID",
+            ""
+        ],
+        "contact_location_id_6": [
+            "39",
+            "contact_location_id_6",
+            "",
+            "Perp Village ID",
+            ""
+        ],
+        "contact_location_0": [
+            "40",
+            "contact_location_0",
+            "",
+            "Perp Region",
+            ""
+        ],
+        "contact_location_1": [
+            "41",
+            "contact_location_1",
+            "",
+            "Perp District",
+            ""
+        ],
+        "contact_location_2": [
+            "42",
+            "contact_location_2",
+            "",
+            "Perp County",
+            ""
+        ],
+        "contact_location_3": [
+            "43",
+            "contact_location_3",
+            "",
+            "Perp SubCounty",
+            ""
+        ],
+        "contact_location_4": [
+            "44",
+            "contact_location_4",
+            "",
+            "Perp Parish",
+            ""
+        ],
+        "contact_location_5": [
+            "45",
+            "contact_location_5",
+            "",
+            "Perp Village",
+            ""
+        ],
+        "contact_location_6": [
+            "46",
+            "contact_location_6",
+            "",
+            "Perp Constituency",
+            ""
+        ],
+        "contact_is_refugee": [
+            "47",
+            "contact_is_refugee",
+            "",
+            "Perp Is Refugee",
+            "::yesno:0:2"
+        ],
+        "relationship_id": [
+            "48",
+            "relationship_id",
+            "",
+            "Perp Relationship with Client ID",
+            ""
+        ],
+        "relationship": [
+            "49",
+            "relationship",
+            "",
+            "Perp Relationship with Client",
+            ""
+        ],
+        "shareshome_id": [
+            "50",
+            "shareshome_id",
+            "",
+            "Shares Home ID",
+            ""
+        ],
+        "shareshome": [
+            "51",
+            "shareshome",
+            "",
+            "Perp Shares Home",
+            ""
+        ],
+        "marital_id": [
+            "52",
+            "marital_id",
+            "",
+            "Marital Status ID",
+            ""
+        ],
+        "marital": [
+            "53",
+            "marital",
+            "",
+            "Perp Marital Status",
+            ""
+        ],
+        "health_id": [
+            "54",
+            "health_id",
+            "",
+            "Health Status ID",
+            ""
+        ],
+        "health": [
+            "55",
+            "health",
+            "",
+            "Perp Health Status",
+            ""
+        ],
+        "employment_id": [
+            "56",
+            "employment_id",
+            "",
+            "Employment Status ID",
+            ""
+        ],
+        "employment": [
+            "57",
+            "employment",
+            "",
+            "Perp Employment Status",
+            ""
+        ],
+        "guardian_fullname": [
+            "58",
+            "guardian_fullname",
+            "",
+            "Perp Guardian Name",
+            ""
+        ],
+        "notes": [
+            "59",
+            "notes",
+            "",
+            "Perp Additional Details",
+            ""
+        ],
+        "spouse_profession_id": [
+            "60",
+            "spouse_profession_id",
+            "",
+            "Spouse Profession ID",
+            ""
+        ],
+        "spouse_profession": [
+            "61",
+            "spouse_profession",
+            "",
+            "Client Spouse Profession",
+            ""
+        ],
+        "spouse_fullname": [
+            "62",
+            "spouse_fullname",
+            "",
+            "Client Spouse Fullname",
+            ""
+        ],
+        "src_uid": [
+            "63",
+            "src_uid",
+            "",
+            "Channel Uniqueid",
+            ""
+        ],
+        "is_delete": [
+            "64",
+            "is_delete",
+            "",
+            "Client Is Deleted",
+            ""
+        ],
+        "case_id_": [
+            "65",
+            "case_id_",
+            "31687",
+            "Case Link ID",
+            ""
+        ]
+    },
+    "perpetrators_ctx": [
+        [
+            "0",
+            "10",
+            "0",
+            "0",
+            "0",
+            "",
+            ""
+        ]
+    ],
+    "clients": [],
+    "clients_no_data": [
+        []
+    ],
+    "clients_k": {
+        "id": [
+            "0",
+            "id",
+            "",
+            "",
+            ""
+        ],
+        "created_on": [
+            "1",
+            "created_on",
+            "",
+            "",
+            ""
+        ],
+        "created_by": [
+            "2",
+            "created_by",
+            "",
+            "",
+            ""
+        ],
+        "created_by_id": [
+            "3",
+            "created_by_id",
+            "",
+            "",
+            ""
+        ],
+        "created_by_role": [
+            "4",
+            "created_by_role",
+            "",
+            "Created By Role",
+            ""
+        ],
+        "case_id": [
+            "5",
+            "case_id",
+            "",
+            "Case ID",
+            ""
+        ],
+        "contact_id": [
+            "6",
+            "contact_id",
+            "",
+            "Contact ID",
+            ""
+        ],
+        "contact_fullname": [
+            "7",
+            "contact_fullname",
+            "",
+            "Client Fullname",
+            ""
+        ],
+        "contact_fname": [
+            "8",
+            "contact_fname",
+            "",
+            "First Name",
+            ""
+        ],
+        "contact_lname": [
+            "9",
+            "contact_lname",
+            "",
+            "Last Name",
+            ""
+        ],
+        "contact_phone": [
+            "10",
+            "contact_phone",
+            "",
+            "Client Phone",
+            ""
+        ],
+        "contact_email": [
+            "11",
+            "contact_email",
+            "",
+            "Client Email",
+            ""
+        ],
+        "contact_phone2": [
+            "12",
+            "contact_phone2",
+            "",
+            "Client Alternative Contact",
+            ""
+        ],
+        "contact_dob": [
+            "13",
+            "contact_dob",
+            "",
+            "Client Date of Birth",
+            "d M Y H:i:s"
+        ],
+        "contact_age": [
+            "14",
+            "contact_age",
+            "",
+            "Client Age",
+            ""
+        ],
+        "contact_age_group_id": [
+            "15",
+            "contact_age_group_id",
+            "",
+            "Age Group ID",
+            ""
+        ],
+        "contact_age_group": [
+            "16",
+            "contact_age_group",
+            "",
+            "Client Age Group",
+            ""
+        ],
+        "contact_sex_id": [
+            "17",
+            "contact_sex_id",
+            "",
+            "Gender ID",
+            ""
+        ],
+        "contact_sex": [
+            "18",
+            "contact_sex",
+            "",
+            "Client Gender",
+            ""
+        ],
+        "contact_national_id_type_id": [
+            "19",
+            "contact_national_id_type_id",
+            "",
+            "ID Type ID",
+            ""
+        ],
+        "contact_national_id_type": [
+            "20",
+            "contact_national_id_type",
+            "",
+            "Client ID Type",
+            ""
+        ],
+        "contact_national_id": [
+            "21",
+            "contact_national_id",
+            "",
+            "Client National ID",
+            ""
+        ],
+        "contact_address": [
+            "22",
+            "contact_address",
+            "",
+            "Client Address",
+            ""
+        ],
+        "contact_residence": [
+            "23",
+            "contact_residence",
+            "",
+            "Client Residence",
+            ""
+        ],
+        "contact_nationality_id": [
+            "24",
+            "contact_nationality_id",
+            "",
+            "Nationality ID",
+            ""
+        ],
+        "contact_nationality": [
+            "25",
+            "contact_nationality",
+            "",
+            "Client Nationality",
+            ""
+        ],
+        "contact_tribe_id": [
+            "26",
+            "contact_tribe_id",
+            "",
+            "Tribe ID",
+            ""
+        ],
+        "contact_tribe": [
+            "27",
+            "contact_tribe",
+            "",
+            "Client Tribe",
+            ""
+        ],
+        "contact_lang_id": [
+            "28",
+            "contact_lang_id",
+            "",
+            "Language ID",
+            ""
+        ],
+        "contact_lang": [
+            "29",
+            "contact_lang",
+            "",
+            "Client Language",
+            ""
+        ],
+        "contact_location_id": [
+            "30",
+            "contact_location_id",
+            "",
+            "Location ID",
+            ""
+        ],
+        "contact_location": [
+            "31",
+            "contact_location",
+            "",
+            "Client Location",
+            ""
+        ],
+        "contact_landmark": [
+            "32",
+            "contact_landmark",
+            "",
+            "Client Nearest Landmark",
+            ""
+        ],
+        "contact_location_id_0": [
+            "33",
+            "contact_location_id_0",
+            "",
+            "Client Region ID",
+            ""
+        ],
+        "contact_location_id_1": [
+            "34",
+            "contact_location_id_1",
+            "",
+            "Client District ID",
+            ""
+        ],
+        "contact_location_id_2": [
+            "35",
+            "contact_location_id_2",
+            "",
+            "Client County ID",
+            ""
+        ],
+        "contact_location_id_3": [
+            "36",
+            "contact_location_id_3",
+            "",
+            "Client Sub County ID",
+            ""
+        ],
+        "contact_location_id_4": [
+            "37",
+            "contact_location_id_4",
+            "",
+            "Client Parish ID",
+            ""
+        ],
+        "contact_location_id_5": [
+            "38",
+            "contact_location_id_5",
+            "",
+            "Client Village ID",
+            ""
+        ],
+        "contact_location_id_6": [
+            "39",
+            "contact_location_id_6",
+            "",
+            "Client Constituency ID",
+            ""
+        ],
+        "contact_location_0": [
+            "40",
+            "contact_location_0",
+            "",
+            "Client Region",
+            ""
+        ],
+        "contact_location_1": [
+            "41",
+            "contact_location_1",
+            "",
+            "Client District",
+            ""
+        ],
+        "contact_location_2": [
+            "42",
+            "contact_location_2",
+            "",
+            "Client County",
+            ""
+        ],
+        "contact_location_3": [
+            "43",
+            "contact_location_3",
+            "",
+            "Client SubCounty",
+            ""
+        ],
+        "contact_location_4": [
+            "44",
+            "contact_location_4",
+            "",
+            "Client Parish",
+            ""
+        ],
+        "contact_location_5": [
+            "45",
+            "contact_location_5",
+            "",
+            "Client Village",
+            ""
+        ],
+        "contact_location_6": [
+            "46",
+            "contact_location_6",
+            "",
+            "Client Constituency",
+            ""
+        ],
+        "contact_is_refugee": [
+            "47",
+            "contact_is_refugee",
+            "",
+            "Client Is Refugee",
+            "::yesno:0:2"
+        ],
+        "is_reporter": [
+            "48",
+            "is_reporter",
+            "",
+            "Is Reporter",
+            "::yesno:0:1"
+        ],
+        "category_id": [
+            "49",
+            "category_id",
+            "",
+            "Category ID",
+            ""
+        ],
+        "category": [
+            "50",
+            "category",
+            "",
+            "Category",
+            ""
+        ],
+        "gbv_related": [
+            "51",
+            "gbv_related",
+            "",
+            "GBV Related",
+            "::yesno:0:2"
+        ],
+        "relationship_id": [
+            "52",
+            "relationship_id",
+            "",
+            "Report Relationship to Client ID",
+            ""
+        ],
+        "relationship": [
+            "53",
+            "relationship",
+            "",
+            "Report Relationship to Client",
+            ""
+        ],
+        "relationship_comment": [
+            "54",
+            "relationship_comment",
+            "",
+            "Relationship Comment",
+            ""
+        ],
+        "is_disabled": [
+            "55",
+            "is_disabled",
+            "",
+            "Client IsDisability",
+            "::yesno:0:1"
+        ],
+        "disability_id": [
+            "56",
+            "disability_id",
+            "",
+            "Disability ID",
+            ""
+        ],
+        "disability": [
+            "57",
+            "disability",
+            "",
+            "Client Disability",
+            ""
+        ],
+        "health_id": [
+            "58",
+            "health_id",
+            "",
+            "Health Status ID",
+            ""
+        ],
+        "health": [
+            "59",
+            "health",
+            "",
+            "Client Health Status",
+            ""
+        ],
+        "hiv_id": [
+            "60",
+            "hiv_id",
+            "",
+            "HIV ID",
+            ""
+        ],
+        "hiv": [
+            "61",
+            "hiv",
+            "",
+            "Client HIV",
+            ""
+        ],
+        "special_services": [
+            "62",
+            "special_services",
+            "",
+            "Client Registered for Special Services",
+            ""
+        ],
+        "in_school": [
+            "63",
+            "in_school",
+            "",
+            "Client In School",
+            "::yesno:0:1"
+        ],
+        "school_type_id": [
+            "64",
+            "school_type_id",
+            "",
+            "School Type ID",
+            ""
+        ],
+        "school_type": [
+            "65",
+            "school_type",
+            "",
+            "Client School Type",
+            ""
+        ],
+        "school_level_id": [
+            "66",
+            "school_level_id",
+            "",
+            "School Level ID",
+            ""
+        ],
+        "school_level": [
+            "67",
+            "school_level",
+            "",
+            "Client School Level",
+            ""
+        ],
+        "school_attendance": [
+            "68",
+            "school_attendance",
+            "",
+            "Client School Attendance",
+            ""
+        ],
+        "school_name": [
+            "69",
+            "school_name",
+            "",
+            "Client School Name",
+            ""
+        ],
+        "school_address": [
+            "70",
+            "school_address",
+            "",
+            "Client School Address",
+            ""
+        ],
+        "not_in_school_id": [
+            "71",
+            "not_in_school_id",
+            "",
+            "Reason for not attending School ID",
+            ""
+        ],
+        "not_in_school": [
+            "72",
+            "not_in_school",
+            "",
+            "Client Reason for not attending School",
+            ""
+        ],
+        "not_in_school_reason": [
+            "73",
+            "not_in_school_reason",
+            "",
+            "Client Not In School Reason",
+            ""
+        ],
+        "is_married": [
+            "74",
+            "is_married",
+            "",
+            "Client Is Married",
+            "::yesno:0:1"
+        ],
+        "marital_id": [
+            "75",
+            "marital_id",
+            "",
+            "Marital Status ID",
+            ""
+        ],
+        "marital": [
+            "76",
+            "marital",
+            "",
+            "Client Marital Status",
+            ""
+        ],
+        "spouse_profession_id": [
+            "77",
+            "spouse_profession_id",
+            "",
+            "Spouse Profession ID",
+            ""
+        ],
+        "spouse_profession": [
+            "78",
+            "spouse_profession",
+            "",
+            "Client Spouse Profession",
+            ""
+        ],
+        "spouse_fullname": [
+            "79",
+            "spouse_fullname",
+            "",
+            "Client Spouse Fullname",
+            ""
+        ],
+        "is_guardian_known": [
+            "80",
+            "is_guardian_known",
+            "",
+            "Client Is Guardian Known?",
+            "::yesno:0:1"
+        ],
+        "guardian_marital_id": [
+            "81",
+            "guardian_marital_id",
+            "",
+            "Guardian's Marital Status ID",
+            ""
+        ],
+        "guardian_marital": [
+            "82",
+            "guardian_marital",
+            "",
+            "Client Guardian's Marital Status",
+            ""
+        ],
+        "guardian_fullname": [
+            "83",
+            "guardian_fullname",
+            "",
+            "Client Guardian's Name",
+            ""
+        ],
+        "guardian_national_id": [
+            "84",
+            "guardian_national_id",
+            "",
+            "Client Guardian's National ID",
+            ""
+        ],
+        "household_id": [
+            "85",
+            "household_id",
+            "",
+            "Household Type ID",
+            ""
+        ],
+        "household": [
+            "86",
+            "household",
+            "",
+            "Client Household Type",
+            ""
+        ],
+        "household_adults": [
+            "87",
+            "household_adults",
+            "",
+            "Client Number of Adults in Household",
+            ""
+        ],
+        "household_head_occupation_id": [
+            "88",
+            "household_head_occupation_id",
+            "",
+            "Client Occupation of Household Head ID",
+            ""
+        ],
+        "household_head_occupation": [
+            "89",
+            "household_head_occupation",
+            "",
+            "Client Occupation of Household Head",
+            ""
+        ],
+        "is_disabled_refered": [
+            "90",
+            "is_disabled_refered",
+            "",
+            "Refered for Special services",
+            "::yesno:0:1"
+        ],
+        "is_disabled_referals": [
+            "91",
+            "is_disabled_referals",
+            "",
+            "Referals",
+            ""
+        ],
+        "src_uid": [
+            "92",
+            "src_uid",
+            "",
+            "Channel Uniqueid",
+            ""
+        ],
+        "is_delete": [
+            "93",
+            "is_delete",
+            "",
+            "Client Is Deleted",
+            ""
+        ],
+        "is_reporter_id": [
+            "94",
+            "is_reporter_id",
+            "",
+            "Is Reporter ID",
+            ""
+        ],
+        "case_uuid": [
+            "95",
+            "case_uuid",
+            "",
+            "Case UUID",
+            ""
+        ],
+        "case_id_": [
+            "96",
+            "case_id_",
+            "31687",
+            "Case Link ID",
+            ""
+        ]
+    },
+    "clients_ctx": [
+        [
+            "0",
+            "10",
+            "0",
+            "0",
+            "0",
+            "",
+            ""
+        ]
+    ],
+    "attachments": [],
+    "attachments_no_data": [
+        []
+    ],
+    "attachments_k": {
+        "id": [
+            "0",
+            "id",
+            "",
+            "ID",
+            ""
+        ],
+        "created_on": [
+            "1",
+            "created_on",
+            "",
+            "Created On",
+            ""
+        ],
+        "created_by": [
+            "2",
+            "created_by",
+            "",
+            "Created By",
+            ""
+        ],
+        "created_by_id": [
+            "3",
+            "created_by_id",
+            "",
+            "Created By ID",
+            ""
+        ],
+        "created_by_role": [
+            "4",
+            "created_by_role",
+            "",
+            "Created By Role",
+            ""
+        ],
+        "file_id": [
+            "5",
+            "file_id",
+            "",
+            "File ID",
+            ""
+        ],
+        "file_name": [
+            "6",
+            "file_name",
+            "",
+            "Name",
+            ""
+        ],
+        "file_mime": [
+            "7",
+            "file_mime",
+            "",
+            "Mime",
+            ""
+        ],
+        "file_size": [
+            "8",
+            "file_size",
+            "",
+            "Size",
+            ""
+        ],
+        "file_uploadstatus": [
+            "9",
+            "file_uploadstatus",
+            "",
+            "Upload Status",
+            ""
+        ],
+        "file_movestatus": [
+            "10",
+            "file_movestatus",
+            "",
+            "Move Status",
+            ""
+        ],
+        "i_": [
+            "11",
+            "i_",
+            "",
+            "Position",
+            ""
+        ],
+        "case_id": [
+            "12",
+            "case_id",
+            "",
+            "Case ID",
+            ""
+        ],
+        "case_id_": [
+            "13",
+            "case_id_",
+            "31687",
+            "Link ID",
+            ""
+        ]
+    },
+    "attachments_ctx": [
+        [
+            "0",
+            "10",
+            "0",
+            "0",
+            "0",
+            "",
+            ""
+        ]
+    ],
+    "case_activities": [
+        [
+            "503908",
+            "1757487391",
+            "test",
+            "273",
+            "99",
+            "31687",
+            "539202939",
+            "1",
+            "31687",
+            "Agnes needs to be sheltered from her abusive father.",
+            "3",
+            "1",
+            "0",
+            "",
+            "",
+            "387725",
+            "Complete",
+            "walkin",
+            "walkin-100-1757484659785",
+            "",
+            "2",
+            "86732",
+            "133243",
+            "Agnes Wacera",
+            "254728769034",
+            "",
+            "",
+            "1252530000",
+            "16",
+            "^15-17",
+            "^Female",
+            "24567895",
+            "^Kenyan",
+            "",
+            "",
+            "ACC church",
+            "Murang'a",
+            "Kandara",
+            "Kagundu-Ini",
+            "",
+            "",
+            "",
+            "1",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "ro0",
+            "rc0"
+        ]
+    ],
+    "case_activities_k": {
+        "id": [
+            "0",
+            "id",
+            "",
+            "ID",
+            ""
+        ],
+        "created_on": [
+            "1",
+            "created_on",
+            "",
+            "Created On",
+            ""
+        ],
+        "created_by": [
+            "2",
+            "created_by",
+            "",
+            "Created By",
+            ""
+        ],
+        "created_by_id": [
+            "3",
+            "created_by_id",
+            "",
+            "Created By ID",
+            ""
+        ],
+        "created_by_role": [
+            "4",
+            "created_by_role",
+            "",
+            "Created By Role",
+            ""
+        ],
+        "case_id": [
+            "5",
+            "case_id",
+            "31687",
+            "Case ID",
+            ""
+        ],
+        "aub_id": [
+            "6",
+            "aub_id",
+            "",
+            "Case ID",
+            ""
+        ],
+        "activity": [
+            "7",
+            "activity",
+            "",
+            "Activity",
+            ""
+        ],
+        "activity_ref": [
+            "8",
+            "activity_ref",
+            "",
+            "Activity",
+            ""
+        ],
+        "detail": [
+            "9",
+            "detail",
+            "",
+            "Detail",
+            ""
+        ],
+        "priority": [
+            "10",
+            "priority",
+            "",
+            "Priority",
+            ""
+        ],
+        "status": [
+            "11",
+            "status",
+            "",
+            "Status",
+            ""
+        ],
+        "escalated_to_id": [
+            "12",
+            "escalated_to_id",
+            "",
+            "Escalated To ID",
+            ""
+        ],
+        "escalated_to": [
+            "13",
+            "escalated_to",
+            "",
+            "Escalated To",
+            ""
+        ],
+        "escalated_to_role": [
+            "14",
+            "escalated_to_role",
+            "",
+            "Escalated To Role",
+            ""
+        ],
+        "disposition_id": [
+            "15",
+            "disposition_id",
+            "",
+            "Disposition ID",
+            ""
+        ],
+        "disposition": [
+            "16",
+            "disposition",
+            "",
+            "Disposition",
+            ""
+        ],
+        "src": [
+            "17",
+            "src",
+            "",
+            "Channel",
+            ""
+        ],
+        "src_uid": [
+            "18",
+            "src_uid",
+            "",
+            "Channel UniqueID",
+            ""
+        ],
+        "src_address": [
+            "19",
+            "src_address",
+            "",
+            "Channel Address",
+            ""
+        ],
+        "src_vector": [
+            "20",
+            "src_vector",
+            "",
+            "Channel Direction",
+            ""
+        ],
+        "reporter_id": [
+            "21",
+            "reporter_id",
+            "",
+            "Reporter ID",
+            ""
+        ],
+        "reporter_contact_id": [
+            "22",
+            "reporter_contact_id",
+            "",
+            "Reporter Contact ID",
+            ""
+        ],
+        "reporter_fullname": [
+            "23",
+            "reporter_fullname",
+            "",
+            "Reporter Fullname",
+            ""
+        ],
+        "reporter_phone": [
+            "24",
+            "reporter_phone",
+            "",
+            "Reporter Phone",
+            ""
+        ],
+        "reporter_email": [
+            "25",
+            "reporter_email",
+            "",
+            "Reporter Email",
+            ""
+        ],
+        "reporter_phone2": [
+            "26",
+            "reporter_phone2",
+            "",
+            "Reporter Alternative Contact",
+            ""
+        ],
+        "reporter_dob": [
+            "27",
+            "reporter_dob",
+            "",
+            "Reporter Date of Birth",
+            ""
+        ],
+        "reporter_age": [
+            "28",
+            "reporter_age",
+            "",
+            "Reporter Age",
+            ""
+        ],
+        "reporter_age_group": [
+            "29",
+            "reporter_age_group",
+            "",
+            "Reporter Age Group",
+            ""
+        ],
+        "reporter_sex": [
+            "30",
+            "reporter_sex",
+            "",
+            "Reporter Gender",
+            ""
+        ],
+        "reporter_national_id": [
+            "31",
+            "reporter_national_id",
+            "",
+            "Reporter National ID",
+            ""
+        ],
+        "reporter_nationality": [
+            "32",
+            "reporter_nationality",
+            "",
+            "Reporter Nationality",
+            ""
+        ],
+        "reporter_tribe": [
+            "33",
+            "reporter_tribe",
+            "",
+            "Reporter Tribe",
+            ""
+        ],
+        "reporter_lang": [
+            "34",
+            "reporter_lang",
+            "",
+            "Reporter Language",
+            ""
+        ],
+        "reporter_landmark": [
+            "35",
+            "reporter_landmark",
+            "",
+            "Reporter Nearest Landmark",
+            ""
+        ],
+        "reporter_location_0": [
+            "36",
+            "reporter_location_0",
+            "",
+            "Reporter Region",
+            ""
+        ],
+        "reporter_location_1": [
+            "37",
+            "reporter_location_1",
+            "",
+            "Reporter District",
+            ""
+        ],
+        "reporter_location_2": [
+            "38",
+            "reporter_location_2",
+            "",
+            "Reporter County",
+            ""
+        ],
+        "reporter_location_3": [
+            "39",
+            "reporter_location_3",
+            "",
+            "Reporter Sub County",
+            ""
+        ],
+        "reporter_location_4": [
+            "40",
+            "reporter_location_4",
+            "",
+            "Reporter Parish",
+            ""
+        ],
+        "reporter_location_5": [
+            "41",
+            "reporter_location_5",
+            "",
+            "Reporter Village",
+            ""
+        ],
+        "change_count": [
+            "42",
+            "change_count",
+            "",
+            "Fields Affected",
+            ""
+        ],
+        "yr": [
+            "43",
+            "yr",
+            "",
+            "Year",
+            ":d:y:0: "
+        ],
+        "mn": [
+            "44",
+            "mn",
+            "",
+            "Month",
+            ":d:my:0: "
+        ],
+        "wk": [
+            "45",
+            "wk",
+            "",
+            "Week",
+            ":d:dmy:0: "
+        ],
+        "dt": [
+            "46",
+            "dt",
+            "",
+            "Date",
+            ":d:dmy:0: "
+        ],
+        "hr": [
+            "47",
+            "hr",
+            "",
+            "Hour",
+            ":d:dmyh:0: "
+        ],
+        "h": [
+            "48",
+            "h",
+            "",
+            "Hour",
+            ""
+        ],
+        "syncts": [
+            "49",
+            "syncts",
+            "",
+            "Sync Timestamp",
+            ""
+        ],
+        "case_dept": [
+            "50",
+            "case_dept",
+            "",
+            "Department",
+            ""
+        ]
+    },
+    "case_activities_ctx": [
+        [
+            "0",
+            "10",
+            "1",
+            "1",
+            "1",
+            "",
+            ""
+        ]
+    ],
+    "dispositions": [],
+    "dispositions_no_data": [
+        []
+    ],
+    "dispositions_k": {
+        "id": [
+            "0",
+            "id",
+            "0",
+            "",
+            ""
+        ],
+        "created_on": [
+            "1",
+            "created_on",
+            "",
+            "",
+            ""
+        ],
+        "created_by": [
+            "2",
+            "created_by",
+            "",
+            "",
+            ""
+        ],
+        "created_by_id": [
+            "3",
+            "created_by_id",
+            "",
+            "",
+            ""
+        ],
+        "created_by_role": [
+            "4",
+            "created_by_role",
+            "",
+            "Created By Role",
+            ""
+        ],
+        "src": [
+            "5",
+            "src",
+            "",
+            "Channel",
+            ""
+        ],
+        "src_uid": [
+            "6",
+            "src_uid",
+            "",
+            "Channel Uniqueid",
+            ""
+        ],
+        "src_uid2": [
+            "7",
+            "src_uid2",
+            "",
+            "Channel Uniqueid 2",
+            ""
+        ],
+        "src_address": [
+            "8",
+            "src_address",
+            "",
+            "Channel Address",
+            ""
+        ],
+        "src_usr": [
+            "9",
+            "src_usr",
+            "",
+            "Channel User",
+            ""
+        ],
+        "src_vector": [
+            "10",
+            "src_vector",
+            "",
+            "Channel Direction",
+            ""
+        ],
+        "src_ts": [
+            "11",
+            "src_ts",
+            "",
+            "Channel Timestamp",
+            ""
+        ],
+        "src_callid": [
+            "12",
+            "src_callid",
+            "",
+            "Channel Call ID",
+            ""
+        ],
+        "src_campaign_id": [
+            "13",
+            "src_campaign_id",
+            "",
+            "Channel Campaign ID",
+            ""
+        ],
+        "src_action_id": [
+            "14",
+            "src_action_id",
+            "",
+            "Channel Action ID",
+            ""
+        ],
+        "disposition_id": [
+            "15",
+            "disposition_id",
+            "",
+            "Disposition",
+            ""
+        ],
+        "disposition": [
+            "16",
+            "disposition",
+            "",
+            "Disposition",
+            ""
+        ],
+        "src_uid_": [
+            "17",
+            "src_uid_",
+            "",
+            "Link UID",
+            ""
+        ],
+        "src_uid2_": [
+            "18",
+            "src_uid2_",
+            "",
+            "Link UID2",
+            ""
+        ],
+        "is_active": [
+            "19",
+            "is_active",
+            "",
+            "Active",
+            ""
+        ],
+        "has_contact": [
+            "20",
+            "has_contact",
+            "",
+            "has_contact",
+            ""
+        ],
+        "reporter_id": [
+            "21",
+            "reporter_id",
+            "",
+            "Reporter ID",
+            ""
+        ],
+        "reporter_contact_id": [
+            "22",
+            "reporter_contact_id",
+            "",
+            "Reporter Contact ID",
+            ""
+        ],
+        "reporter_fullname": [
+            "23",
+            "reporter_fullname",
+            "",
+            "Reporter Fullname",
+            ""
+        ],
+        "reporter_phone": [
+            "24",
+            "reporter_phone",
+            "",
+            "Reporter Phone",
+            ""
+        ],
+        "reporter_email": [
+            "25",
+            "reporter_email",
+            "",
+            "Reporter Email",
+            ""
+        ],
+        "reporter_phone2": [
+            "26",
+            "reporter_phone2",
+            "",
+            "Reporter Alternative Contact",
+            ""
+        ],
+        "reporter_national_id": [
+            "27",
+            "reporter_national_id",
+            "",
+            "Reporter National ID",
+            ""
+        ],
+        "reporter_landmark": [
+            "28",
+            "reporter_landmark",
+            "",
+            "Reporter Nearest Landmark",
+            ""
+        ],
+        "reporter_dob": [
+            "29",
+            "reporter_dob",
+            "",
+            "Reporter Date of Birth",
+            "d M Y H:i:s"
+        ],
+        "reporter_age": [
+            "30",
+            "reporter_age",
+            "",
+            "Reporter Age",
+            ""
+        ],
+        "reporter_age_group_id": [
+            "31",
+            "reporter_age_group_id",
+            "",
+            "Reporter Age Group",
+            ""
+        ],
+        "reporter_age_group": [
+            "32",
+            "reporter_age_group",
+            "",
+            "Reporter Age Group",
+            ""
+        ],
+        "reporter_sex_id": [
+            "33",
+            "reporter_sex_id",
+            "",
+            "Reporter Gender",
+            ""
+        ],
+        "reporter_sex": [
+            "34",
+            "reporter_sex",
+            "",
+            "Reporter Gender",
+            ""
+        ],
+        "reporter_national_id_type_id": [
+            "35",
+            "reporter_national_id_type_id",
+            "",
+            "ID Type ID",
+            ""
+        ],
+        "reporter_national_id_type": [
+            "36",
+            "reporter_national_id_type",
+            "",
+            "ID Type",
+            ""
+        ],
+        "reporter_nationality_id": [
+            "37",
+            "reporter_nationality_id",
+            "",
+            "Reporter Nationality ID",
+            ""
+        ],
+        "reporter_nationality": [
+            "38",
+            "reporter_nationality",
+            "",
+            "Reporter Nationality",
+            ""
+        ],
+        "reporter_tribe_id": [
+            "39",
+            "reporter_tribe_id",
+            "",
+            "Reporter Tribe ID",
+            ""
+        ],
+        "reporter_tribe": [
+            "40",
+            "reporter_tribe",
+            "",
+            "Reporter Tribe",
+            ""
+        ],
+        "reporter_lang_id": [
+            "41",
+            "reporter_lang_id",
+            "",
+            "Reporter Language ID",
+            ""
+        ],
+        "reporter_lang": [
+            "42",
+            "reporter_lang",
+            "",
+            "Reporter Language",
+            ""
+        ],
+        "reporter_location_id": [
+            "43",
+            "reporter_location_id",
+            "",
+            "Reporter Location",
+            ""
+        ],
+        "reporter_location": [
+            "44",
+            "reporter_location",
+            "",
+            "Reporter Location",
+            ""
+        ],
+        "reporter_location_id_0": [
+            "45",
+            "reporter_location_id_0",
+            "",
+            "Reporter Region ID",
+            ""
+        ],
+        "reporter_location_id_1": [
+            "46",
+            "reporter_location_id_1",
+            "",
+            "Reporter District ID",
+            ""
+        ],
+        "reporter_location_id_2": [
+            "47",
+            "reporter_location_id_2",
+            "",
+            "Reporter County ID",
+            ""
+        ],
+        "reporter_location_id_3": [
+            "48",
+            "reporter_location_id_3",
+            "",
+            "Reporter Sub County ID",
+            ""
+        ],
+        "reporter_location_id_4": [
+            "49",
+            "reporter_location_id_4",
+            "",
+            "Reporter Parish ID",
+            ""
+        ],
+        "reporter_location_id_5": [
+            "50",
+            "reporter_location_id_5",
+            "",
+            "Reporter Village ID",
+            ""
+        ],
+        "reporter_location_0": [
+            "51",
+            "reporter_location_0",
+            "",
+            "Reporter Region",
+            ""
+        ],
+        "reporter_location_1": [
+            "52",
+            "reporter_location_1",
+            "",
+            "Reporter District",
+            ""
+        ],
+        "reporter_location_2": [
+            "53",
+            "reporter_location_2",
+            "",
+            "Reporter County",
+            ""
+        ],
+        "reporter_location_3": [
+            "54",
+            "reporter_location_3",
+            "",
+            "Reporter Sub County",
+            ""
+        ],
+        "reporter_location_4": [
+            "55",
+            "reporter_location_4",
+            "",
+            "Reporter Parish",
+            ""
+        ],
+        "reporter_location_5": [
+            "56",
+            "reporter_location_5",
+            "",
+            "Reporter Village",
+            ""
+        ],
+        "case_id": [
+            "57",
+            "case_id",
+            "",
+            "Case ID",
+            ""
+        ],
+        "case_category": [
+            "58",
+            "case_category",
+            "",
+            "Case Category",
+            ""
+        ],
+        "case_priority": [
+            "59",
+            "case_priority",
+            "",
+            "Case Priority",
+            ""
+        ],
+        "case_status": [
+            "60",
+            "case_status",
+            "",
+            "Case Status",
+            ""
+        ]
+    },
+    "dispositions_ctx": [
+        [
+            "0",
+            "10",
+            "0",
+            "0",
+            "0",
+            "",
+            ""
+        ]
+    ],
+    "reporters_uuid": [],
+    "reporters_uuid_no_data": [
+        []
+    ],
+    "reporters_uuid_k": {
+        "id": [
+            "0",
+            "id",
+            "0",
+            "",
+            ""
+        ],
+        "created_on": [
+            "1",
+            "created_on",
+            "",
+            "",
+            ""
+        ],
+        "created_by": [
+            "2",
+            "created_by",
+            "",
+            "",
+            ""
+        ],
+        "created_by_id": [
+            "3",
+            "created_by_id",
+            "",
+            "",
+            ""
+        ],
+        "created_by_role": [
+            "4",
+            "created_by_role",
+            "",
+            "Created By Role",
+            ""
+        ],
+        "contact_id": [
+            "5",
+            "contact_id",
+            "",
+            "Contact",
+            ""
+        ],
+        "contact_fullname": [
+            "6",
+            "contact_fullname",
+            "",
+            "Fullname",
+            ""
+        ],
+        "contact_fname": [
+            "7",
+            "contact_fname",
+            "",
+            "First Name",
+            ""
+        ],
+        "contact_lname": [
+            "8",
+            "contact_lname",
+            "",
+            "Last Name",
+            ""
+        ],
+        "contact_phone": [
+            "9",
+            "contact_phone",
+            "",
+            "Phone",
+            ""
+        ],
+        "contact_email": [
+            "10",
+            "contact_email",
+            "",
+            "Email",
+            ""
+        ],
+        "contact_phone2": [
+            "11",
+            "contact_phone2",
+            "",
+            "Alternative Contact",
+            ""
+        ],
+        "contact_dob": [
+            "12",
+            "contact_dob",
+            "",
+            "Date of Birth",
+            "d M Y H:i:s"
+        ],
+        "contact_age": [
+            "13",
+            "contact_age",
+            "",
+            "Age",
+            ""
+        ],
+        "contact_age_group_id": [
+            "14",
+            "contact_age_group_id",
+            "",
+            "Age Group ID",
+            ""
+        ],
+        "contact_age_group": [
+            "15",
+            "contact_age_group",
+            "",
+            "Age Group",
+            ""
+        ],
+        "contact_sex_id": [
+            "16",
+            "contact_sex_id",
+            "",
+            "Gender ID",
+            ""
+        ],
+        "contact_sex": [
+            "17",
+            "contact_sex",
+            "",
+            "Gender",
+            ""
+        ],
+        "contact_national_id_type_id": [
+            "18",
+            "contact_national_id_type_id",
+            "",
+            "ID Type",
+            ""
+        ],
+        "contact_national_id_type": [
+            "19",
+            "contact_national_id_type",
+            "",
+            "ID Type",
+            ""
+        ],
+        "contact_national_id": [
+            "20",
+            "contact_national_id",
+            "",
+            "National ID",
+            ""
+        ],
+        "contact_address": [
+            "21",
+            "contact_address",
+            "",
+            "Address",
+            ""
+        ],
+        "contact_residence": [
+            "22",
+            "contact_residence",
+            "",
+            "Residence",
+            ""
+        ],
+        "contact_nationality_id": [
+            "23",
+            "contact_nationality_id",
+            "",
+            "Nationality ID",
+            ""
+        ],
+        "contact_nationality": [
+            "24",
+            "contact_nationality",
+            "",
+            "Nationality",
+            ""
+        ],
+        "contact_tribe_id": [
+            "25",
+            "contact_tribe_id",
+            "",
+            "Tribe ID",
+            ""
+        ],
+        "contact_tribe": [
+            "26",
+            "contact_tribe",
+            "",
+            "Tribe",
+            ""
+        ],
+        "contact_lang_id": [
+            "27",
+            "contact_lang_id",
+            "",
+            "Language ID",
+            ""
+        ],
+        "contact_lang": [
+            "28",
+            "contact_lang",
+            "",
+            "Language",
+            ""
+        ],
+        "contact_location_id": [
+            "29",
+            "contact_location_id",
+            "",
+            "Location ID",
+            ""
+        ],
+        "contact_location": [
+            "30",
+            "contact_location",
+            "",
+            "Location",
+            ""
+        ],
+        "contact_landmark": [
+            "31",
+            "contact_landmark",
+            "",
+            "Nearest Landmark",
+            ""
+        ],
+        "contact_location_id_0": [
+            "32",
+            "contact_location_id_0",
+            "",
+            "Location Level 0 ID",
+            ""
+        ],
+        "contact_location_id_1": [
+            "33",
+            "contact_location_id_1",
+            "",
+            "Location Level 1 ID",
+            ""
+        ],
+        "contact_location_id_2": [
+            "34",
+            "contact_location_id_2",
+            "",
+            "Location Level 2 ID",
+            ""
+        ],
+        "contact_location_id_3": [
+            "35",
+            "contact_location_id_3",
+            "",
+            "Location Level 3 ID",
+            ""
+        ],
+        "contact_location_id_4": [
+            "36",
+            "contact_location_id_4",
+            "",
+            "Location Level 4 ID",
+            ""
+        ],
+        "contact_location_id_5": [
+            "37",
+            "contact_location_id_5",
+            "",
+            "Location Level 5 ID",
+            ""
+        ],
+        "contact_location_id_6": [
+            "38",
+            "contact_location_id_6",
+            "",
+            "Location Level 6 ID",
+            ""
+        ],
+        "contact_location_0": [
+            "39",
+            "contact_location_0",
+            "",
+            "Location Level 0",
+            ""
+        ],
+        "contact_location_1": [
+            "40",
+            "contact_location_1",
+            "",
+            "Location Level 1",
+            ""
+        ],
+        "contact_location_2": [
+            "41",
+            "contact_location_2",
+            "",
+            "Location Level 2",
+            ""
+        ],
+        "contact_location_3": [
+            "42",
+            "contact_location_3",
+            "",
+            "Location Level 3",
+            ""
+        ],
+        "contact_location_4": [
+            "43",
+            "contact_location_4",
+            "",
+            "Location Level 4",
+            ""
+        ],
+        "contact_location_5": [
+            "44",
+            "contact_location_5",
+            "",
+            "Location Level 5",
+            ""
+        ],
+        "contact_location_6": [
+            "45",
+            "contact_location_6",
+            "",
+            "Location Level 6",
+            ""
+        ],
+        "contact_is_refugee": [
+            "46",
+            "contact_is_refugee",
+            "",
+            "Reporter Is Refugee",
+            "::yesno:0:2"
+        ],
+        "src": [
+            "47",
+            "src",
+            "",
+            "Channel",
+            ""
+        ],
+        "src_uid": [
+            "48",
+            "src_uid",
+            "",
+            "Channel Uniqueid",
+            ""
+        ],
+        "src_address": [
+            "49",
+            "src_address",
+            "",
+            "Channel Address",
+            ""
+        ],
+        "src_vector": [
+            "50",
+            "src_vector",
+            "",
+            "Channel Direction",
+            ""
+        ],
+        "is_client": [
+            "51",
+            "is_client",
+            "",
+            "Is Client",
+            ""
+        ],
+        "case_id": [
+            "52",
+            "case_id",
+            "",
+            "Case ID",
+            ""
+        ]
+    },
+    "reporters_uuid_ctx": [
+        [
+            "0",
+            "10",
+            "0",
+            "0",
+            "0",
+            "",
+            ""
+        ]
+    ]
+}

@@ -34,49 +34,49 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         
         # CPIMS case categories mapping
         self.case_categories = [
-            {"item_id": "CSCU", "item_description": "Harmful cultural practice", "item_sub_category": "cultural_practice_id", "the_order": 22},
-            {"item_id": "CSRG", "item_description": "Sexual Exploitation and abuse", "item_sub_category": "sexual_exploit_id", "the_order": 34},
-            {"item_id": "CLCM", "item_description": "Child Mother", "item_sub_category": "", "the_order": 41},
-            {"item_id": "CIDC", "item_description": "Orphaned Child", "item_sub_category": "orphaned_child_id", "the_order": 28},
-            {"item_id": "CSIC", "item_description": "Neglect", "item_sub_category": "neglect_denial_id", "the_order": 27},
-            {"item_id": "CCMO", "item_description": "Mother Offer", "item_sub_category": "mother_offer_id", "the_order": 40},
-            {"item_id": "CCDF", "item_description": "Defilement", "item_sub_category": "defilement_id", "the_order": 17},
-            {"item_id": "CSTC", "item_description": "Trafficked child / Person", "item_sub_category": "trafficking_id", "the_order": 37},
-            {"item_id": "CSSM", "item_description": "Smuggling", "item_sub_category": "", "the_order": 43},
-            {"item_id": "CCIP", "item_description": "Children / Persons on the streets", "item_sub_category": "on_streets_id", "the_order": 15},
-            {"item_id": "CDIS", "item_description": "Abandoned", "item_sub_category": None, "the_order": 1},
-            {"item_id": "CDSA", "item_description": "Abduction", "item_sub_category": None, "the_order": 2},
-            {"item_id": "CLAB", "item_description": "Child Affected by HIV/AIDS", "item_sub_category": None, "the_order": 3},
-            {"item_id": "CORP", "item_description": "Child Delinquency", "item_sub_category": None, "the_order": 4},
-            {"item_id": "COSR", "item_description": "Child headed household", "item_sub_category": None, "the_order": 5},
-            {"item_id": "CTRF", "item_description": "Child Labour", "item_sub_category": "child_labour_id", "the_order": 6},
-            {"item_id": "CCCM", "item_description": "Child Marriage", "item_sub_category": None, "the_order": 7},
-            {"item_id": "SCCI", "item_description": "Child of imprisoned parent (s)", "item_sub_category": None, "the_order": 8},
-            {"item_id": "CSAB", "item_description": "Child offender", "item_sub_category": "offender_id", "the_order": 9},
-            {"item_id": "CSAD", "item_description": "Child out of school", "item_sub_category": None, "the_order": 10},
-            {"item_id": "CSHV", "item_description": "Child pregnancy", "item_sub_category": None, "the_order": 11},
-            {"item_id": "CSDQ", "item_description": "Child radicalization", "item_sub_category": None, "the_order": 12},
-            {"item_id": "CCCT", "item_description": "Child truancy", "item_sub_category": "out_of_school_id", "the_order": 13},
-            {"item_id": "CSCL", "item_description": "Child with disability", "item_sub_category": None, "the_order": 14},
-            {"item_id": "CCCP", "item_description": "Custody", "item_sub_category": "custody_id", "the_order": 16},
-            {"item_id": "CSCT", "item_description": "Disputed paternity", "item_sub_category": None, "the_order": 18},
-            {"item_id": "CSDS", "item_description": "Drug and Substance Abuse", "item_sub_category": "drug_abuse_id", "the_order": 19},
-            {"item_id": "CCEA", "item_description": "Emotional Abuse", "item_sub_category": "emotional_abuse_id", "the_order": 20},
-            {"item_id": "CSCS", "item_description": "FGM", "item_sub_category": None, "the_order": 21},
-            {"item_id": "CSDF", "item_description": "Incest", "item_sub_category": None, "the_order": 23},
-            {"item_id": "CSDP", "item_description": "Inheritance/Succession", "item_sub_category": None, "the_order": 24},
-            {"item_id": "CSRC", "item_description": "Sexual assault", "item_sub_category": None, "the_order": 33},
-            {"item_id": "CFGM", "item_description": "Internally displaced child", "item_sub_category": None, "the_order": 25},
-            {"item_id": "CLFC", "item_description": "Parental child abduction", "item_sub_category": None, "the_order": 29},
-            {"item_id": "CSSA", "item_description": "Sick Child (Chronic Illness)", "item_sub_category": None, "the_order": 35},
-            {"item_id": "CSSO", "item_description": "Sodomy", "item_sub_category": None, "the_order": 36},
-            {"item_id": "CSNG", "item_description": "Physical abuse/violence", "item_sub_category": None, "the_order": 30},
-            {"item_id": "CPCA", "item_description": "Refugee Children", "item_sub_category": None, "the_order": 31},
-            {"item_id": "CPAV", "item_description": "Registration", "item_sub_category": None, "the_order": 32},
-            {"item_id": "CSUC", "item_description": "Unlawful confinement", "item_sub_category": None, "the_order": 38},
-            {"item_id": "CHCP", "item_description": "Missing Child (Lost & Found)", "item_sub_category": None, "the_order": 26},
-            {"item_id": "CCDT", "item_description": "Destitution", "item_sub_category": None, "the_order": 42},
-            {"item_id": "CCOA", "item_description": "Online Child Exploitation and Abuse", "item_sub_category": "online_abuse_id", "the_order": 39}
+            {"item_id": "CSCU", "item_description": "Harmful cultural practice"},
+            {"item_id": "CSRG", "item_description": "Child Prostitution, Sexual Abuse"},
+            {"item_id": "CLCM", "item_description": "Child Mother"},
+            {"item_id": "CIDC", "item_description": "Orphan & Vulnerable children"},
+            {"item_id": "CSIC", "item_description": "Child Neglect"},
+            {"item_id": "CCMO", "item_description": "Mother offer"},
+            {"item_id": "CCDF", "item_description": "Defilement"},
+            {"item_id": "CSTC", "item_description": "Child Trafficking"},
+            {"item_id": "CSSM", "item_description": ""},
+            {"item_id": "CCIP", "item_description": "Children on the streets"},
+            {"item_id": "CDIS", "item_description": "Child Abandonment"},
+            {"item_id": "CDSA", "item_description": "Child Abduction"},
+            {"item_id": "CLAB", "item_description": "Child affected by HIV/AIDS"},
+            {"item_id": "CORP", "item_description": "Juvenile Deliquency"},
+            {"item_id": "COSR", "item_description": "Child headed household"},
+            {"item_id": "CTRF", "item_description": "Child Labor"},
+            {"item_id": "CCCM", "item_description": "Child Marriage"},
+            {"item_id": "SCCI", "item_description": "Child of imprisoned parent (S)"},
+            {"item_id": "CSAB", "item_description": "Child offender"},
+            {"item_id": "CSAD", "item_description": "Child out of school"},
+            {"item_id": "CSHV", "item_description": "Teenage Pregnancy"},
+            {"item_id": "CSDQ", "item_description": "Child radicalization"},
+            {"item_id": "CCCT", "item_description": "Child Truancy"},
+            {"item_id": "CSCL", "item_description": "Mental & physical disability"},
+            {"item_id": "CCCP", "item_description": "Custody"},
+            {"item_id": "CSCT", "item_description": "Disputed Paternity"},
+            {"item_id": "CSDS", "item_description": "Drug Abuse"},
+            {"item_id": "CCEA", "item_description": "Emotional Abuse"},
+            {"item_id": "CSCS", "item_description": "Female Genital Mutilation"},
+            {"item_id": "CSDF", "item_description": "Sexual Abuse (Incest)"},
+            {"item_id": "CSDP", "item_description": "Inheritance/succession"},
+            {"item_id": "CSRC", "item_description": "Sexual assault"},
+            {"item_id": "CFGM", "item_description": "Internally displaced child"},
+            {"item_id": "CLFC", "item_description": "Parental child abduction"},
+            {"item_id": "CSSA", "item_description": "Sickness or illness"},
+            {"item_id": "CSSO", "item_description": "Sexual Abuse (Sodomy)"},
+            {"item_id": "CSNG", "item_description": "Physical Abuse"},
+            {"item_id": "CPCA", "item_description": "Refugee Children"},
+            {"item_id": "CPAV", "item_description": "Birth Registration"},
+            {"item_id": "CSUC", "item_description": "Unlawful Confinement"},
+            {"item_id": "CHCP", "item_description": "Lost and Found, Lost Child"},
+            {"item_id": "CCDT", "item_description": ""},
+            {"item_id": "CCOA", "item_description": "Online Abuse"}
         ]
         
         # Debug logging for token pickup
@@ -93,11 +93,11 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
     
     def validate_request(self, request: Any) -> bool:
         """
-        Validate authenticity of incoming Helpline API request.
-        
+        Validate authenticity of incoming Helpline request (new object-based format).
+
         Args:
             request: The request data to validate
-            
+
         Returns:
             True if the request is valid, False otherwise
         """
@@ -106,28 +106,23 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
                 payload = request
             else:
                 payload = json.loads(request.body)
-            
-            # Check for required fields for CPIMS case creation from API payload
-            required_fields = ["id", "narrative", "reporter_phone"]
-            
+
+            # Check for required fields in new object-based format
+            required_fields = ["id", "narrative"]
+
             # Validate required fields exist
             for field in required_fields:
                 if field not in payload:
                     logger.error(f"Missing required field for CPIMS: {field}")
                     return False
-            
-            # Validate that case has an ID
-            if not payload.get("id"):
-                logger.error("Case ID cannot be empty")
-                return False
-                
-            # Validate that there's some narrative content
+
+            # Validate narrative is not empty
             if not payload.get("narrative", "").strip():
-                logger.warning("Case narrative is empty - this may affect case quality")
-                # Don't fail validation for empty narrative, just warn
-                
+                logger.error("Narrative cannot be empty")
+                return False
+
             return True
-            
+
         except (json.JSONDecodeError, AttributeError) as e:
             logger.error(f"Invalid request format: {str(e)}")
             return False
@@ -323,6 +318,14 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
                     "payload_sent": outgoing_payload
                 }
 
+        except ValueError as e:
+            # Handle category validation errors
+            logger.warning(f"Case rejected due to invalid category: {str(e)}")
+            return {
+                "status": "rejected",
+                "message": f"Case rejected: {str(e)}",
+                "reason": "invalid_category"
+            }
         except requests.RequestException as e:
             logger.exception(f"Network error sending to CPIMS: {str(e)}")
             return {
@@ -362,7 +365,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
                 return data.get(key, default) if data else default
             except (AttributeError, TypeError):
                 return default
-        
+
         # Extract main case data
         case_data = helpline_data
         
@@ -398,8 +401,8 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         logger.info(f"   Constituency: '{constituency_name}'")
         logger.info(f"   Ward: '{ward_name}'")
         logger.info(f"   Full reporter_location: '{reporter_location}'")
-        
-        # Look up area_code values from CPIMS geo API
+
+        # Look up area_code values from CPIMS geo API using type-specific lookups
         county_code = self._lookup_area_code_by_type(county_name, "GPRV") if county_name else None
         constituency_code = self._lookup_area_code_by_type(constituency_name, "GDIS") if constituency_name else None
         ward_code = self._lookup_area_code_by_type(ward_name, "GWRD") if ward_name else None
@@ -419,11 +422,11 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         logger.info(f"   Ward '{ward_name}' -> area_code: '{ward_code}'")
         
         # Extract case category 
-        category_description = get_safe(case_data, "cat_0", "")
+        category_description = get_safe(case_data, "cat_1", "")
         
         # Log the extracted category value for debugging
         logger.info(f"📂 Category Extraction Debug (API Format):")
-        logger.info(f"   Category (cat_0): '{category_description}'")
+        logger.info(f"   Category (cat_1): '{category_description}'")
         
         # Look up item_id for the category description
         category_item_id = self._lookup_category_item_id(category_description) if category_description else None
@@ -431,6 +434,12 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         # Log the category lookup result
         logger.info(f"🔍 Category Lookup Results (API Format):")
         logger.info(f"   Category '{category_description}' -> item_id: '{category_item_id}'")
+        
+        # Strict validation: If category is not found in CPIMS categories, reject the case
+        if not category_item_id:
+            logger.warning(f"❌ CASE REJECTED: Category '{category_description}' not found in CPIMS category mapping")
+            logger.warning(f"   Available categories: {[cat['item_description'] for cat in self.case_categories]}")
+            raise ValueError(f"Invalid category '{category_description}' - not found in CPIMS category mapping")
         
         # Determine data source priority: client data if available, otherwise reporter data
         has_client_data = bool(client_data)
@@ -475,8 +484,8 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         cpims_payload = {
             # Basic case information
             "physical_condition": "PNRM",  # Default - not available in API payload
-            "county": county_code or "UNK",
-            "sub_county_code": constituency_code or "UNK",
+            "county": county_code or "UNK",  # Use county code instead of name
+            "sub_county_code": constituency_code or "UNK",  # Use constituency code instead of name
             "hh_economic_status": "UINC",  # Default - not available in API payload
             "other_condition": "CHNM",  # Default - not available in API payload
             "child_sex": self._map_code(person_sex, "sex") or "SMAL",
@@ -493,7 +502,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "case_reporter": self._map_code("Helpline 116", "case_reporter") or "CRHE",
             "child_in_school": get_safe(client_data, "in_school", None) if has_client_data else None,
             "tribe": get_safe(client_data, "contact_tribe", None) if has_client_data else get_safe(case_data, "reporter_tribe", None),
-            "sublocation": ward_name or "Unknown",
+            "sublocation": ward_code or "Unk",
             "child_surname": self._extract_name(person_fullname, "surname") or "Unknown",
             "case_village": get_safe(case_data, "reporter_location_5", "") or "Unknown Village",  # Lowest level location
             "latitude": None,  # Not available in this API payload structure
@@ -513,14 +522,14 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "mental_condition": "MNRM",  # Default
             "police_station": "",
             "risk_level": self._map_code(get_safe(case_data, "priority", ""), "risk_level") or "RLMD",
-            "constituency": (constituency_code or "UNK")[:3],  # Max 3 chars
+            "constituency": (constituency_code or "UNK")[:3],  # Max 3 chars  
             "hobbies": None,
             "reporter_email": get_safe(case_data, "reporter_email", ""),
-            "location": get_safe(case_data, "reporter_location_5", "") or ward_name or "Unknown",
+            "location": get_safe(case_data, "reporter_location_5", "") or ward_code or "Unk",
             "reporter_county": county_code or "UNK",
             "reporter_sub_county": constituency_code or "UNK", 
-            "reporter_ward": ward_code or "UNKNOWN_WARD",
-            "reporter_village": get_safe(case_data, "reporter_location_5", "") or "UNKNOWN_VILLAGE",
+            "reporter_ward": ward_code or "UNK",
+            "reporter_village": get_safe(case_data, "reporter_location_5", "") or "UNK",
             "has_birth_cert": None,
             "user": get_safe(case_data, "created_by", "helpline_user"),
             "area_code": county_code or "UNK",
@@ -952,26 +961,49 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "Not Applicable": "PSNA"
         }
         
-        # Case category codes
+        # Case category codes - updated with latest CPIMS mapping
         case_category_codes = {
-            "Neglect": "CSIC",
-            "Defilement": "CCDF",
-            "Trafficked child / Person": "CSTC",
             "Harmful cultural practice": "CSCU",
-            "Sexual Exploitation and abuse": "CSRG",
+            "Child Prostitution, Sexual Abuse": "CSRG",
             "Child Mother": "CLCM",
-            "Online Abuse": "CCOA",
-            "Orphaned Child": "CIDC",
-            "Mother Offer": "CCMO",
-            "Smuggling": "CSSM",
-            "Children / Persons on the streets": "CCIP",
-            "Abandoned": "CDIS",
-            "Abduction": "CDSA",
-            "Child Affected by HIV/AIDS": "CLAB",
-            "Child Delinquency": "CORP",
+            "Orphan & Vulnerable children": "CIDC",
+            "Child Neglect": "CSIC",
+            "Mother offer": "CCMO",
+            "Defilement": "CCDF",
+            "Child Trafficking": "CSTC",
+            "Children on the streets": "CCIP",
+            "Child Abandonment": "CDIS",
+            "Child Abduction": "CDSA",
+            "Child affected by HIV/AIDS": "CLAB",
+            "Juvenile Deliquency": "CORP",
             "Child headed household": "COSR",
-            "Child Labour": "CTRF",
-            "Child Marriage": "CCCM"
+            "Child Labor": "CTRF",
+            "Child Marriage": "CCCM",
+            "Child of imprisoned parent (S)": "SCCI",
+            "Child offender": "CSAB",
+            "Child out of school": "CSAD",
+            "Teenage Pregnancy": "CSHV",
+            "Child radicalization": "CSDQ",
+            "Child Truancy": "CCCT",
+            "Mental & physical disability": "CSCL",
+            "Custody": "CCCP",
+            "Disputed Paternity": "CSCT",
+            "Drug Abuse": "CSDS",
+            "Emotional Abuse": "CCEA",
+            "Female Genital Mutilation": "CSCS",
+            "Sexual Abuse (Incest)": "CSDF",
+            "Inheritance/succession": "CSDP",
+            "Sexual assault": "CSRC",
+            "Internally displaced child": "CFGM",
+            "Parental child abduction": "CLFC",
+            "Sickness or illness": "CSSA",
+            "Sexual Abuse (Sodomy)": "CSSO",
+            "Physical Abuse": "CSNG",
+            "Refugee Children": "CPCA",
+            "Birth Registration": "CPAV",
+            "Unlawful Confinement": "CSUC",
+            "Lost and Found, Lost Child": "CHCP",
+            "Online Abuse": "CCOA"
         }
         
         # Case nature codes
