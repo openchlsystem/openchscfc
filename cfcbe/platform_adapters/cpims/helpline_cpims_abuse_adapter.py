@@ -31,60 +31,60 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         
         # Cache for geo data to avoid repeated API calls
         self._geo_data_cache = None
-        
-        # CPIMS case categories mapping
+
+        # Log token configuration status once at initialization
+        logger.info(f"CPIMS adapter initialized - Auth configured: {bool(self.cpims_auth_token)}")
+
+        # CPIMS case categories mapping - sorted A-Z by helpline_description
+        # helpline_description: What Helpline sends (for lookup)
+        # cpims_description: What CPIMS expects (for outgoing payload)
+        # has_sub_category: Whether CPIMS expects sub-category data
         self.case_categories = [
-            {"item_id": "CSCU", "item_description": "Harmful cultural practice"},
-            {"item_id": "CSRG", "item_description": "Child Prostitution, Sexual Abuse"},
-            {"item_id": "CLCM", "item_description": "Child Mother"},
-            {"item_id": "CIDC", "item_description": "Orphan & Vulnerable children"},
-            {"item_id": "CSIC", "item_description": "Child Neglect"},
-            {"item_id": "CCMO", "item_description": "Mother offer"},
-            {"item_id": "CCDF", "item_description": "Defilement"},
-            {"item_id": "CSTC", "item_description": "Child Trafficking"},
-            {"item_id": "CSSM", "item_description": ""},
-            {"item_id": "CCIP", "item_description": "Children on the streets"},
-            {"item_id": "CDIS", "item_description": "Child Abandonment"},
-            {"item_id": "CDSA", "item_description": "Child Abduction"},
-            {"item_id": "CLAB", "item_description": "Child affected by HIV/AIDS"},
-            {"item_id": "CORP", "item_description": "Juvenile Deliquency"},
-            {"item_id": "COSR", "item_description": "Child headed household"},
-            {"item_id": "CTRF", "item_description": "Child Labor"},
-            {"item_id": "CCCM", "item_description": "Child Marriage"},
-            {"item_id": "SCCI", "item_description": "Child of imprisoned parent (S)"},
-            {"item_id": "CSAB", "item_description": "Child offender"},
-            {"item_id": "CSAD", "item_description": "Child out of school"},
-            {"item_id": "CSHV", "item_description": "Teenage Pregnancy"},
-            {"item_id": "CSDQ", "item_description": "Child radicalization"},
-            {"item_id": "CCCT", "item_description": "Child Truancy"},
-            {"item_id": "CSCL", "item_description": "Mental & physical disability"},
-            {"item_id": "CCCP", "item_description": "Custody"},
-            {"item_id": "CSCT", "item_description": "Disputed Paternity"},
-            {"item_id": "CSDS", "item_description": "Drug Abuse"},
-            {"item_id": "CCEA", "item_description": "Emotional Abuse"},
-            {"item_id": "CSCS", "item_description": "Female Genital Mutilation"},
-            {"item_id": "CSDF", "item_description": "Sexual Abuse (Incest)"},
-            {"item_id": "CSDP", "item_description": "Inheritance/succession"},
-            {"item_id": "CSRC", "item_description": "Sexual assault"},
-            {"item_id": "CFGM", "item_description": "Internally displaced child"},
-            {"item_id": "CLFC", "item_description": "Parental child abduction"},
-            {"item_id": "CSSA", "item_description": "Sickness or illness"},
-            {"item_id": "CSSO", "item_description": "Sexual Abuse (Sodomy)"},
-            {"item_id": "CSNG", "item_description": "Physical Abuse"},
-            {"item_id": "CPCA", "item_description": "Refugee Children"},
-            {"item_id": "CPAV", "item_description": "Birth Registration"},
-            {"item_id": "CSUC", "item_description": "Unlawful Confinement"},
-            {"item_id": "CHCP", "item_description": "Lost and Found, Lost Child"},
-            {"item_id": "CCDT", "item_description": ""},
-            {"item_id": "CCOA", "item_description": "Online Abuse"}
+            {"item_id": "CPAV", "helpline_description": "Birth Registration", "cpims_description": "Registration", "has_sub_category": False},
+            {"item_id": "CDIS", "helpline_description": "Child Abandonment", "cpims_description": "Abandoned", "has_sub_category": False},
+            {"item_id": "CDSA", "helpline_description": "Child Abduction", "cpims_description": "Abduction", "has_sub_category": False},
+            {"item_id": "CLAB", "helpline_description": "Child affected by HIV/AIDS", "cpims_description": "Child Affected by HIV/AIDS", "has_sub_category": False},
+            {"item_id": "COSR", "helpline_description": "Child headed household", "cpims_description": "Child headed household", "has_sub_category": False},
+            {"item_id": "CTRF", "helpline_description": "Child Labor", "cpims_description": "Child Labour", "has_sub_category": True},
+            {"item_id": "CCCM", "helpline_description": "Child Marriage", "cpims_description": "Child Marriage", "has_sub_category": False},
+            {"item_id": "CLCM", "helpline_description": "Child Mother", "cpims_description": "Child Mother", "has_sub_category": False},
+            {"item_id": "CSIC", "helpline_description": "Child Neglect", "cpims_description": "Neglect", "has_sub_category": True},
+            {"item_id": "CSAB", "helpline_description": "Child offender", "cpims_description": "Child offender", "has_sub_category": True},
+            {"item_id": "SCCI", "helpline_description": "Child of imprisoned parent (S)", "cpims_description": "Child of imprisoned parent (s)", "has_sub_category": False},
+            {"item_id": "CSAD", "helpline_description": "Child out of school", "cpims_description": "Child out of school", "has_sub_category": False},
+            {"item_id": "CSRG", "helpline_description": "Child Prostitution, Sexual Abuse", "cpims_description": "Sexual Exploitation and abuse", "has_sub_category": False},
+            {"item_id": "CSDQ", "helpline_description": "Child radicalization", "cpims_description": "Child radicalization", "has_sub_category": False},
+            {"item_id": "CSTC", "helpline_description": "Child Trafficking", "cpims_description": "Trafficked child", "has_sub_category": False},
+            {"item_id": "CCCT", "helpline_description": "Child Truancy", "cpims_description": "Child truancy", "has_sub_category": True},
+            {"item_id": "CCIP", "helpline_description": "Children on the streets", "cpims_description": "Children on the streets", "has_sub_category": False},
+            {"item_id": "CCCP", "helpline_description": "Custody", "cpims_description": "Custody", "has_sub_category": True},
+            {"item_id": "CCDF", "helpline_description": "Defilement", "cpims_description": "Defilement", "has_sub_category": False},
+            {"item_id": "CCDT", "helpline_description": "Destitution", "cpims_description": "Destitution", "has_sub_category": False},
+            {"item_id": "CSCT", "helpline_description": "Disputed Paternity", "cpims_description": "Disputed paternity", "has_sub_category": False},
+            {"item_id": "CSDS", "helpline_description": "Drug Abuse", "cpims_description": "Drug and Substance Abuse", "has_sub_category": True},
+            {"item_id": "CCEA", "helpline_description": "Emotional Abuse", "cpims_description": "Emotional Abuse", "has_sub_category": True},
+            {"item_id": "CSCS", "helpline_description": "Female Genital Mutilation", "cpims_description": "FGM", "has_sub_category": False},
+            {"item_id": "CSCU", "helpline_description": "Harmful cultural practice", "cpims_description": "Harmful cultural practice", "has_sub_category": False},
+            {"item_id": "CSDP", "helpline_description": "Inheritance/succession", "cpims_description": "Inheritance/Succession", "has_sub_category": False},
+            {"item_id": "CFGM", "helpline_description": "Internally displaced child", "cpims_description": "Internally displaced child", "has_sub_category": False},
+            {"item_id": "CORP", "helpline_description": "Juvenile Deliquency", "cpims_description": "Child Delinquency", "has_sub_category": False},
+            {"item_id": "CHCP", "helpline_description": "Lost and Found, Lost Child", "cpims_description": "Missing Child (Lost & Found)", "has_sub_category": False},
+            {"item_id": "CSCL", "helpline_description": "Mental & physical disability", "cpims_description": "Child with disability", "has_sub_category": False},
+            {"item_id": "CCMO", "helpline_description": "Mother offer", "cpims_description": "Mother Offer", "has_sub_category": True},
+            {"item_id": "CCOA", "helpline_description": "Online Abuse", "cpims_description": "Online Child Exploitation and Abuse", "has_sub_category": True},
+            {"item_id": "CIDC", "helpline_description": "Orphan & Vulnerable children", "cpims_description": "Orphaned Child", "has_sub_category": True},
+            {"item_id": "CLFC", "helpline_description": "Parental child abduction", "cpims_description": "Parental child abduction", "has_sub_category": False},
+            {"item_id": "CSNG", "helpline_description": "Physical Abuse", "cpims_description": "Physical abuse/violence", "has_sub_category": False},
+            {"item_id": "CPCA", "helpline_description": "Refugee Children", "cpims_description": "Refugee Children", "has_sub_category": False},
+            {"item_id": "CSDF", "helpline_description": "Sexual Abuse (Incest)", "cpims_description": "Incest", "has_sub_category": False},
+            {"item_id": "CSSO", "helpline_description": "Sexual Abuse (Sodomy)", "cpims_description": "Sodomy", "has_sub_category": False},
+            {"item_id": "CSRC", "helpline_description": "Sexual assault", "cpims_description": "Sexual assault", "has_sub_category": False},
+            {"item_id": "CSSM", "helpline_description": "Smuggling", "cpims_description": "Smuggling", "has_sub_category": False},
+            {"item_id": "CSSA", "helpline_description": "Sickness or illness", "cpims_description": "Sick Child (Chronic Illness)", "has_sub_category": False},
+            {"item_id": "CSHV", "helpline_description": "Teenage Pregnancy", "cpims_description": "Child pregnancy", "has_sub_category": False},
+            {"item_id": "CSUC", "helpline_description": "Unlawful Confinement", "cpims_description": "Unlawful confinement", "has_sub_category": False}
         ]
-        
-        # Debug logging for token pickup
-        logger.info(f"🔑 CPIMS Token Debug:")
-        logger.info(f"   Raw token from settings: '{self.cpims_auth_token}'")
-        logger.info(f"   Token length: {len(self.cpims_auth_token) if self.cpims_auth_token else 0}")
-        logger.info(f"   Token exists: {bool(self.cpims_auth_token)}")
-    
+
     def handle_verification(self, request: HttpRequest) -> Optional[HttpResponse]:
         """
         CPIMS doesn't require verification challenges.
@@ -94,10 +94,10 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
     def validate_request(self, request: Any) -> bool:
         """
         Validate authenticity of incoming Helpline request (new object-based format).
-        
+
         Args:
             request: The request data to validate
-            
+
         Returns:
             True if the request is valid, False otherwise
         """
@@ -106,29 +106,26 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
                 payload = request
             else:
                 payload = json.loads(request.body)
-            
+
             # Check for required fields in new object-based format
             required_fields = ["id", "narrative"]
-            
+
             # Validate required fields exist
             for field in required_fields:
                 if field not in payload:
                     logger.error(f"Missing required field for CPIMS: {field}")
                     return False
-            
+
             # Validate narrative is not empty
             if not payload.get("narrative", "").strip():
                 logger.error("Narrative cannot be empty")
                 return False
-                    
+
             return True
-            
+
         except (json.JSONDecodeError, AttributeError) as e:
             logger.error(f"Invalid request format: {str(e)}")
             return False
-    
-    
-    
     
     def parse_messages(self, request: Any) -> List[Dict[str, Any]]:
         """
@@ -232,11 +229,9 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             # Flatten the payload: all fields in cpims_payload go to the top level
             outgoing_payload = dict(cpims_payload)
 
-            # Debug logging - only show what's being sent to CPIMS
-            logger.info(f"📤 Sending case to CPIMS: {self.cpims_endpoint}")
-            logger.info("=== CPIMS OUTGOING PAYLOAD ===")
-            logger.info(json.dumps(outgoing_payload, indent=2))
-            logger.info("=== END CPIMS PAYLOAD ===")
+            # Log what's being sent to CPIMS
+            logger.info(f"Sending case to CPIMS: {self.cpims_endpoint}")
+            logger.info(f"Payload: {json.dumps(outgoing_payload, indent=2)}")
 
             # Prepare headers
             headers = {
@@ -244,20 +239,11 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             }
 
             # Add authorization if token is configured (optional for test environment)
-            logger.info(f"🔐 Header Preparation Debug:")
-            logger.info(f"   Token value: '{self.cpims_auth_token}'")
-            logger.info(f"   Token bool check: {bool(self.cpims_auth_token)}")
-
             if self.cpims_auth_token:
-                # CPIMS expects the token directly in Authorization header (as per Postman)
                 headers['Authorization'] = f"Token {self.cpims_auth_token}"
-
-                logger.info(f"✅ Using CPIMS authentication token in Authorization header")
-                logger.info(f"   Token: {self.cpims_auth_token[:8]}...{self.cpims_auth_token[-8:]}")
+                logger.info("Using CPIMS authentication token")
             else:
-                logger.info("❌ No CPIMS auth token - proceeding without authentication")
-
-            logger.info(f"📋 Final headers: {dict(headers)}")
+                logger.warning("No CPIMS auth token - proceeding without authentication")
 
             # Handle SSL verification based on configuration
             disable_ssl = getattr(settings, 'DISABLE_SSL_VERIFICATION', False)
@@ -368,13 +354,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
                 return data.get(key, default) if data else default
             except (AttributeError, TypeError):
                 return default
-        
-        # Extract location from reporter data in the main object
-        county_name = get_safe(helpline_data, "reporter_location_0", "")  # County
-        constituency_name = get_safe(helpline_data, "reporter_location_1", "")  # Constituency  
-        ward_name = get_safe(helpline_data, "reporter_location_2", "")  # Ward
-        subcounty_name = get_safe(helpline_data, "reporter_location_3", "")  # Sub County
-        
+
         # Extract main case data
         case_data = helpline_data
         
@@ -391,49 +371,23 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         reporter_location_parts = reporter_location.split("^") if reporter_location else []
         
         # Extract location components from reporter_location string
-        # Format: "^County^Constituency^Ward" 
+        # Format: "^County^Constituency^Ward"
         county_name = reporter_location_parts[1] if len(reporter_location_parts) > 1 else get_safe(case_data, "reporter_location_0", "")
         constituency_name = reporter_location_parts[2] if len(reporter_location_parts) > 2 else get_safe(case_data, "reporter_location_1", "")
         ward_name = reporter_location_parts[3] if len(reporter_location_parts) > 3 else get_safe(case_data, "reporter_location_2", "")
-        
+
         # Fallback to individual location fields if split didn't work
         if not county_name:
             county_name = get_safe(case_data, "reporter_location_0", "")
         if not constituency_name:
-            constituency_name = get_safe(case_data, "reporter_location_1", "")  
+            constituency_name = get_safe(case_data, "reporter_location_1", "")
         if not ward_name:
             ward_name = get_safe(case_data, "reporter_location_2", "")
-            
-        # Log the extracted location values for debugging
-        logger.info(f"🌍 Location Extraction Debug:")
-        logger.info(f"   County (reporter contact_location_0, index 39): '{county_name}'")
-        logger.info(f"   Constituency (reporter contact_location_1, index 40): '{constituency_name}'")
-        logger.info(f"   Ward (reporter contact_location_2, index 41): '{ward_name}'")
-        logger.info(f"   Sub County (reporter contact_location_3, index 42): '{subcounty_name}'")
-        logger.info(f"🌍 Location Extraction Debug (API Format):")
-        logger.info(f"   County: '{county_name}'")
-        logger.info(f"   Constituency: '{constituency_name}'")
-        logger.info(f"   Ward: '{ward_name}'")
-        logger.info(f"   Full reporter_location: '{reporter_location}'")
-        
+
         # Look up area_code values from CPIMS geo API using type-specific lookups
-        parish_name = get_safe(helpline_data, "reporter_location_4", "")  # Parish
-        village_name = get_safe(helpline_data, "reporter_location_5", "")  # Village
-        
-        # Use type-specific lookups for better disambiguation
         county_code = self._lookup_area_code_by_type(county_name, "GPRV") if county_name else None
         constituency_code = self._lookup_area_code_by_type(constituency_name, "GDIS") if constituency_name else None
         ward_code = self._lookup_area_code_by_type(ward_name, "GWRD") if ward_name else None
-        # Look up area_code values from CPIMS geo API
-        county_code = self._lookup_area_code_by_type(county_name, "GPRV") if county_name else None
-        constituency_code = self._lookup_area_code_by_type(constituency_name, "GDIS") if constituency_name else None
-        ward_code = self._lookup_area_code_by_type(ward_name, "GWRD") if ward_name else None
-        
-        # Fallback to generic lookup for broader compatibility if type-specific lookup fails
-        if not county_code and county_name:
-            county_code = self._lookup_area_code(county_name)
-        if not constituency_code and constituency_name:
-            constituency_code = self._lookup_area_code(constituency_name)
         
         # Fallback to generic lookup if type-specific lookup fails
         if not county_code and county_name:
@@ -442,36 +396,23 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             constituency_code = self._lookup_area_code(constituency_name)
         if not ward_code and ward_name:
             ward_code = self._lookup_area_code(ward_name)
-            
-        # Log the lookup results
-        logger.info(f"🔍 Location Lookup Results:")
-        logger.info(f"   County '{county_name}' -> area_code: '{county_code}' (GPRV)")
-        logger.info(f"   Constituency '{constituency_name}' -> area_code: '{constituency_code}' (GDIS)")
-        logger.info(f"   Ward '{ward_name}' -> area_code: '{ward_code}' (GWRD)")
-        logger.info(f"🔍 Location Lookup Results (API Format):")
-        logger.info(f"   County '{county_name}' -> area_code: '{county_code}'")
-        logger.info(f"   Constituency '{constituency_name}' -> area_code: '{constituency_code}'")
-        logger.info(f"   Ward '{ward_name}' -> area_code: '{ward_code}'")
-        
-        # Extract case category 
-        category_description = get_safe(case_data, "cat_1", "")
-        
-        # Log the extracted category value for debugging
-        logger.info(f"📂 Category Extraction Debug (API Format):")
-        logger.info(f"   Category (cat_1): '{category_description}'")
-        
-        # Look up item_id for the category description
-        category_item_id = self._lookup_category_item_id(category_description) if category_description else None
-        
-        # Log the category lookup result
-        logger.info(f"🔍 Category Lookup Results (API Format):")
-        logger.info(f"   Category '{category_description}' -> item_id: '{category_item_id}'")
-        
+
+        # Extract case category from Helpline
+        helpline_category = get_safe(case_data, "cat_1", "")
+
+        # Look up full category info (item_id, cpims_description, has_sub_category)
+        category_info = self._lookup_category_info(helpline_category) if helpline_category else None
+
         # Strict validation: If category is not found in CPIMS categories, reject the case
-        if not category_item_id:
-            logger.warning(f"❌ CASE REJECTED: Category '{category_description}' not found in CPIMS category mapping")
-            logger.warning(f"   Available categories: {[cat['item_description'] for cat in self.case_categories]}")
-            raise ValueError(f"Invalid category '{category_description}' - not found in CPIMS category mapping")
+        if not category_info:
+            logger.warning(f"❌ CASE REJECTED: Helpline category '{helpline_category}' not found in CPIMS category mapping")
+            logger.warning(f"   Available Helpline categories: {[cat['helpline_description'] for cat in self.case_categories]}")
+            raise ValueError(f"Invalid Helpline category '{helpline_category}' - not found in CPIMS category mapping")
+
+        # Extract CPIMS values from category info
+        category_item_id = category_info.get('item_id')
+        cpims_category_description = category_info.get('cpims_description')
+        has_sub_category = category_info.get('has_sub_category', False)
         
         # Determine data source priority: client data if available, otherwise reporter data
         has_client_data = bool(client_data)
@@ -549,7 +490,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "court_name": "",
             "case_landmark": get_safe(case_data, "reporter_landmark", "") or ward_name or county_name or "Helpline Report",
             "religion_type": None,
-            "long_term_needs": None,
+            "long_term_needs": None ,
             "immediate_needs": None,
             "mental_condition": "MNRM",  # Default
             "police_station": "",
@@ -569,15 +510,15 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             # Case details array
             "case_details": [{
                 "place_of_event": get_safe(case_data, "incidence_location", ""),
-                "category": category_item_id or category_description,
+                "category": category_item_id,  # CPIMS code
                 "nature_of_event": self._map_code(get_safe(case_data, "cat_2", ""), "case_nature"),
                 "date_of_event": format_api_timestamp(get_safe(case_data, "incidence_when", ""))
             }],
-            
+
             # Categories array
             "categories": [{
-                "case_category": category_item_id or category_description,
-                "case_sub_category": get_safe(case_data, "cat_1", ""),
+                "case_category": category_item_id,  # CPIMS code
+                "case_sub_category": cpims_category_description if has_sub_category else "",  # CPIMS description if sub-category expected
                 "case_date_event": format_api_timestamp(get_safe(case_data, "incidence_when", "")),
                 "case_nature": self._map_code(get_safe(case_data, "cat_2", ""), "case_nature"),
                 "case_place_of_event": get_safe(case_data, "incidence_location", ""),
@@ -609,12 +550,6 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "caregivers": []
         }
 
-        # Debug log for final payload structure
-        logger.info(f"[CPIMS PAYLOAD] Final payload structure created from API data")
-        logger.info(f"   Case ID: '{cpims_payload.get('case_details', [{}])[0].get('case_id', 'N/A')}'")
-        logger.info(f"   Reporter County: '{cpims_payload['reporter_county']}'")
-        logger.info(f"   Child Name: '{cpims_payload['child_first_name']} {cpims_payload['child_surname']}'")
-        
         return cpims_payload
     
     def _format_timestamp(self, timestamp_str: str) -> str:
@@ -663,10 +598,10 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         # Return cached data if available
         if self._geo_data_cache is not None:
             return self._geo_data_cache
-        
+
         try:
-            logger.info(f"📍 Fetching geo data from CPIMS: {self.cpims_geo_endpoint}")
-            
+            logger.info(f"Fetching geo data from CPIMS: {self.cpims_geo_endpoint}")
+
             headers = {'Content-Type': 'application/json'}
             
             # Add authorization if token is available
@@ -726,12 +661,11 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         area_name_lower = area_name.lower().strip()
         
         for area in geo_data:
-            if (area.get('area_name', '').lower().strip() == area_name_lower and 
+            if (area.get('area_name', '').lower().strip() == area_name_lower and
                 area.get('area_type_id') == area_type_id):
                 area_code = area.get('area_code')
-                logger.info(f"Found area_code '{area_code}' for area '{area_name}' with type '{area_type_id}'")
                 return area_code
-        
+
         logger.warning(f"Area '{area_name}' with type '{area_type_id}' not found in CPIMS geo data")
         return None
     
@@ -759,9 +693,8 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         for area in geo_data:
             if area.get('area_name', '').lower().strip() == area_name_lower:
                 area_type_id = area.get('area_type_id')
-                logger.info(f"Found area_type_id '{area_type_id}' for area '{area_name}'")
                 return area_type_id
-        
+
         logger.warning(f"Area '{area_name}' not found in CPIMS geo data")
         return None
     
@@ -789,37 +722,47 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         for area in geo_data:
             if area.get('area_name', '').lower().strip() == area_name_lower:
                 area_code = area.get('area_code')
-                logger.info(f"Found area_code '{area_code}' for area '{area_name}'")
                 return area_code
-                
+
         logger.warning(f"Area '{area_name}' not found in CPIMS geo data")
         return None
     
     
+    def _lookup_category_info(self, helpline_category: str) -> Optional[Dict[str, Any]]:
+        """
+        Look up full category info for a given Helpline category description.
+
+        Args:
+            helpline_category: The Helpline category description to look up
+
+        Returns:
+            Category dict with item_id, cpims_description, has_sub_category if found, None otherwise
+        """
+        if not helpline_category:
+            return None
+
+        # Search for the category by Helpline description (case-insensitive)
+        helpline_category_lower = helpline_category.lower().strip()
+
+        for category in self.case_categories:
+            if category.get('helpline_description', '').lower().strip() == helpline_category_lower:
+                return category
+
+        logger.warning(f"Helpline category '{helpline_category}' not found in mapping")
+        return None
+
     def _lookup_category_item_id(self, category_description: str) -> Optional[str]:
         """
-        Look up item_id for a given category description from CPIMS case categories.
-        
+        Look up item_id for a given Helpline category description.
+
         Args:
-            category_description: The description of the category to look up
-            
+            category_description: The Helpline category description to look up
+
         Returns:
-            The item_id if found, None otherwise
+            The CPIMS item_id if found, None otherwise
         """
-        if not category_description:
-            return None
-        
-        # Search for the category by description (case-insensitive)
-        category_description_lower = category_description.lower().strip()
-        
-        for category in self.case_categories:
-            if category.get('item_description', '').lower().strip() == category_description_lower:
-                item_id = category.get('item_id')
-                logger.info(f"Found item_id '{item_id}' for category '{category_description}'")
-                return item_id
-        
-        logger.warning(f"Category '{category_description}' not found in CPIMS categories")
-        return None
+        category_info = self._lookup_category_info(category_description)
+        return category_info.get('item_id') if category_info else None
     
     def _extract_name(self, full_name: str, part: str) -> str:
         """
@@ -898,7 +841,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "Chronic": "CHRO"
         }
         
-        # Risk level codes - handle both description and order number
+        # Risk level codes
         risk_level_codes = {
             "Low": "RLLW",
             "Medium": "RLMD", 
@@ -908,62 +851,62 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "3": "RLHG"
         }
         
-        # Case reporter codes
+        # Case reporter codes - sorted A-Z
         case_reporter_codes = {
-            "Self": "CRSF",
-            "Helpline 116": "CRHE",
-            "Police": "CRPO",
-            "Father": "CRFA",
-            "Mother": "CRMO",
-            "Court": "CRCO",
-            "Other relative(s)": "CROR",
-            "Other non-relative(s)": "CRON",
-            "Probation": "CRPR",
             "Chief": "CRCH",
-            "Immigration": "CRIM",
+            "Court": "CRCO",
+            "Diplomatic missions": "CRDM",
+            "Father": "CRFA",
+            "Helpline 116": "CRHE",
             "Helpline 1195": "CRHL",
-            "Service Providers": "CRSP",
+            "Immigration": "CRIM",
             "Labour Officers": "CRLO",
             "Ministry of Tourism": "CRMT",
-            "Trade Union": "CRTU",
-            "Diplomatic missions": "CRDM",
-            "Other Government agency": "CROG"
+            "Mother": "CRMO",
+            "Other Government agency": "CROG",
+            "Other non-relative(s)": "CRON",
+            "Other relative(s)": "CROR",
+            "Police": "CRPO",
+            "Probation": "CRPR",
+            "Self": "CRSF",
+            "Service Providers": "CRSP",
+            "Trade Union": "CRTU"
         }
         
-        # Family status codes
+        # Family status codes - sorted A-Z
         family_status_codes = {
-            "Caregiver is more than 60 years old": "FSOL",
-            "Living with biological parents": "CCBP",
-            "Living with adoptive parents": "CCAP",
-            "Living in child-headed household (no adult caregiver)": "FSHD",
-            "Living alone": "FSLA",
-            "Living with a friend": "FSLF",
             "Caregiver is chronically ill": "FSCI",
             "Caregiver is disabled": "FSCD",
-            "Living in children home": "FSCH",
-            "Living with father only": "CCFO",
+            "Caregiver is more than 60 years old": "FSOL",
             "In institution with mother (has child mother)": "RSMI",
             "Informal Guardian": "CCIG",
+            "Living alone": "FSLA",
+            "Living in child-headed household (no adult caregiver)": "FSHD",
+            "Living in children home": "FSCH",
             "Living in poor household (destitute)": "FSPH",
             "Living on the Street": "CCLS",
+            "Living with a friend": "FSLF",
+            "Living with adoptive parents": "CCAP",
+            "Living with biological parents": "CCBP",
+            "Living with father only": "CCFO",
             "Living with mother only": "CCMO",
             "Orphaned - father dead": "FSOF",
             "Orphaned - mother dead": "FSOM",
             "Other Family": "CCOF"
         }
         
-        # Tribe codes
+        # Tribe codes - sorted A-Z
         tribe_codes = {
-            "Kisii": "TRII",
-            "Kikuyu": "TRKI",
-            "Luhya": "TRLU",
-            "Luo": "TRLO",
             "American": "TRAM",
             "European": "TREU",
             "Kalenjin": "TRKE",
             "Kamba": "TRKA",
             "Kenyan Somali": "TRKS",
+            "Kikuyu": "TRKI",
+            "Kisii": "TRII",
             "Kuria": "TRKU",
+            "Luhya": "TRLU",
+            "Luo": "TRLO",
             "Maasai": "TRAA",
             "Mbeere": "TRMB",
             "Meru": "TRME",
@@ -993,49 +936,49 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "Not Applicable": "PSNA"
         }
         
-        # Case category codes - updated with latest CPIMS mapping
+        # Case category codes - updated with latest CPIMS mapping (sorted A-Z)
         case_category_codes = {
-            "Harmful cultural practice": "CSCU",
-            "Child Prostitution, Sexual Abuse": "CSRG",
-            "Child Mother": "CLCM",
-            "Orphan & Vulnerable children": "CIDC",
-            "Child Neglect": "CSIC",
-            "Mother offer": "CCMO",
-            "Defilement": "CCDF",
-            "Child Trafficking": "CSTC",
-            "Children on the streets": "CCIP",
+            "Birth Registration": "CPAV",
             "Child Abandonment": "CDIS",
             "Child Abduction": "CDSA",
             "Child affected by HIV/AIDS": "CLAB",
-            "Juvenile Deliquency": "CORP",
             "Child headed household": "COSR",
             "Child Labor": "CTRF",
             "Child Marriage": "CCCM",
-            "Child of imprisoned parent (S)": "SCCI",
+            "Child Mother": "CLCM",
+            "Child Neglect": "CSIC",
             "Child offender": "CSAB",
+            "Child of imprisoned parent (S)": "SCCI",
             "Child out of school": "CSAD",
-            "Teenage Pregnancy": "CSHV",
+            "Child Prostitution, Sexual Abuse": "CSRG",
             "Child radicalization": "CSDQ",
+            "Child Trafficking": "CSTC",
             "Child Truancy": "CCCT",
-            "Mental & physical disability": "CSCL",
+            "Children on the streets": "CCIP",
             "Custody": "CCCP",
+            "Defilement": "CCDF",
             "Disputed Paternity": "CSCT",
             "Drug Abuse": "CSDS",
             "Emotional Abuse": "CCEA",
             "Female Genital Mutilation": "CSCS",
-            "Sexual Abuse (Incest)": "CSDF",
+            "Harmful cultural practice": "CSCU",
             "Inheritance/succession": "CSDP",
-            "Sexual assault": "CSRC",
             "Internally displaced child": "CFGM",
+            "Juvenile Deliquency": "CORP",
+            "Lost and Found, Lost Child": "CHCP",
+            "Mental & physical disability": "CSCL",
+            "Mother offer": "CCMO",
+            "Online Abuse": "CCOA",
+            "Orphan & Vulnerable children": "CIDC",
             "Parental child abduction": "CLFC",
-            "Sickness or illness": "CSSA",
-            "Sexual Abuse (Sodomy)": "CSSO",
             "Physical Abuse": "CSNG",
             "Refugee Children": "CPCA",
-            "Birth Registration": "CPAV",
-            "Unlawful Confinement": "CSUC",
-            "Lost and Found, Lost Child": "CHCP",
-            "Online Abuse": "CCOA"
+            "Sexual Abuse (Incest)": "CSDF",
+            "Sexual Abuse (Sodomy)": "CSSO",
+            "Sexual assault": "CSRC",
+            "Sickness or illness": "CSSA",
+            "Teenage Pregnancy": "CSHV",
+            "Unlawful Confinement": "CSUC"
         }
         
         # Case nature codes
@@ -1045,7 +988,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "Emergency": "OOEM"
         }
         
-        # Relationship codes (for perpetrators)
+        # Relationship codes (for perpetrators) - sorted A-Z
         relationship_codes = {
             "Commercial Drivers": "RCCD",
             "Employer": "RCEP",
@@ -1053,11 +996,11 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "Health care worker": "RCHW",
             "Local Influentials": "RCLI",
             "Neighbour": "RCNB",
-            "Other non-family": "RCOT",
             "Other family member": "ROFM",
             "Other Humanitarian Worker": "ROHW",
-            "Other Primary Care Giver/Guardian": "ROCG",
+            "Other non-family": "RCOT",
             "Other person in positions of authority": "ROPA",
+            "Other Primary Care Giver/Guardian": "ROCG",
             "Parent": "RCPT",
             "Religious Leader": "RCRL",
             "Security Guards": "RCSG",
@@ -1101,7 +1044,6 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         elif mapping_type == "relationship":
             mapping_dict = relationship_codes
         
-
         # Normalize incoming value (remove caret prefixes and trim whitespace)
         normalized_value = (value or "").lstrip("^").strip()
 
@@ -1112,4 +1054,3 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
 
         # Return the mapped value or the original value if not found (non-strict)
         return mapping_dict.get(normalized_value, value)
-
