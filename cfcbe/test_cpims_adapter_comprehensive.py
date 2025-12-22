@@ -33,13 +33,13 @@ from shared.models.standard_message import StandardMessage
 def load_sample_payload():
     """Load the sample payload from the JSON file."""
     try:
-        with open('test_sample_payload.json', 'r', encoding='utf-8') as f:
+        with open('test_cpims_connection.json', 'r', encoding='utf-8') as f:
             return json.load(f)
     except FileNotFoundError:
-        print("❌ test_sample_payload.json not found. Creating it first...")
+        print("test_cpims_connection.json not found. Creating it first...")
         return None
     except json.JSONDecodeError as e:
-        print(f"❌ Error parsing JSON: {e}")
+        print(f"Error parsing JSON: {e}")
         return None
 
 def test_adapter_initialization():
@@ -51,7 +51,7 @@ def test_adapter_initialization():
         print(f"   CPIMS endpoint: {adapter.cpims_endpoint}")
         print(f"   CPIMS geo endpoint: {adapter.cpims_geo_endpoint}")
         print(f"   Auth token configured: {'Yes' if adapter.cpims_auth_token else 'No'}")
-        print(f"   Case categories loaded: {len(adapter.case_categories)} categories")
+        print(f"   Auth token configured: {'Yes' if adapter.cpims_auth_token else 'No'}")
         return adapter
     except Exception as e:
         print(f"❌ Adapter initialization failed: {e}")
@@ -62,18 +62,18 @@ def test_payload_validation(adapter, payload):
     print("\n=== Testing Payload Validation ===")
     try:
         is_valid = adapter.validate_request(payload)
-        print(f"✅ Payload validation result: {is_valid}")
-        
+        print(f"Payload validation result: {is_valid}")
+
         if is_valid:
-            print("   ✓ Required fields present")
-            print(f"   ✓ Cases array has {len(payload.get('cases', []))} entries")
-            print(f"   ✓ Reporters array has {len(payload.get('reporters', []))} entries")
+            print("   Required fields present")
+            print(f"   ID: {payload.get('id', 'N/A')}")
+            print(f"   Narrative: {'Present' if payload.get('narrative') else 'Missing'}")
         else:
-            print("   ❌ Validation failed - check required fields")
-        
+            print("   Validation failed - check required fields")
+
         return is_valid
     except Exception as e:
-        print(f"❌ Validation test failed: {e}")
+        print(f"Validation test failed: {e}")
         return False
 
 def test_message_parsing(adapter, payload):
@@ -81,20 +81,19 @@ def test_message_parsing(adapter, payload):
     print("\n=== Testing Message Parsing ===")
     try:
         messages = adapter.parse_messages(payload)
-        print(f"✅ Parsed {len(messages)} message(s)")
-        
+        print(f"Parsed {len(messages)} message(s)")
+
         if messages:
             msg = messages[0]
             print(f"   Message ID: {msg.get('message_id')}")
             print(f"   Source: {msg.get('source')}")
             print(f"   Platform: {msg.get('platform')}")
             print(f"   Content Type: {msg.get('content_type')}")
-            print(f"   Content Preview: {msg.get('content', '')[:100]}...")
-            print(f"   Metadata keys: {list(msg.get('metadata', {}).keys())}")
-        
+            print(f"   Content Preview: {msg.get('content', '')[:50]}...")
+
         return messages
     except Exception as e:
-        print(f"❌ Message parsing failed: {e}")
+        print(f"Message parsing failed: {e}")
         return []
 
 def test_cpims_mapping(adapter, payload):
@@ -102,33 +101,42 @@ def test_cpims_mapping(adapter, payload):
     print("\n=== Testing CPIMS Mapping ===")
     try:
         cpims_payload = adapter._map_to_cpims_format(payload)
-        
-        print("✅ CPIMS mapping successful")
+
+        print("CPIMS mapping successful")
         print(f"   Mapped payload has {len(cpims_payload)} top-level fields")
-        
+
         # Show key mapped fields
         key_fields = [
             'physical_condition', 'county', 'sub_county_code', 'child_sex',
-            'reporter_first_name', 'case_date', 'child_first_name', 
+            'reporter_first_name', 'case_date', 'child_first_name',
             'case_narration', 'risk_level', 'area_code'
         ]
-        
+
         print("\n   Key mapped fields:")
         for field in key_fields:
             value = cpims_payload.get(field, 'NOT_FOUND')
             print(f"     {field}: {value}")
-        
-        # Show array lengths
+
+        # Show array lengths and category details
         arrays = ['case_details', 'categories', 'perpetrators', 'siblings']
         print(f"\n   Array fields:")
         for array_name in arrays:
             array_val = cpims_payload.get(array_name, [])
             print(f"     {array_name}: {len(array_val)} items")
-        
+
+        # Show category details
+        categories = cpims_payload.get('categories', [])
+        if categories:
+            print("\n   Category details:")
+            for cat in categories:
+                print(f"     case_category: {cat.get('case_category')}")
+                print(f"     case_sub_category: {cat.get('case_sub_category')}")
+                print(f"     case_nature: {cat.get('case_nature')}")
+
         return cpims_payload
-        
+
     except Exception as e:
-        print(f"❌ CPIMS mapping failed: {e}")
+        print(f"CPIMS mapping failed: {e}")
         import traceback
         traceback.print_exc()
         return None
@@ -138,46 +146,43 @@ def test_standard_message_creation(adapter, messages):
     print("\n=== Testing StandardMessage Creation ===")
     try:
         if not messages:
-            print("❌ No messages to convert")
+            print("No messages to convert")
             return None
-            
+
         msg_dict = messages[0]
         standard_msg = adapter.to_standard_message(msg_dict)
-        
-        print("✅ StandardMessage created successfully")
+
+        print("StandardMessage created successfully")
         print(f"   Message ID: {standard_msg.message_id}")
         print(f"   Source: {standard_msg.source}")
         print(f"   Platform: {standard_msg.platform}")
         print(f"   Content Type: {standard_msg.content_type}")
         print(f"   Has metadata: {'Yes' if standard_msg.metadata else 'No'}")
-        
+
         return standard_msg
-        
+
     except Exception as e:
-        print(f"❌ StandardMessage creation failed: {e}")
+        print(f"StandardMessage creation failed: {e}")
         return None
 
 def test_data_extraction(payload):
     """Test extraction of specific data points from the payload."""
     print("\n=== Testing Data Extraction ===")
     try:
-        case_data = payload.get("cases", [[]])[0]
-        reporter_data = payload.get("reporters", [[]])[0] if payload.get("reporters") else []
-        
-        # Test key data extractions
-        print("✅ Key data points extracted:")
-        print(f"   Case ID: {case_data[0] if case_data else 'N/A'}")
-        print(f"   Case Narrative: {case_data[39] if len(case_data) > 39 else 'N/A'}")
-        print(f"   Reporter Name: {reporter_data[6] if len(reporter_data) > 6 else 'N/A'}")
-        print(f"   Reporter Phone: {reporter_data[9] if len(reporter_data) > 9 else 'N/A'}")
-        print(f"   County: {reporter_data[41] if len(reporter_data) > 41 else 'N/A'}")
-        print(f"   Sub County: {reporter_data[42] if len(reporter_data) > 42 else 'N/A'}")
-        print(f"   Category: {case_data[15] if len(case_data) > 15 else 'N/A'}")
-        
+        # New JSON object format
+        print("Key data points extracted:")
+        print(f"   Case ID: {payload.get('id', 'N/A')}")
+        print(f"   Case Narrative: {payload.get('narrative', 'N/A')}")
+        print(f"   Reporter Name: {payload.get('reporter_fullname', 'N/A')}")
+        print(f"   Reporter Phone: {payload.get('reporter_phone', 'N/A')}")
+        print(f"   County: {payload.get('reporter_location_0', 'N/A')}")
+        print(f"   Sub County: {payload.get('reporter_location_1', 'N/A')}")
+        print(f"   Category: {payload.get('cat_1', 'N/A')}")
+
         return True
-        
+
     except Exception as e:
-        print(f"❌ Data extraction test failed: {e}")
+        print(f"Data extraction test failed: {e}")
         return False
 
 def test_send_message_preparation(adapter, standard_msg):
@@ -186,22 +191,22 @@ def test_send_message_preparation(adapter, standard_msg):
     try:
         # We'll test the preparation part without actually sending
         metadata = standard_msg.metadata if hasattr(standard_msg, 'metadata') else {}
-        
+
         if not metadata:
-            print("❌ No metadata available for sending")
+            print("No metadata available for sending")
             return False
-        
+
         # Test CPIMS format mapping (this would be called in send_message)
         cpims_payload = adapter._map_to_cpims_format(metadata)
-        
-        print("✅ Send message preparation successful")
+
+        print("Send message preparation successful")
         print(f"   CPIMS payload ready with {len(cpims_payload)} fields")
         print(f"   Would send to: {adapter.cpims_endpoint}")
-        
+
         return True
-        
+
     except Exception as e:
-        print(f"❌ Send message preparation failed: {e}")
+        print(f"Send message preparation failed: {e}")
         return False
 
 def print_test_summary(results):
@@ -209,37 +214,37 @@ def print_test_summary(results):
     print("\n" + "="*60)
     print("TEST SUMMARY")
     print("="*60)
-    
+
     total_tests = len(results)
     passed_tests = sum(1 for result in results.values() if result)
     failed_tests = total_tests - passed_tests
-    
+
     for test_name, result in results.items():
-        status = "✅ PASS" if result else "❌ FAIL"
+        status = "PASS" if result else "FAIL"
         print(f"{test_name:<40} {status}")
-    
+
     print(f"\nTotal Tests: {total_tests}")
     print(f"Passed: {passed_tests}")
     print(f"Failed: {failed_tests}")
     print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
-    
+
     if failed_tests == 0:
-        print("\n🎉 All tests passed! The CPIMS adapter is working correctly.")
+        print("\nAll tests passed! The CPIMS adapter is working correctly.")
     else:
-        print(f"\n⚠️  {failed_tests} test(s) failed. Please check the errors above.")
+        print(f"\n{failed_tests} test(s) failed. Please check the errors above.")
 
 def main():
     """Main test execution."""
-    print("🔧 CPIMS Adapter Comprehensive Test Suite")
+    print("CPIMS Adapter Comprehensive Test Suite")
     print("="*60)
-    
+
     # Load sample payload
     payload = load_sample_payload()
     if not payload:
-        print("❌ Cannot proceed without sample payload")
+        print("Cannot proceed without sample payload")
         return
-    
-    print(f"📄 Loaded sample payload with {len(payload)} top-level keys")
+
+    print(f"Loaded sample payload with {len(payload)} top-level keys")
     
     # Track test results
     results = {}

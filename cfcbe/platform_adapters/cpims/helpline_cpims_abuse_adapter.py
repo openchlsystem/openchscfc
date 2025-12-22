@@ -27,63 +27,18 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
     def __init__(self):
         self.cpims_endpoint = getattr(settings, 'CPIMS_ENDPOINT_URL', 'https://test.cpims.net/api/v1/crs/')
         self.cpims_geo_endpoint = getattr(settings, 'CPIMS_GEO_ENDPOINT_URL', 'https://test.cpims.net/api/v1/geo/')
+        self.cpims_settings_endpoint = getattr(settings, 'CPIMS_SETTINGS_ENDPOINT_URL', 'https://test.cpims.net/api/v1/settings/')
         self.cpims_auth_token = getattr(settings, 'CPIMS_AUTH_TOKEN', '')
-        
-        # Cache for geo data to avoid repeated API calls
+
+        # Cache for data to avoid repeated API calls
         self._geo_data_cache = None
+        self._category_data_cache = None
+        self._sub_category_caches = {}  # Dict to cache sub-category data by field_name
+        self._case_nature_cache = None
+        self._place_of_event_cache = None
 
         # Log token configuration status once at initialization
         logger.info(f"CPIMS adapter initialized - Auth configured: {bool(self.cpims_auth_token)}")
-
-        # CPIMS case categories mapping - sorted A-Z by helpline_description
-        # helpline_description: What Helpline sends (for lookup)
-        # cpims_description: What CPIMS expects (for outgoing payload)
-        # has_sub_category: Whether CPIMS expects sub-category data
-        self.case_categories = [
-            {"item_id": "CPAV", "helpline_description": "Birth Registration", "cpims_description": "Registration", "has_sub_category": False},
-            {"item_id": "CDIS", "helpline_description": "Child Abandonment", "cpims_description": "Abandoned", "has_sub_category": False},
-            {"item_id": "CDSA", "helpline_description": "Child Abduction", "cpims_description": "Abduction", "has_sub_category": False},
-            {"item_id": "CLAB", "helpline_description": "Child affected by HIV/AIDS", "cpims_description": "Child Affected by HIV/AIDS", "has_sub_category": False},
-            {"item_id": "COSR", "helpline_description": "Child headed household", "cpims_description": "Child headed household", "has_sub_category": False},
-            {"item_id": "CTRF", "helpline_description": "Child Labor", "cpims_description": "Child Labour", "has_sub_category": True},
-            {"item_id": "CCCM", "helpline_description": "Child Marriage", "cpims_description": "Child Marriage", "has_sub_category": False},
-            {"item_id": "CLCM", "helpline_description": "Child Mother", "cpims_description": "Child Mother", "has_sub_category": False},
-            {"item_id": "CSIC", "helpline_description": "Child Neglect", "cpims_description": "Neglect", "has_sub_category": True},
-            {"item_id": "CSAB", "helpline_description": "Child offender", "cpims_description": "Child offender", "has_sub_category": True},
-            {"item_id": "SCCI", "helpline_description": "Child of imprisoned parent (S)", "cpims_description": "Child of imprisoned parent (s)", "has_sub_category": False},
-            {"item_id": "CSAD", "helpline_description": "Child out of school", "cpims_description": "Child out of school", "has_sub_category": False},
-            {"item_id": "CSRG", "helpline_description": "Child Prostitution, Sexual Abuse", "cpims_description": "Sexual Exploitation and abuse", "has_sub_category": False},
-            {"item_id": "CSDQ", "helpline_description": "Child radicalization", "cpims_description": "Child radicalization", "has_sub_category": False},
-            {"item_id": "CSTC", "helpline_description": "Child Trafficking", "cpims_description": "Trafficked child", "has_sub_category": False},
-            {"item_id": "CCCT", "helpline_description": "Child Truancy", "cpims_description": "Child truancy", "has_sub_category": True},
-            {"item_id": "CCIP", "helpline_description": "Children on the streets", "cpims_description": "Children on the streets", "has_sub_category": False},
-            {"item_id": "CCCP", "helpline_description": "Custody", "cpims_description": "Custody", "has_sub_category": True},
-            {"item_id": "CCDF", "helpline_description": "Defilement", "cpims_description": "Defilement", "has_sub_category": False},
-            {"item_id": "CCDT", "helpline_description": "Destitution", "cpims_description": "Destitution", "has_sub_category": False},
-            {"item_id": "CSCT", "helpline_description": "Disputed Paternity", "cpims_description": "Disputed paternity", "has_sub_category": False},
-            {"item_id": "CSDS", "helpline_description": "Drug Abuse", "cpims_description": "Drug and Substance Abuse", "has_sub_category": True},
-            {"item_id": "CCEA", "helpline_description": "Emotional Abuse", "cpims_description": "Emotional Abuse", "has_sub_category": True},
-            {"item_id": "CSCS", "helpline_description": "Female Genital Mutilation", "cpims_description": "FGM", "has_sub_category": False},
-            {"item_id": "CSCU", "helpline_description": "Harmful cultural practice", "cpims_description": "Harmful cultural practice", "has_sub_category": False},
-            {"item_id": "CSDP", "helpline_description": "Inheritance/succession", "cpims_description": "Inheritance/Succession", "has_sub_category": False},
-            {"item_id": "CFGM", "helpline_description": "Internally displaced child", "cpims_description": "Internally displaced child", "has_sub_category": False},
-            {"item_id": "CORP", "helpline_description": "Juvenile Deliquency", "cpims_description": "Child Delinquency", "has_sub_category": False},
-            {"item_id": "CHCP", "helpline_description": "Lost and Found, Lost Child", "cpims_description": "Missing Child (Lost & Found)", "has_sub_category": False},
-            {"item_id": "CSCL", "helpline_description": "Mental & physical disability", "cpims_description": "Child with disability", "has_sub_category": False},
-            {"item_id": "CCMO", "helpline_description": "Mother offer", "cpims_description": "Mother Offer", "has_sub_category": True},
-            {"item_id": "CCOA", "helpline_description": "Online Abuse", "cpims_description": "Online Child Exploitation and Abuse", "has_sub_category": True},
-            {"item_id": "CIDC", "helpline_description": "Orphan & Vulnerable children", "cpims_description": "Orphaned Child", "has_sub_category": True},
-            {"item_id": "CLFC", "helpline_description": "Parental child abduction", "cpims_description": "Parental child abduction", "has_sub_category": False},
-            {"item_id": "CSNG", "helpline_description": "Physical Abuse", "cpims_description": "Physical abuse/violence", "has_sub_category": False},
-            {"item_id": "CPCA", "helpline_description": "Refugee Children", "cpims_description": "Refugee Children", "has_sub_category": False},
-            {"item_id": "CSDF", "helpline_description": "Sexual Abuse (Incest)", "cpims_description": "Incest", "has_sub_category": False},
-            {"item_id": "CSSO", "helpline_description": "Sexual Abuse (Sodomy)", "cpims_description": "Sodomy", "has_sub_category": False},
-            {"item_id": "CSRC", "helpline_description": "Sexual assault", "cpims_description": "Sexual assault", "has_sub_category": False},
-            {"item_id": "CSSM", "helpline_description": "Smuggling", "cpims_description": "Smuggling", "has_sub_category": False},
-            {"item_id": "CSSA", "helpline_description": "Sickness or illness", "cpims_description": "Sick Child (Chronic Illness)", "has_sub_category": False},
-            {"item_id": "CSHV", "helpline_description": "Teenage Pregnancy", "cpims_description": "Child pregnancy", "has_sub_category": False},
-            {"item_id": "CSUC", "helpline_description": "Unlawful Confinement", "cpims_description": "Unlawful confinement", "has_sub_category": False}
-        ]
 
     def handle_verification(self, request: HttpRequest) -> Optional[HttpResponse]:
         """
@@ -406,13 +361,35 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         # Strict validation: If category is not found in CPIMS categories, reject the case
         if not category_info:
             logger.warning(f"❌ CASE REJECTED: Helpline category '{helpline_category}' not found in CPIMS category mapping")
-            logger.warning(f"   Available Helpline categories: {[cat['helpline_description'] for cat in self.case_categories]}")
+        if not category_info:
+            logger.warning(f"❌ CASE REJECTED: Helpline category '{helpline_category}' not found in CPIMS category mapping")
+            logger.warning(f"   Available Helpline categories: (Fetch from API failed or returned no matches)")
+            raise ValueError(f"Invalid Helpline category '{helpline_category}' - not found in CPIMS category mapping")
             raise ValueError(f"Invalid Helpline category '{helpline_category}' - not found in CPIMS category mapping")
 
         # Extract CPIMS values from category info
+
         category_item_id = category_info.get('item_id')
         cpims_category_description = category_info.get('cpims_description')
         has_sub_category = category_info.get('has_sub_category', False)
+        item_sub_category_field = category_info.get('item_sub_category')
+
+        # Resolve sub-category ID
+        # Default to category_item_id as CPIMS requires a value even if no sub-category
+        sub_category_id = category_item_id
+        
+        if has_sub_category and item_sub_category_field:
+            # Try to resolve sub-category from input
+            # First check explicit 'sub_category' field, then fallback to 'cat_2' (often used for sub-type)
+            sub_category_name = get_safe(case_data, "sub_category", "") or get_safe(case_data, "cat_2", "")
+            
+            if sub_category_name:
+                found_sub_id = self._lookup_sub_category_id(sub_category_name, item_sub_category_field)
+                if found_sub_id:
+                    sub_category_id = found_sub_id
+                    logger.info(f"Resolved sub-category '{sub_category_name}' to ID '{sub_category_id}'")
+            else:
+                logger.warning(f"Category '{helpline_category}' expects sub-category ('{item_sub_category_field}') but no 'sub_category' field found in input")
         
         # Determine data source priority: client data if available, otherwise reporter data
         has_client_data = bool(client_data)
@@ -506,22 +483,23 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "has_birth_cert": None,
             "user": get_safe(case_data, "created_by", "helpline_user"),
             "area_code": county_code or "UNK",
-
-            # Case details array
+            "case_category_id": category_item_id,
+            "case_category": category_info.get('cpims_description', ''),
             "case_details": [{
-                "place_of_event": get_safe(case_data, "incidence_location", ""),
-                "category": category_item_id,  # CPIMS code
-                "nature_of_event": self._map_code(get_safe(case_data, "cat_2", ""), "case_nature"),
+                "place_of_event": self._lookup_place_of_event(get_safe(case_data, "incidence_location", "")) or "",
+                "category": category_item_id,
+                "sub_category": sub_category_id,
+                "nature_of_event": self._lookup_case_nature(get_safe(case_data, "cat_2", "")) or "OOEV",
                 "date_of_event": format_api_timestamp(get_safe(case_data, "incidence_when", ""))
             }],
 
             # Categories array
             "categories": [{
-                "case_category": category_item_id,  # CPIMS code
-                "case_sub_category": cpims_category_description if has_sub_category else "",  # CPIMS description if sub-category expected
-                "case_date_event": format_api_timestamp(get_safe(case_data, "incidence_when", "")),
-                "case_nature": self._map_code(get_safe(case_data, "cat_2", ""), "case_nature"),
-                "case_place_of_event": get_safe(case_data, "incidence_location", ""),
+                "case_category": category_item_id,  # CPIMS code (e.g., "CCDF" for Defilement) - from case_category_id endpoint
+                "case_sub_category": sub_category_id,
+                "case_date_event": format_api_timestamp(get_safe(case_data, "incidence_when", "")),  # Date format YYYY-MM-DD
+                "case_nature": self._lookup_case_nature(get_safe(case_data, "cat_2", "")) or "OOEV",
+                "case_place_of_event": self._lookup_place_of_event(get_safe(case_data, "incidence_location", "")) or "",  # From event_place_id endpoint
                 "case_id": get_safe(case_data, "id", "")
             }],
             
@@ -637,7 +615,107 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         except Exception as e:
             logger.error(f"Error fetching geo data: {str(e)}")
             return None
-    
+
+    def _get_category_data(self) -> Optional[List[Dict[str, Any]]]:
+        """
+        Fetch category data from CPIMS settings endpoint.
+        Uses caching to avoid repeated API calls.
+
+        Returns:
+            List of case categories or None if request fails
+        """
+        # Return cached data if available
+        if self._category_data_cache is not None:
+            return self._category_data_cache
+
+        try:
+            # Fetch case_category_id from CPIMS settings API
+            url = f"{self.cpims_settings_endpoint}?field_name=case_category_id"
+            logger.info(f"Fetching category data from CPIMS: {url}")
+
+            headers = {'Content-Type': 'application/json'}
+
+            # Add authorization if token is available
+            if self.cpims_auth_token:
+                headers['Authorization'] = f"Token {self.cpims_auth_token}"
+
+            # Handle SSL verification
+            disable_ssl = getattr(settings, 'DISABLE_SSL_VERIFICATION', False)
+            verify_ssl = not disable_ssl
+
+            response = requests.get(
+                url,
+                headers=headers,
+                timeout=30,
+                verify=verify_ssl
+            )
+
+            logger.info(f"Category API response status: {response.status_code}")
+
+            if response.status_code == 200:
+                category_data = response.json()
+                # Cache the successful response
+                self._category_data_cache = category_data
+                logger.info(f"Successfully fetched {len(category_data)} case categories")
+                return category_data
+            else:
+                logger.error(f"Failed to fetch category data: {response.status_code} - {response.text}")
+                return None
+
+        except requests.RequestException as e:
+            logger.error(f"Network error fetching category data: {str(e)}")
+            return None
+        except Exception as e:
+            logger.error(f"Error fetching category data: {str(e)}")
+            return None
+
+    def _get_sub_category_data(self, field_name: str) -> Optional[List[Dict[str, Any]]]:
+        """
+        Fetch sub-category data from CPIMS settings endpoint for a specific field.
+        Uses caching to avoid repeated API calls.
+
+        Args:
+            field_name: The sub-category field name (e.g., 'child_labour_id', 'offender_id')
+
+        Returns:
+            List of sub-category items if successful, None otherwise
+        """
+        if not field_name:
+            return None
+
+        # Check if already cached
+        if field_name in self._sub_category_caches:
+            return self._sub_category_caches[field_name]
+
+        try:
+            url = f"{self.cpims_settings_endpoint}?field_name={field_name}"
+            logger.info(f"Fetching sub-category data from CPIMS: {url}")
+
+            headers = {'Content-Type': 'application/json'}
+            if self.cpims_auth_token:
+                headers['Authorization'] = f"Token {self.cpims_auth_token}"
+
+            disable_ssl = getattr(settings, 'DISABLE_SSL_VERIFICATION', False)
+            verify_ssl = not disable_ssl
+
+            response = requests.get(url, headers=headers, timeout=30, verify=verify_ssl)
+
+            if response.status_code == 200:
+                sub_category_data = response.json()
+                self._sub_category_caches[field_name] = sub_category_data
+                logger.info(f"Successfully fetched {len(sub_category_data)} sub-categories for {field_name}")
+                return sub_category_data
+            else:
+                logger.error(f"Failed to fetch sub-category data for {field_name}: {response.status_code}")
+                return None
+
+        except requests.RequestException as e:
+            logger.error(f"Network error fetching sub-category data for {field_name}: {str(e)}")
+            return None
+        except Exception as e:
+            logger.error(f"Error fetching sub-category data for {field_name}: {str(e)}")
+            return None
+
     def _lookup_area_code_by_type(self, area_name: str, area_type_id: str) -> Optional[str]:
         """
         Look up area_code for a given area name and area_type_id from CPIMS geo data.
@@ -730,26 +808,116 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
     
     def _lookup_category_info(self, helpline_category: str) -> Optional[Dict[str, Any]]:
         """
-        Look up full category info for a given Helpline category description.
-
+        Look up category information from CPIMS API with intelligent fuzzy matching.
+        
         Args:
             helpline_category: The Helpline category description to look up
-
+            
         Returns:
-            Category dict with item_id, cpims_description, has_sub_category if found, None otherwise
+            Category dict with item_id, cpims_description, has_sub_category, item_sub_category if found
         """
         if not helpline_category:
             return None
 
-        # Search for the category by Helpline description (case-insensitive)
+        # Get category data from CPIMS API
+        category_data = self._get_category_data()
+        if not category_data:
+            logger.warning(f"No category data available for lookup of: {helpline_category}")
+            return None
+
+        # Common category aliases mapping
+        category_aliases = {
+            "child labor": "Child Labour",
+            "child labour": "Child Labour", 
+            "abuse": "Physical abuse/violence",
+            "physical abuse": "Physical abuse/violence",
+            "violence": "Physical abuse/violence",
+            "emotional abuse": "Emotional Abuse",
+            "sexual abuse": "Sexual Exploitation and abuse",
+            "sexual assault": "Sexual assault",
+            "sexual exploitation": "Sexual Exploitation and abuse",
+            "rape": "Defilement",
+            "defilement": "Defilement",
+            "neglect": "Neglect",
+            "drug abuse": "Drug and Substance Abuse",
+            "substance abuse": "Drug and Substance Abuse",
+            "drugs": "Drug and Substance Abuse",
+            "trafficking": "Trafficked child",
+            "child trafficking": "Trafficked child",
+            "fgm": "FGM",
+            "female genital mutilation": "FGM",
+            "child marriage": "Child Marriage",
+            "early marriage": "Child Marriage",
+            "abandoned": "Abandoned",
+            "abandonment": "Abandoned",
+            "street children": "Children on the streets",
+            "street child": "Children on the streets",
+            "orphan": "Orphaned Child",
+            "teenage pregnancy": "Child pregnancy",
+            "child pregnancy": "Child pregnancy",
+            "pregnancy": "Child pregnancy",
+            "birth registration": "Registration",
+            "registration": "Registration",
+            "missing child": "Missing Child (Lost & Found)",
+            "lost child": "Missing Child (Lost & Found)",
+            "custody": "Custody",
+            "truancy": "Child truancy",
+            "disability": "Child with disability",
+            "hiv": "Child Affected by HIV/AIDS",
+            "aids": "Child Affected by HIV/AIDS",
+            "incest": "Incest",
+            "sodomy": "Sodomy",
+            "child offender": "Child offender",
+            "out of school": "Child out of school",
+            "radicalization": "Child radicalization",
+            "child radicalization": "Child radicalization",
+            "abduction": "Abduction",
+            "online abuse": "Online Child Exploitation and Abuse",
+            "cyber abuse": "Online Child Exploitation and Abuse",
+            "delinquency": "Child Delinquency",
+        }
+
         helpline_category_lower = helpline_category.lower().strip()
 
-        for category in self.case_categories:
-            if category.get('helpline_description', '').lower().strip() == helpline_category_lower:
-                return category
+        # Try exact match first
+        for category in category_data:
+            if category.get('item_description', '').lower().strip() == helpline_category_lower:
+                return {
+                    'item_id': category.get('item_id'),
+                    'cpims_description': category.get('item_description'),
+                    'has_sub_category': bool(category.get('item_sub_category')),
+                    'item_sub_category': category.get('item_sub_category')
+                }
 
-        logger.warning(f"Helpline category '{helpline_category}' not found in mapping")
+        # Try alias mapping
+        mapped_category = category_aliases.get(helpline_category_lower)
+        if mapped_category:
+            for category in category_data:
+                if category.get('item_description', '').lower().strip() == mapped_category.lower().strip():
+                    logger.info(f"Matched category '{helpline_category}' via alias to '{mapped_category}'")
+                    return {
+                        'item_id': category.get('item_id'),
+                        'cpims_description': category.get('item_description'),
+                        'has_sub_category': bool(category.get('item_sub_category')),
+                        'item_sub_category': category.get('item_sub_category')
+                    }
+
+        # Try partial matching (e.g., "Labour" in "Child Labour")
+        for category in category_data:
+            item_desc = category.get('item_description', '').lower()
+            if helpline_category_lower in item_desc or item_desc in helpline_category_lower:
+                logger.info(f"Matched category '{helpline_category}' via partial match to '{category.get('item_description')}'")
+                return {
+                    'item_id': category.get('item_id'),
+                    'cpims_description': category.get('item_description'),
+                    'has_sub_category': bool(category.get('item_sub_category')),
+                    'item_sub_category': category.get('item_sub_category')
+                }
+
+        logger.warning(f"Helpline category '{helpline_category}' not found in CPIMS API data")
         return None
+
+
 
     def _lookup_category_item_id(self, category_description: str) -> Optional[str]:
         """
@@ -763,6 +931,200 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         """
         category_info = self._lookup_category_info(category_description)
         return category_info.get('item_id') if category_info else None
+
+    def _lookup_sub_category_id(self, sub_category_name: str, field_name: str) -> Optional[str]:
+        """
+        Look up item_id for a given sub-category name and field_name with fuzzy matching.
+        
+        Args:
+            sub_category_name: The sub-category name to look up
+            field_name: The settings field name for this sub-category type
+            
+        Returns:
+            The CPIMS item_id if found, None otherwise
+        """
+        if not sub_category_name or not field_name:
+            return None
+            
+        # Context-aware aliases based on field type
+        sub_category_aliases = {
+            # Child labour aliases
+            "domestic work": "Domestic work / Exploitative household chores",
+            "agriculture": "Agriculture / Farming work (Milking, tilling, harvesting, weeding, scarring animals)",
+            "farming": "Agriculture / Farming work (Milking, tilling, harvesting, weeding, scarring animals)",
+            "jua kali": "Informal Sector (Jua kali)",
+            "informal": "Informal Sector (Jua kali)",
+            "transport": "Transport industry work (bodaboda, motor cycle taxis, bicycles, carts, matatus, boat rowing, touting)",
+            "bodaboda": "Transport industry work (bodaboda, motor cycle taxis, bicycles, carts, matatus, boat rowing, touting)",
+            "mining": "Mining and quarrying (Sand harvesting, ballast making)",
+            "quarrying": "Mining and quarrying (Sand harvesting, ballast making)",
+            "hotel": "Hotels, restaurants and bars work",
+            "restaurant": "Hotels, restaurants and bars work",
+            
+            # Offender type aliases
+            "theft": "Theft",
+            "stealing": "Theft",
+            "robbery": "Robbery with Violence",
+            "burglary": "House breaking/Burglary",
+            "housebreaking": "House breaking/Burglary",
+            "assault": "Assault",
+            "murder": "Murder",
+            "rape": "Attempted Defilement/Rape",
+            "defilement": "Defilement",
+            "drugs": "Possession of narcotics",
+            "narcotics": "Possession of narcotics",
+            "peddling": "Peddling of drugs",
+            
+            # Out of school reasons
+            "poverty": "Family Poverty",
+            "family poverty": "Family Poverty",
+            "disability": "Disability/Chronic Illness",
+            "illness": "Disability/Chronic Illness",
+            "work": "Engaged in child labour",
+            "labour": "Engaged in child labour",
+            "preference": "Childs Preference",
+            "caregiver": "Care Givers Decision",
+            
+            # Custody
+            "guardianship": "Guardianship",
+            "disputed": "Disputed Custody",
+            "access": "Access denied",
+        }
+        
+        # Fetch data for this sub-category type
+        sub_category_data = self._get_sub_category_data(field_name)
+        if not sub_category_data:
+            logger.warning(f"No data available for sub-category field: {field_name}")
+            return None
+            
+        # Search for the sub-category by name (case-insensitive)
+        name_lower = sub_category_name.lower().strip()
+        
+        # Try exact match first
+        for item in sub_category_data:
+            # Check if name matches description (case-insensitive)
+            if item.get('item_description', '').lower().strip() == name_lower:
+                return item.get('item_id')
+            # Also check if the input IS the ID itself
+            if item.get('item_id', '') == sub_category_name:
+                 return item.get('item_id')
+        
+        # Try alias mapping
+        mapped_sub_category = sub_category_aliases.get(name_lower)
+        if mapped_sub_category:
+            for item in sub_category_data:
+                if item.get('item_description', '').lower().strip() == mapped_sub_category.lower().strip():
+                    logger.info(f"Matched sub-category '{sub_category_name}' via alias to '{mapped_sub_category}'")
+                    return item.get('item_id')
+        
+        # Try partial matching
+        for item in sub_category_data:
+            item_desc = item.get('item_description', '').lower()
+            if name_lower in item_desc or item_desc in name_lower:
+                logger.info(f"Matched sub-category '{sub_category_name}' via partial match to '{item.get('item_description')}'")
+                return item.get('item_id')
+                
+        logger.warning(f"Sub-category '{sub_category_name}' not found in {field_name}")
+        return None
+
+    def _get_case_nature_data(self) -> Optional[List[Dict[str, Any]]]:
+        """
+        Fetch case nature data from CPIMS settings endpoint.
+        """
+        if self._case_nature_cache is not None:
+            return self._case_nature_cache
+
+        return self._fetch_settings_data("case_nature_id", "_case_nature_cache")
+
+    def _get_place_of_event_data(self) -> Optional[List[Dict[str, Any]]]:
+        """
+        Fetch place of event data from CPIMS settings endpoint.
+        """
+        if self._place_of_event_cache is not None:
+            return self._place_of_event_cache
+
+        return self._fetch_settings_data("event_place_id", "_place_of_event_cache")
+
+    def _fetch_settings_data(self, field_name: str, cache_attr: str) -> Optional[List[Dict[str, Any]]]:
+        """
+        Generic method to fetch settings data.
+        """
+        try:
+            url = f"{self.cpims_settings_endpoint}?field_name={field_name}"
+            headers = {'Content-Type': 'application/json'}
+            if self.cpims_auth_token:
+                headers['Authorization'] = f"Token {self.cpims_auth_token}"
+
+            disable_ssl = getattr(settings, 'DISABLE_SSL_VERIFICATION', False)
+            response = requests.get(url, headers=headers, timeout=30, verify=not disable_ssl)
+
+            if response.status_code == 200:
+                data = response.json()
+                setattr(self, cache_attr, data)
+                return data
+            else:
+                logger.error(f"Failed to fetch {field_name}: {response.status_code}")
+                return None
+        except Exception as e:
+            logger.error(f"Error fetching {field_name}: {str(e)}")
+            return None
+
+    def _lookup_case_nature(self, nature_description: str) -> Optional[str]:
+        """Look up item_id for case nature."""
+        if not nature_description: return None
+        data = self._get_case_nature_data()
+        return self._lookup_item_id(data, nature_description)
+
+    def _lookup_place_of_event(self, place_description: str) -> Optional[str]:
+        """Look up item_id for place of event with smart matching."""
+        if not place_description: return None
+        
+        # Common aliases mapping
+        place_aliases = {
+            "home": "Home & Family",
+            "school": "School and Educational Settings",
+            "street": "On the Street",
+            "church": "Place of worship/Religious Centre",
+            "mosque": "Place of worship/Religious Centre",
+            "temple": "Place of worship/Religious Centre",
+            "work": "Places of Work",
+            "hospital": "Health Facility",
+            "clinic": "Health Facility",
+        }
+        
+        data = self._get_place_of_event_data()
+        if not data: return None
+        
+        place_lower = place_description.lower().strip()
+        
+        # Try exact match first
+        result = self._lookup_item_id(data, place_description)
+        if result: return result
+        
+        # Try alias mapping
+        mapped_place = place_aliases.get(place_lower)
+        if mapped_place:
+            result = self._lookup_item_id(data, mapped_place)
+            if result: return result
+        
+        # Try partial matching (e.g., "Home" in "Home & Family")
+        for item in data:
+            item_desc = item.get('item_description', '').lower()
+            if place_lower in item_desc or item_desc in place_lower:
+                return item.get('item_id')
+        
+        logger.warning(f"Place of event '{place_description}' not found in API data")
+        return None
+
+    def _lookup_item_id(self, data_list: Optional[List[Dict[str, Any]]], description: str) -> Optional[str]:
+        """Generic lookup helper."""
+        if not data_list or not description: return None
+        desc_lower = description.lower().strip()
+        for item in data_list:
+            if item.get('item_description', '').lower().strip() == desc_lower:
+                return item.get('item_id')
+        return None
+        return None
     
     def _extract_name(self, full_name: str, part: str) -> str:
         """
@@ -1047,8 +1409,8 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         # Normalize incoming value (remove caret prefixes and trim whitespace)
         normalized_value = (value or "").lstrip("^").strip()
 
-        # For risk_level, enforce strict mapping to ensure CPIMS codes are emitted
-        if mapping_type == "risk_level":
+        # For risk_level and case_nature, enforce strict mapping to ensure CPIMS codes are emitted
+        if mapping_type in ["risk_level", "case_nature"]:
             # Return empty string if not found so caller can apply a safe default
             return mapping_dict.get(normalized_value, "")
 
