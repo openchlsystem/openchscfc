@@ -489,7 +489,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
                 "place_of_event": self._lookup_place_of_event(get_safe(case_data, "incidence_location", "")) or "",
                 "category": category_item_id,
                 "sub_category": sub_category_id,
-                "nature_of_event": self._lookup_case_nature(get_safe(case_data, "cat_2", "")) or "OOEV",
+                "nature_of_event": self._lookup_case_nature(get_safe(case_data, "cat_3", "")) or "OOEV",
                 "date_of_event": format_api_timestamp(get_safe(case_data, "incidence_when", ""))
             }],
 
@@ -498,7 +498,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
                 "case_category": category_item_id,  # CPIMS code (e.g., "CCDF" for Defilement) - from case_category_id endpoint
                 "case_sub_category": sub_category_id,
                 "case_date_event": format_api_timestamp(get_safe(case_data, "incidence_when", "")),  # Date format YYYY-MM-DD
-                "case_nature": self._lookup_case_nature(get_safe(case_data, "cat_2", "")) or "OOEV",
+                "case_nature": self._lookup_case_nature(get_safe(case_data, "cat_3", "")) or "OOEV",
                 "case_place_of_event": self._lookup_place_of_event(get_safe(case_data, "incidence_location", "")) or "",  # From event_place_id endpoint
                 "case_id": get_safe(case_data, "id", "")
             }],
@@ -1298,57 +1298,9 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "Not Applicable": "PSNA"
         }
         
-        # Case category codes - updated with latest CPIMS mapping (sorted A-Z)
-        case_category_codes = {
-            "Birth Registration": "CPAV",
-            "Child Abandonment": "CDIS",
-            "Child Abduction": "CDSA",
-            "Child affected by HIV/AIDS": "CLAB",
-            "Child headed household": "COSR",
-            "Child Labor": "CTRF",
-            "Child Marriage": "CCCM",
-            "Child Mother": "CLCM",
-            "Child Neglect": "CSIC",
-            "Child offender": "CSAB",
-            "Child of imprisoned parent (S)": "SCCI",
-            "Child out of school": "CSAD",
-            "Child Prostitution, Sexual Abuse": "CSRG",
-            "Child radicalization": "CSDQ",
-            "Child Trafficking": "CSTC",
-            "Child Truancy": "CCCT",
-            "Children on the streets": "CCIP",
-            "Custody": "CCCP",
-            "Defilement": "CCDF",
-            "Disputed Paternity": "CSCT",
-            "Drug Abuse": "CSDS",
-            "Emotional Abuse": "CCEA",
-            "Female Genital Mutilation": "CSCS",
-            "Harmful cultural practice": "CSCU",
-            "Inheritance/succession": "CSDP",
-            "Internally displaced child": "CFGM",
-            "Juvenile Deliquency": "CORP",
-            "Lost and Found, Lost Child": "CHCP",
-            "Mental & physical disability": "CSCL",
-            "Mother offer": "CCMO",
-            "Online Abuse": "CCOA",
-            "Orphan & Vulnerable children": "CIDC",
-            "Parental child abduction": "CLFC",
-            "Physical Abuse": "CSNG",
-            "Refugee Children": "CPCA",
-            "Sexual Abuse (Incest)": "CSDF",
-            "Sexual Abuse (Sodomy)": "CSSO",
-            "Sexual assault": "CSRC",
-            "Sickness or illness": "CSSA",
-            "Teenage Pregnancy": "CSHV",
-            "Unlawful Confinement": "CSUC"
-        }
-        
-        # Case nature codes
-        case_nature_codes = {
-            "Chronic/On-going event": "OCGE",
-            "One-off event": "OOEV",
-            "Emergency": "OOEM"
-        }
+        # Note: Case category codes and case nature codes are now fetched dynamically
+        # from CPIMS API via _lookup_category_info() and _lookup_case_nature()
+        # No hardcoded mappings needed here
         
         # Relationship codes (for perpetrators) - sorted A-Z
         relationship_codes = {
@@ -1399,18 +1351,19 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             mapping_dict = religion_codes
         elif mapping_type == "perpetrator_status":
             mapping_dict = perpetrator_status_codes
-        elif mapping_type == "case_category":
-            mapping_dict = case_category_codes
-        elif mapping_type == "case_nature":
-            mapping_dict = case_nature_codes
         elif mapping_type == "relationship":
             mapping_dict = relationship_codes
+        # Note: case_category and case_nature are fetched via API, not hardcoded mappings
         
         # Normalize incoming value (remove caret prefixes and trim whitespace)
         normalized_value = (value or "").lstrip("^").strip()
 
-        # For risk_level and case_nature, enforce strict mapping to ensure CPIMS codes are emitted
-        if mapping_type in ["risk_level", "case_nature"]:
+        # If no mapping dict found (e.g., for case_category/case_nature which use API), return empty
+        if not mapping_dict:
+            return ""
+
+        # For risk_level, enforce strict mapping to ensure CPIMS codes are emitted
+        if mapping_type == "risk_level":
             # Return empty string if not found so caller can apply a safe default
             return mapping_dict.get(normalized_value, "")
 
