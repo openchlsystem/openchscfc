@@ -486,7 +486,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
             "case_category_id": category_item_id,
             "case_category": category_info.get('cpims_description', ''),
             "case_details": [{
-                "place_of_event": self._lookup_place_of_event(get_safe(case_data, "incidence_location", "")) or "",
+                "place_of_event": self._lookup_place_of_event(get_safe(case_data, "incidence_location", "")) or "PECE",
                 "category": category_item_id,
                 "sub_category": sub_category_id,
                 "nature_of_event": self._lookup_case_nature(get_safe(case_data, "cat_3", "")) or "OOEV",
@@ -499,7 +499,7 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
                 "case_sub_category": sub_category_id,
                 "case_date_event": format_api_timestamp(get_safe(case_data, "incidence_when", "")),  # Date format YYYY-MM-DD
                 "case_nature": self._lookup_case_nature(get_safe(case_data, "cat_3", "")) or "OOEV",
-                "case_place_of_event": self._lookup_place_of_event(get_safe(case_data, "incidence_location", "")) or "",  # From event_place_id endpoint
+                "case_place_of_event": self._lookup_place_of_event(get_safe(case_data, "incidence_location", "")) or "PECE",  # From event_place_id endpoint, fallback to "Other Community Event"
                 "case_id": get_safe(case_data, "id", "")
             }],
             
@@ -1076,7 +1076,10 @@ class HelplineCPIMSAbuseAdapter(BaseAdapter):
         return self._lookup_item_id(data, nature_description)
 
     def _lookup_place_of_event(self, place_description: str) -> Optional[str]:
-        """Look up item_id for place of event with smart matching."""
+        """
+        Look up item_id for place of event with smart matching.
+        Returns "PECE" (Other Community Event) as fallback if not found.
+        """
         if not place_description: return None
         
         # Common aliases mapping
